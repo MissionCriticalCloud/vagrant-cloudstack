@@ -1,3 +1,15 @@
+# 0.0.2 (May 3, 2013)
+
+* Renamed module from CloudStack to Cloudstack
+* Renamed configurations to match Cloudstack
+  * domain -> domain_id
+  * offering_id -> service_offering_id
+* Added specc test for all provider specific configurations
+
+# 0.0.1 (April 17, 2013)
+
+* Forked into a Cloudstack plugin
+
 # 0.2.1 (April 16, 2013)
 
 * Got rid of extranneous references to old SSH settings.

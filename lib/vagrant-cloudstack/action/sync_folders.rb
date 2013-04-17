@@ -5,16 +5,16 @@ require "vagrant/util/subprocess"
 require "vagrant/util/scoped_hash_override"
 
 module VagrantPlugins
-  module AWS
+  module Cloudstack
     module Action
       # This middleware uses `rsync` to sync the folders over to the
-      # AWS instance.
+      # cloudstack instance.
       class SyncFolders
         include Vagrant::Util::ScopedHashOverride
 
         def initialize(app, env)
           @app    = app
-          @logger = Log4r::Logger.new("vagrant_aws::action::sync_folders")
+          @logger = Log4r::Logger.new("vagrant_cloudstack::action::sync_folders")
         end
 
         def call(env)
@@ -23,7 +23,7 @@ module VagrantPlugins
           ssh_info = env[:machine].ssh_info
 
           env[:machine].config.vm.synced_folders.each do |id, data|
-            data = scoped_hash_override(data, :aws)
+            data = scoped_hash_override(data, :cloudstack)
 
             # Ignore disabled shared folders
             next if data[:disabled]
@@ -35,7 +35,7 @@ module VagrantPlugins
             # avoid creating an additional directory with rsync
             hostpath = "#{hostpath}/" if hostpath !~ /\/$/
 
-            env[:ui].info(I18n.t("vagrant_aws.rsync_folder",
+            env[:ui].info(I18n.t("vagrant_cloudstack.rsync_folder",
                                 :hostpath => hostpath,
                                 :guestpath => guestpath))
 

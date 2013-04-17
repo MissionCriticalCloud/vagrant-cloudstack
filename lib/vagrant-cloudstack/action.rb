@@ -3,7 +3,7 @@ require "pathname"
 require "vagrant/action/builder"
 
 module VagrantPlugins
-  module AWS
+  module Cloudstack
     module Action
       # Include the built-in modules so we can use them as top-level things.
       include Vagrant::Action::Builtin
@@ -12,7 +12,7 @@ module VagrantPlugins
       def self.action_destroy
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
-          b.use ConnectAWS
+          b.use ConnectCloudstack
           b.use TerminateInstance
         end
       end
@@ -39,7 +39,7 @@ module VagrantPlugins
       def self.action_read_ssh_info
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
-          b.use ConnectAWS
+          b.use ConnectCloudstack
           b.use ReadSSHInfo
         end
       end
@@ -50,7 +50,7 @@ module VagrantPlugins
       def self.action_read_state
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
-          b.use ConnectAWS
+          b.use ConnectCloudstack
           b.use ReadState
         end
       end
@@ -88,7 +88,7 @@ module VagrantPlugins
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
-          b.use ConnectAWS
+          b.use ConnectCloudstack
           b.use Call, IsCreated do |env, b2|
             if env[:result]
               b2.use MessageAlreadyCreated
@@ -105,7 +105,7 @@ module VagrantPlugins
 
       # The autoload farm
       action_root = Pathname.new(File.expand_path("../action", __FILE__))
-      autoload :ConnectAWS, action_root.join("connect_aws")
+      autoload :ConnectCloudstack, action_root.join("connect_cloudstack")
       autoload :IsCreated, action_root.join("is_created")
       autoload :MessageAlreadyCreated, action_root.join("message_already_created")
       autoload :MessageNotCreated, action_root.join("message_not_created")

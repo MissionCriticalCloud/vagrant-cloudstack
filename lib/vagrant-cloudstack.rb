@@ -1,10 +1,10 @@
 require "pathname"
 
-require "vagrant-aws/plugin"
+require "vagrant-cloudstack/plugin"
 
 module VagrantPlugins
-  module AWS
-    lib_path = Pathname.new(File.expand_path("../vagrant-aws", __FILE__))
+  module Cloudstack
+    lib_path = Pathname.new(File.expand_path("../vagrant-cloudstack", __FILE__))
     autoload :Action, lib_path.join("action")
     autoload :Errors, lib_path.join("errors")
 

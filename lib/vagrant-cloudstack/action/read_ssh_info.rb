@@ -1,27 +1,27 @@
 require "log4r"
 
 module VagrantPlugins
-  module AWS
+  module Cloudstack
     module Action
       # This action reads the SSH info for the machine and puts it into the
       # `:machine_ssh_info` key in the environment.
       class ReadSSHInfo
         def initialize(app, env)
           @app    = app
-          @logger = Log4r::Logger.new("vagrant_aws::action::read_ssh_info")
+          @logger = Log4r::Logger.new("vagrant_cloudstack::action::read_ssh_info")
         end
 
         def call(env)
-          env[:machine_ssh_info] = read_ssh_info(env[:aws_compute], env[:machine])
+          env[:machine_ssh_info] = read_ssh_info(env[:cloudstack_compute], env[:machine])
 
           @app.call(env)
         end
 
-        def read_ssh_info(aws, machine)
+        def read_ssh_info(cloudstack, machine)
           return nil if machine.id.nil?
 
           # Find the machine
-          server = aws.servers.get(machine.id)
+          server = cloudstack.servers.get(machine.id)
           if server.nil?
             # The machine can't be found
             @logger.info("Machine couldn't be found, assuming it got destroyed.")
@@ -31,7 +31,7 @@ module VagrantPlugins
 
           # Read the DNS info
           return {
-            :host => server.dns_name || server.private_ip_address,
+            :host => server.nics[0]['ipaddress'],
             :port => 22
           }
         end

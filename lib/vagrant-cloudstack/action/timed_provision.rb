@@ -1,12 +1,12 @@
-require "vagrant-aws/util/timer"
+require "vagrant-cloudstack/util/timer"
 
 module VagrantPlugins
-  module AWS
+  module Cloudstack
     module Action
       # This is the same as the builtin provision except it times the
       # provisioner runs.
       class TimedProvision < Vagrant::Action::Builtin::Provision
-        def run_provisioner(env, p)
+        def run_provisioner(env, pname, p)
           timer = Util::Timer.time do
             super
           end

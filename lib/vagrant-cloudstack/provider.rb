@@ -2,7 +2,7 @@ require "log4r"
 require "vagrant"
 
 module VagrantPlugins
-  module AWS
+  module Cloudstack
     class Provider < Vagrant.plugin("2", :provider)
       def initialize(machine)
         @machine = machine
@@ -34,8 +34,8 @@ module VagrantPlugins
         state_id = env[:machine_state_id]
 
         # Get the short and long description
-        short = I18n.t("vagrant_aws.states.short_#{state_id}")
-        long  = I18n.t("vagrant_aws.states.long_#{state_id}")
+        short = I18n.t("vagrant_cloudstack.states.short_#{state_id}")
+        long  = I18n.t("vagrant_cloudstack.states.long_#{state_id}")
 
         # Return the MachineState object
         Vagrant::MachineState.new(state_id, short, long)
@@ -43,7 +43,7 @@ module VagrantPlugins
 
       def to_s
         id = @machine.id.nil? ? "new" : @machine.id
-        "AWS (#{id})"
+        "Cloudstack (#{id})"
       end
     end
   end
