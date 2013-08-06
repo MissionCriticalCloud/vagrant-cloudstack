@@ -1,5 +1,7 @@
 source "https://rubygems.org"
 
+gem 'nokogiri', "= 1.5.10"
+gem 'fog', :git => 'git://github.com/fog/fog.git', :ref => 'dc7c5e285a1a252031d3d1570cbf2289f7137ed0'
 gemspec
 
 group :development do
