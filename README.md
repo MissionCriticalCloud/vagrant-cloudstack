@@ -1,5 +1,7 @@
 # Vagrant Cloudstack Provider
 
+[![Build Status](https://travis-ci.org/klarna/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/klarna/vagrant-cloudstack)
+
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
 This is a [Vagrant](http://www.vagrantup.com) 1.2+ plugin that adds an [Cloudstack](http://cloudstack.apache.org)
@@ -181,7 +183,7 @@ the plugin without installing it into your Vagrant environment by just
 creating a `Vagrantfile` in the top level of this directory (it is gitignored)
 and add the following line to your `Vagrantfile` 
 ```ruby
-Vagrant.require_plugin "vagrant-aws"
+Vagrant.require_plugin "vagrant-cloudstack"
 ```
 Use bundler to execute Vagrant:
 
