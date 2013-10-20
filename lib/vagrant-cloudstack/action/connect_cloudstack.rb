@@ -32,6 +32,7 @@ module VagrantPlugins
           end
 
           fog_config[:cloudstack_host] = domain_config.host if domain_config.host
+          fog_config[:cloudstack_path] = domain_config.path if domain_config.path
           fog_config[:cloudstack_port] = domain_config.port if domain_config.port
           fog_config[:cloudstack_scheme] = domain_config.scheme if domain_config.scheme
 
