@@ -52,16 +52,17 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :cloudstack do |cloudstack, override|
     cloudstack.host = "cloudstack.local"
+    cloudstack.path = "/client/api"
     cloudstack.port = "8080"
     cloudstack.scheme = "http"
     cloudstack.api_key = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.secret_key = "AAAAAAAAAAAAAAAAAAA"
 
-    cs.template_id = "AAAAAAAAAAAAAAAAAAA"
-    cs.service_offering_id = "AAAAAAAAAAAAAAAAAAA"
-    cs.network_id = "AAAAAAAAAAAAAAAAAAA"
-    cs.zone_id = "AAAAAAAAAAAAAAAAAAA"
-    cs.project_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.template_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.service_offering_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.network_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.zone_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
   end
 end
 ```
@@ -90,6 +91,7 @@ provider-specific configuration for this provider.
 This provider exposes quite a few provider-specific configuration options:
 
 * `host` - Cloudstack api host
+* `path` - Cloudstack api path
 * `port` - Cloudstack api port
 * `scheme` - Cloudstack api scheme _(default: http)_
 * `api_key` - The api key for accessing Cloudstack

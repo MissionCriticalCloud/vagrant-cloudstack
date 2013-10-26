@@ -16,6 +16,7 @@ describe VagrantPlugins::Cloudstack::Config do
     end
 
     its("host")                   { should be_nil }
+    its("path")                   { should be_nil }
     its("port")                   { should be_nil }
     its("scheme")                 { should == "http" }
     its("api_key")                { should be_nil }
@@ -62,6 +63,7 @@ describe VagrantPlugins::Cloudstack::Config do
 
   describe "domain config" do
     let(:config_host)                   { "foo" }
+    let(:config_path)                   { "foo" }
     let(:config_port)                   { "foo" }
     let(:config_scheme)                 { "foo" }
     let(:config_api_key)                { "foo" }
@@ -76,6 +78,7 @@ describe VagrantPlugins::Cloudstack::Config do
 
     def set_test_values(instance)
       instance.host                   = config_host
+      instance.path                   = config_path
       instance.port                   = config_port
       instance.scheme                 = config_scheme
       instance.api_key                = config_api_key
@@ -107,6 +110,7 @@ describe VagrantPlugins::Cloudstack::Config do
       end
 
       its("host")                   { should == config_host }
+      its("path")                   { should == config_path }
       its("port")                   { should == config_port }
       its("scheme")                 { should == config_scheme }
       its("api_key")                { should == config_api_key }
@@ -137,6 +141,7 @@ describe VagrantPlugins::Cloudstack::Config do
       end
 
       its("host")                   { should == config_host }
+      its("path")                   { should == config_path }
       its("port")                   { should == config_port }
       its("scheme")                 { should == config_scheme }
       its("api_key")                { should == config_api_key }

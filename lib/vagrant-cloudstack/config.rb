@@ -8,6 +8,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :host
 
+      # Cloudstack api path.
+      #
+      # @return [String]
+      attr_accessor :path
+
       # Cloudstack api port.
       #
       # @return [String]
@@ -66,6 +71,7 @@ module VagrantPlugins
 
       def initialize(domain_specific=false)
         @host                   = UNSET_VALUE
+        @path                   = UNSET_VALUE
         @port                   = UNSET_VALUE
         @scheme                 = UNSET_VALUE
         @api_key                = UNSET_VALUE
@@ -149,6 +155,9 @@ module VagrantPlugins
       def finalize!
         # Domain_id must be nil, since we can't default that
         @host = nil if @host == UNSET_VALUE
+
+        # Path must be nil, since we can't default that
+        @path = nil if @path == UNSET_VALUE
 
         # Port must be nil, since we can't default that
         @port = nil if @port == UNSET_VALUE
