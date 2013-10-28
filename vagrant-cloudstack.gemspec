@@ -5,9 +5,9 @@ Gem::Specification.new do |s|
   s.name          = "vagrant-cloudstack"
   s.version       = VagrantPlugins::Cloudstack::VERSION
   s.platform      = Gem::Platform::RUBY
-  s.authors       = "Mitchell Hashimoto"
-  s.email         = "mitchell@hashicorp.com"
-  s.homepage      = "http://www.vagrantup.com"
+  s.authors       = ["Mitchell Hashimoto", "Carl Loa Odin", "Tor-Åke Fransson", "Roeland Kuipers", "atsaki"]
+  s.email         = "carlodin@gmail.com"
+  s.homepage      = "https://github.com/klarna/vagrant-cloudstack/"
   s.summary       = "Enables Vagrant to manage machines in Cloudstack."
   s.description   = "Enables Vagrant to manage machines in Cloudstack."
 
