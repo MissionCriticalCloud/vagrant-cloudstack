@@ -1,7 +1,7 @@
 en:
   vagrant_cloudstack:
-    already_created: |-
-      The machine is already created.
+    already_status: |-
+      The machine is already %{status}.
     launching_instance: |-
       Launching an instance with the following settings...
     launch_no_keypair: |-
@@ -21,6 +21,10 @@ en:
       Make sure rsync is installed and the binary can be found in the PATH.
     rsync_folder: |-
       Rsyncing folder: %{hostpath} => %{guestpath}
+    starting: |-
+      Starting the instance...
+    stopping: |-
+      Stopping the instance...
     terminating: |-
       Terminating the instance...
     waiting_for_ready: |-
@@ -64,6 +68,16 @@ en:
         not created
       long_not_created: |-
         The instance is not created. Run `vagrant up` to create it.
+      short_Stopped: |-
+        stopped
+      long_Stopped: |-
+        The instance is stopped. Run `vagrant up` to start it.
+
+      short_Stopping: |-
+        stopping
+      long_Stopping: |-
+        The instance is stopping. Wait until is completely stopped to 
+        run `vagrant up` and start it.
 
       short_Running: |-
         running
