@@ -31,10 +31,17 @@ en:
       Waiting for instance to become "ready"...
     waiting_for_ssh: |-
       Waiting for SSH to become available...
+    creating_port_forwarding_rule: |-
+      Creating a port forwarding rule for this instance ...
+    deleting_port_forwarding_rule: |-
+      Deleting the port forwarding rule ...
     warn_networks: |-
       Warning! The Cloudstack provider doesn't support any of the Vagrant
       high-level network configurations (`config.vm.network`). They
       will be silently ignored.
+    will_not_destroy: |-
+      The instance '%{name}' will not be destroyed, since the confirmation
+      was declined.
 
     config:
       api_key_required: |-

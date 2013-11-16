@@ -27,9 +27,21 @@ module VagrantPlugins
       # This action is called to terminate the remote machine.
       def self.action_destroy
         Vagrant::Action::Builder.new.tap do |b|
-          b.use ConfigValidate
-          b.use ConnectCloudstack
-          b.use TerminateInstance
+          b.use Call, DestroyConfirm do |env, b2|
+            if env[:result]
+              b2.use ConfigValidate
+              b.use Call, IsCreated do |env2, b3|
+                if !env2[:result]
+                  b3.use MessageNotCreated
+                  next
+                end
+              end
+              b2.use ConnectCloudstack
+              b2.use TerminateInstance
+            else
+              b2.use MessageWillNotDestroy
+            end
+          end
         end
       end
 
@@ -138,6 +150,7 @@ module VagrantPlugins
       autoload :IsStopped, action_root.join("is_stopped")
       autoload :MessageAlreadyCreated, action_root.join("message_already_created")
       autoload :MessageNotCreated, action_root.join("message_not_created")
+      autoload :MessageWillNotDestroy, action_root.join("message_will_not_destroy")
       autoload :ReadSSHInfo, action_root.join("read_ssh_info")
       autoload :ReadState, action_root.join("read_state")
       autoload :RunInstance, action_root.join("run_instance")
