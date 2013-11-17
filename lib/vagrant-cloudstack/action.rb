@@ -143,6 +143,28 @@ module VagrantPlugins
         end
       end
 
+      def self.action_reload
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use ConnectCloudstack
+          b.use Call, IsCreated do |env, b2|
+            if !env[:result]
+              b2.use MessageNotCreated
+              next
+            end
+
+            b2.use action_halt
+            b2.use Call, WaitForState, :Stopped, 120 do |env2, b3|
+              if env2[:result]
+                b3.use action_up
+              else
+                # TODO we couldn't reach :stopped, what now?
+              end
+            end
+          end
+        end
+      end
+
       # The autoload farm
       action_root = Pathname.new(File.expand_path("../action", __FILE__))
       autoload :ConnectCloudstack, action_root.join("connect_cloudstack")
@@ -158,6 +180,7 @@ module VagrantPlugins
       autoload :StopInstance, action_root.join("stop_instance")
       autoload :SyncFolders, action_root.join("sync_folders")
       autoload :TimedProvision, action_root.join("timed_provision")
+      autoload :WaitForState, action_root.join("wait_for_state")
       autoload :WarnNetworks, action_root.join("warn_networks")
       autoload :TerminateInstance, action_root.join("terminate_instance")
     end
