@@ -154,7 +154,7 @@ module VagrantPlugins
             end
 
             b2.use action_halt
-            b2.use Call, WaitForState, :Stopped, 120 do |env2, b3|
+            b2.use Call, WaitForState, :stopped, 120 do |env2, b3|
               if env2[:result]
                 b3.use action_up
               else

@@ -13,7 +13,7 @@ module VagrantPlugins
         def call(env)
           server = env[:cloudstack_compute].servers.get(env[:machine].id)
 
-          if env[:machine].state.id == :Stopped
+          if env[:machine].state.id == :stopped
             env[:ui].info(I18n.t("vagrant_cloudstack.already_status", :status => env[:machine].state.id))
           else
             env[:ui].info(I18n.t("vagrant_cloudstack.stopping"))

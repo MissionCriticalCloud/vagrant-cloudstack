@@ -75,19 +75,19 @@ en:
         not created
       long_not_created: |-
         The instance is not created. Run `vagrant up` to create it.
-      short_Stopped: |-
+      short_stopped: |-
         stopped
-      long_Stopped: |-
+      long_stopped: |-
         The instance is stopped. Run `vagrant up` to start it.
 
-      short_Stopping: |-
+      short_stopping: |-
         stopping
-      long_Stopping: |-
+      long_stopping: |-
         The instance is stopping. Wait until is completely stopped to 
         run `vagrant up` and start it.
 
-      short_Running: |-
+      short_running: |-
         running
-      long_Running: |-
+      long_running: |-
         The instance is running. To stop this machine, you can run
         `vagrant halt`. To destroy the machine, you can run `vagrant destroy`.
