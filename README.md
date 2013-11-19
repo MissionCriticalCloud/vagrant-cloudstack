@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/klarna/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/klarna/vagrant-cloudstack)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.png)](http://badge.fury.io/rb/vagrant-cloudstack)
+[![Dependency Status](https://gemnasium.com/klarna/vagrant-cloudstack.png)](https://gemnasium.com/klarna/vagrant-cloudstack)
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
