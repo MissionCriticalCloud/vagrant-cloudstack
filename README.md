@@ -65,6 +65,7 @@ Vagrant.configure("2") do |config|
     cloudstack.network_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.zone_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.network_type = "Advanced" # or "Basic"
   end
 end
 ```
@@ -106,6 +107,7 @@ This provider exposes quite a few provider-specific configuration options:
 * `service_offering_id`- Service offering uuid to use for the instance
 * `template_id` - Template uuid to use for the instance
 * `zone_id` - Zone uuid to launch the instance into
+* `network_type` - CloudStack Network Type(default: Advanced)
 
 These can be set like typical provider-specific configuration:
 
