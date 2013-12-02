@@ -69,6 +69,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :zone_id
 
+      # Network Type
+      #
+      # @return [String]
+      attr_accessor :network_type
+
       def initialize(domain_specific=false)
         @host                   = UNSET_VALUE
         @path                   = UNSET_VALUE
@@ -83,6 +88,7 @@ module VagrantPlugins
         @service_offering_id    = UNSET_VALUE
         @template_id            = UNSET_VALUE
         @zone_id                = UNSET_VALUE
+        @network_type           = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -191,6 +197,9 @@ module VagrantPlugins
 
         # Zone uuid must be nil, since we can't default that
         @zone_id = nil if @zone_id == UNSET_VALUE
+
+        # NetworkType is 'Advanced' by default
+        @network_type = "Advanced" if @network_type == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

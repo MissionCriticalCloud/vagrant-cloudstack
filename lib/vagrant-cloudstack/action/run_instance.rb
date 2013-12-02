@@ -31,6 +31,7 @@ module VagrantPlugins
           project_id          = domain_config.project_id
           service_offering_id = domain_config.service_offering_id
           template_id         = domain_config.template_id
+          network_type        = domain_config.network_type
 
           # Launch!
           env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
@@ -47,13 +48,23 @@ module VagrantPlugins
           display_name = local_user + "_" + prefix + "_#{Time.now.to_i}"
 
           begin
-            options = {
-              :display_name       => display_name,
-              :zone_id            => zone_id,
-              :flavor_id          => service_offering_id,
-              :image_id           => template_id,
-              :network_ids        => [network_id]
-            }
+            case network_type
+            when "Advanced"
+              options = {
+                :display_name       => display_name,
+                :zone_id            => zone_id,
+                :flavor_id          => service_offering_id,
+                :image_id           => template_id,
+                :network_ids        => [network_id]
+              }
+            when "Basic"
+              options = {
+                :display_name       => display_name,
+                :zone_id            => zone_id,
+                :flavor_id          => service_offering_id,
+                :image_id           => template_id
+              }
+            end
 
             options['project_id'] = project_id if project_id != nil
 
