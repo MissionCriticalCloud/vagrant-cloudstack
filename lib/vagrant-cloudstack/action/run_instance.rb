@@ -27,6 +27,7 @@ module VagrantPlugins
           # Get the configs
           domain_config       = env[:machine].provider_config.get_domain_config(domain)
           zone_id             = domain_config.zone_id
+          host_id             = domain_config.host_id
           network_id          = domain_config.network_id
           project_id          = domain_config.project_id
           service_offering_id = domain_config.service_offering_id
@@ -39,6 +40,7 @@ module VagrantPlugins
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone UUID: #{zone_id}")
           env[:ui].info(" -- Network UUID: #{network_id}") if network_id
+          env[:ui].info(" -- Host UUID: #{host_id}") if host_id
 
           local_user = ENV['USER'].dup
           local_user.gsub!(/[^-a-z0-9_]/i, "")
@@ -50,6 +52,7 @@ module VagrantPlugins
             options = {
               :display_name       => display_name,
               :zone_id            => zone_id,
+              :host_id            => host_id,
               :flavor_id          => service_offering_id,
               :image_id           => template_id,
               :network_ids        => [network_id]

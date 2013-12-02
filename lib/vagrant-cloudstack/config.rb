@@ -63,6 +63,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :template_id
 
+      # Host uuid to use for the instance
+      #
+      # @return [String]
+      attr_accessor :host_id
+
       # Zone uuid to launch the instance into. If nil, it will
       # launch in default project.
       #
@@ -83,6 +88,7 @@ module VagrantPlugins
         @service_offering_id    = UNSET_VALUE
         @template_id            = UNSET_VALUE
         @zone_id                = UNSET_VALUE
+        @host_id                = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -188,6 +194,9 @@ module VagrantPlugins
 
         # Template uuid must be nil, since we can't default that
         @template_id = nil if @template_id == UNSET_VALUE
+
+        # Host uuid must be nil, since we can't default that
+        @host_id = nil if @host_id == UNSET_VALUE
 
         # Zone uuid must be nil, since we can't default that
         @zone_id = nil if @zone_id == UNSET_VALUE

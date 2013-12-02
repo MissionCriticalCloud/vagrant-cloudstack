@@ -9,13 +9,22 @@ module VagrantPlugins
       include Vagrant::Action::Builtin
 
       # This action is called to terminate the remote machine.
+      def self.action_halt
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use ConnectCloudstack
+          b.use HaltInstance
+        end
+      end
+
+      # This action is called to terminate the remote machine.
       def self.action_destroy
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
           b.use ConnectCloudstack
           b.use TerminateInstance
         end
-      end
+      end      
 
       # This action is called when `vagrant provision` is called.
       def self.action_provision
@@ -91,7 +100,7 @@ module VagrantPlugins
           b.use ConnectCloudstack
           b.use Call, IsCreated do |env, b2|
             if env[:result]
-              b2.use MessageAlreadyCreated
+              b2.use StartInstance
               next
             end
 
@@ -116,6 +125,8 @@ module VagrantPlugins
       autoload :TimedProvision, action_root.join("timed_provision")
       autoload :WarnNetworks, action_root.join("warn_networks")
       autoload :TerminateInstance, action_root.join("terminate_instance")
+      autoload :HaltInstance, action_root.join("halt_instance")
+      autoload :StartInstance, action_root.join("start_instance")
     end
   end
 end
