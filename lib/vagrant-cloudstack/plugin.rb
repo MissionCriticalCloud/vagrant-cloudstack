@@ -24,8 +24,7 @@ module VagrantPlugins
         Config
       end
 
-      provider(:cloudstack) do
-        # Setup logging and i18n
+      provider(:cloudstack, parallel: true) do        # Setup logging and i18n
         setup_logging
         setup_i18n
 
