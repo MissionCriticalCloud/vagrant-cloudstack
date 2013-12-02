@@ -69,6 +69,26 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :zone_id
 
+      # The name of the keypair to use.
+      #
+      # @return [String]
+      attr_accessor :keypair
+
+      # IP address id to use for port forwarding rule
+      #
+      # @return [String]
+      attr_accessor :pf_ip_address_id
+
+      # public port to use for port forwarding rule
+      #
+      # @return [String]
+      attr_accessor :pf_public_port
+
+      # private port to use for port forwarding rule
+      #
+      # @return [String]
+      attr_accessor :pf_private_port
+
       def initialize(domain_specific=false)
         @host                   = UNSET_VALUE
         @path                   = UNSET_VALUE
@@ -83,6 +103,10 @@ module VagrantPlugins
         @service_offering_id    = UNSET_VALUE
         @template_id            = UNSET_VALUE
         @zone_id                = UNSET_VALUE
+        @keypair                = UNSET_VALUE
+        @pf_ip_address_id       = UNSET_VALUE
+        @pf_public_port         = UNSET_VALUE
+        @pf_private_port        = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -191,6 +215,18 @@ module VagrantPlugins
 
         # Zone uuid must be nil, since we can't default that
         @zone_id = nil if @zone_id == UNSET_VALUE
+
+        # Keypair defaults to nil
+        @keypair = nil if @keypair == UNSET_VALUE
+
+        # IP address id must be nil, since we can't default that
+        @pf_ip_address_id = nil if @pf_ip_address_id == UNSET_VALUE
+
+        # Public port must be nil, since we can't default that
+        @pf_public_port = nil if @pf_public_port == UNSET_VALUE
+
+        # Private port must be nil, since we can't default that
+        @pf_private_port = nil if @pf_private_port == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

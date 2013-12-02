@@ -31,6 +31,16 @@ module VagrantPlugins
           project_id          = domain_config.project_id
           service_offering_id = domain_config.service_offering_id
           template_id         = domain_config.template_id
+          keypair             = domain_config.keypair
+
+          pf_ip_address_id    = domain_config.pf_ip_address_id
+          pf_public_port      = domain_config.pf_public_port
+          pf_private_port     = domain_config.pf_private_port
+
+          # If there is no keypair then warn the user
+          if !keypair
+            env[:ui].warn(I18n.t("vagrant_cloudstack.launch_no_keypair"))
+          end
 
           # Launch!
           env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
@@ -39,6 +49,7 @@ module VagrantPlugins
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone UUID: #{zone_id}")
           env[:ui].info(" -- Network UUID: #{network_id}") if network_id
+          env[:ui].info(" -- Keypair: #{keypair}") if keypair
 
           local_user = ENV['USER'].dup
           local_user.gsub!(/[^-a-z0-9_]/i, "")
@@ -52,10 +63,11 @@ module VagrantPlugins
               :zone_id            => zone_id,
               :flavor_id          => service_offering_id,
               :image_id           => template_id,
-              :network_ids        => [network_id]
+              :network_ids        => [network_id],
             }
 
             options['project_id'] = project_id if project_id != nil
+            options['key_name'] = keypair if keypair != nil
 
             server = env[:cloudstack_compute].servers.create(options)
           rescue Fog::Compute::Cloudstack::NotFound => e
@@ -102,6 +114,11 @@ module VagrantPlugins
 
           @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
 
+          if pf_ip_address_id and pf_public_port and pf_private_port
+            create_port_forwarding_rule(env, pf_ip_address_id, 
+                                        pf_public_port, pf_private_port)
+          end
+
           if !env[:interrupted]
             env[:metrics]["instance_ssh_time"] = Util::Timer.time do
               # Wait for SSH to be ready.
@@ -132,6 +149,59 @@ module VagrantPlugins
           if env[:machine].provider.state.id != :not_created
             # Undo the import
             terminate(env)
+          end
+        end
+
+        def create_port_forwarding_rule(env, pf_ip_address_id, pf_public_port, pf_private_port)
+          env[:ui].info(I18n.t("vagrant_cloudstack.creating_port_forwarding_rule"))
+
+          begin
+            response = env[:cloudstack_compute].list_public_ip_addresses({:id => pf_ip_address_id})
+          rescue Fog::Compute::Cloudstack::Error => e
+            raise Errors::FogError, :message => e.message
+          end
+
+          if response["listpublicipaddressesresponse"]["count"] == 0
+            @logger.info("IP address #{pf_ip_address_id} not exists. Skip creating port forwarding rule.")
+            env[:ui].info(I18n.t("IP address #{pf_ip_address_id} not exists. Skip creating port forwarding rule."))
+            return
+          end
+
+          pf_ip_address = response["listpublicipaddressesresponse"]["publicipaddress"][0]["ipaddress"]
+
+          env[:ui].info(" -- IP address ID: #{pf_ip_address_id}")
+          env[:ui].info(" -- IP address: #{pf_ip_address}")
+          env[:ui].info(" -- Public port: #{pf_public_port}")
+          env[:ui].info(" -- Private port: #{pf_private_port}")
+
+          options = {
+            :ipaddressid      => pf_ip_address_id,
+            :publicport       => pf_public_port,
+            :privateport      => pf_private_port,
+            :protocol         => "tcp",
+            :virtualmachineid => env[:machine].id,
+            :openfirewall     => "true"
+          }
+
+          begin
+            job_id = env[:cloudstack_compute].create_port_forwarding_rule(options)["createportforwardingruleresponse"]["jobid"]
+            while true
+              response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+              if response["queryasyncjobresultresponse"]["jobstatus"] != 0
+                port_forwarding_rule =  response["queryasyncjobresultresponse"]["jobresult"]["portforwardingrule"]
+                break
+              else
+                sleep 2
+              end
+            end
+          rescue Fog::Compute::Cloudstack::Error => e
+            raise Errors::FogError, :message => e.message
+          end
+
+          # Save port forwarding rule id to the data dir so it can be released when the instance is destroyed
+          port_forwarding_file = env[:machine].data_dir.join('port_forwarding')
+          port_forwarding_file.open('w+') do |f|
+            f.write(port_forwarding_rule["id"])
           end
         end
 

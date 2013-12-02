@@ -106,6 +106,10 @@ This provider exposes quite a few provider-specific configuration options:
 * `service_offering_id`- Service offering uuid to use for the instance
 * `template_id` - Template uuid to use for the instance
 * `zone_id` - Zone uuid to launch the instance into
+* `keypair` - SSH keypair name
+* `pf_ip_address_id` - IP address ID for port forwarding rule
+* `pf_public_port` - Public port for port forwarding rule
+* `pf_private_port` - Private port for port forwarding rule
 
 These can be set like typical provider-specific configuration:
 
