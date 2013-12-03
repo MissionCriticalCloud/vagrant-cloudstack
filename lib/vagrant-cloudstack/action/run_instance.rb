@@ -31,6 +31,7 @@ module VagrantPlugins
           project_id          = domain_config.project_id
           service_offering_id = domain_config.service_offering_id
           template_id         = domain_config.template_id
+          keypair             = domain_config.keypair_name
 
           # Launch!
           env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
@@ -39,6 +40,7 @@ module VagrantPlugins
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone UUID: #{zone_id}")
           env[:ui].info(" -- Network UUID: #{network_id}") if network_id
+          env[:ui].info(" -- Keypair: #{keypair}") if keypair
 
           local_user = ENV['USER'].dup
           local_user.gsub!(/[^-a-z0-9_]/i, "")
@@ -51,11 +53,12 @@ module VagrantPlugins
               :display_name       => display_name,
               :zone_id            => zone_id,
               :flavor_id          => service_offering_id,
-              :image_id           => template_id,
-              :network_ids        => [network_id]
+              :image_id           => template_id
             }
 
-            options['project_id'] = project_id if project_id != nil
+            options['network_ids'] = [network_id] if network_id
+            options['project_id']  = project_id if project_id != nil
+            options['keypair']     = keypair if keypair != nil
 
             server = env[:cloudstack_compute].servers.create(options)
           rescue Fog::Compute::Cloudstack::NotFound => e

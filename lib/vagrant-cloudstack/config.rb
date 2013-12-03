@@ -68,6 +68,12 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :zone_id
+      
+      # Keypair name to use for ssh access.
+      #
+      # @return [String]
+      attr_accessor :keypair_name
+      
 
       def initialize(domain_specific=false)
         @host                   = UNSET_VALUE
@@ -83,6 +89,7 @@ module VagrantPlugins
         @service_offering_id    = UNSET_VALUE
         @template_id            = UNSET_VALUE
         @zone_id                = UNSET_VALUE
+        @keypair_name           = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -191,6 +198,9 @@ module VagrantPlugins
 
         # Zone uuid must be nil, since we can't default that
         @zone_id = nil if @zone_id == UNSET_VALUE
+
+        # keypair name must be nil, since we can't default that
+        @keypair_name = nil if @keypair_name == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

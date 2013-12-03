@@ -28,6 +28,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("service_offering_id")    { should be_nil }
     its("template_id")            { should be_nil }
     its("zone_id")                { should be_nil }
+    its("keypair_name")           { should be_nil }
   end
 
   describe "overriding defaults" do
@@ -37,7 +38,7 @@ describe VagrantPlugins::Cloudstack::Config do
     # and asserts the proper result comes back out.
     [:api_key, :template_id, :zone_id, :instance_ready_timeout,
       :service_offering_id, :api_key,
-      :secret_key, :network_id].each do |attribute|
+      :secret_key, :network_id, :keypair_name].each do |attribute|
 
       it "should not default #{attribute} if overridden" do
         instance.send("#{attribute}=".to_sym, "foo")
@@ -75,6 +76,7 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_service_offering_id)    { "foo" }
     let(:config_template_id)            { "foo" }
     let(:config_zone_id)                { "foo" }
+    let(:config_keypair_name)           { "foo" }
 
     def set_test_values(instance)
       instance.host                   = config_host
@@ -90,6 +92,7 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.service_offering_id    = config_service_offering_id
       instance.template_id            = config_template_id
       instance.zone_id                = config_zone_id
+      instance.keypair_name           = config_keypair_name
     end
 
     it "should raise an exception if not finalized" do
@@ -122,6 +125,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("service_offering_id")    { should == config_service_offering_id }
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
+      its("keypair_name")           { should == config_keypair_name }
     end
 
     context "with a specific config set" do
@@ -153,6 +157,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("service_offering_id")    { should == config_service_offering_id }
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
+      its("keypair_name")           { should == config_keypair_name }
     end
 
     describe "inheritance of parent config" do
