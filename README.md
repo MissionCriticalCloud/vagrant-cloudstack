@@ -65,6 +65,7 @@ Vagrant.configure("2") do |config|
     cloudstack.network_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.zone_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.network_type = "Advanced" # or "Basic"
   end
 end
 ```
@@ -102,6 +103,7 @@ This provider exposes quite a few provider-specific configuration options:
   to become "ready" in Cloudstack. Defaults to 120 seconds.
 * `domain_id` - Domain id to launch the instance into
 * `network_id` - Network uuid that the instance should use
+* `network_type` - CloudStack Network Type(default: Advanced)
 * `project_id` - Project uuid that the instance should belong to 
 * `service_offering_id`- Service offering uuid to use for the instance
 * `template_id` - Template uuid to use for the instance

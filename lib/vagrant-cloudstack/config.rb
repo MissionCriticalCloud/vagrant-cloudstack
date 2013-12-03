@@ -48,6 +48,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :network_id
 
+      # Network Type
+      #
+      # @return [String]
+      attr_accessor :network_type
+
       # Project uuid that the instance should belong to
       #
       # @return [String]
@@ -99,6 +104,7 @@ module VagrantPlugins
         @instance_ready_timeout = UNSET_VALUE
         @domain_id              = UNSET_VALUE
         @network_id             = UNSET_VALUE
+        @network_type           = UNSET_VALUE
         @project_id             = UNSET_VALUE
         @service_offering_id    = UNSET_VALUE
         @template_id            = UNSET_VALUE
@@ -203,6 +209,9 @@ module VagrantPlugins
 
         # Network uuid must be nil, since we can't default that
         @network_id = nil if @network_id == UNSET_VALUE
+
+        # NetworkType is 'Advanced' by default
+        @network_type = "Advanced" if @network_type == UNSET_VALUE
 
         # Project uuid must be nil, since we can't default that
         @project_id = nil if @project_id == UNSET_VALUE
