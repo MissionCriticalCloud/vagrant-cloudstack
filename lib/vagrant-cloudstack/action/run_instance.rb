@@ -115,7 +115,7 @@ module VagrantPlugins
           @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
 
           if pf_ip_address_id and pf_public_port and pf_private_port
-            create_port_forwarding_rule(env, pf_ip_address_id, 
+            create_port_forwarding_rule(env, pf_ip_address_id,
                                         pf_public_port, pf_private_port)
           end
 
