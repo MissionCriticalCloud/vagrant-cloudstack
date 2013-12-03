@@ -1,13 +1,15 @@
 module VagrantPlugins
   module Cloudstack
     module Action
-      class MessageAlreadyCreated
+      # This can be used with "Call" built-in to check if the machine
+      # is stopped and branch in the middleware.
+      class IsStopped
         def initialize(app, env)
           @app = app
         end
 
         def call(env)
-          env[:ui].info(I18n.t("vagrant_cloudstack.already_status", :status => "created"))
+          env[:result] = env[:machine].state.id == :stopped
           @app.call(env)
         end
       end

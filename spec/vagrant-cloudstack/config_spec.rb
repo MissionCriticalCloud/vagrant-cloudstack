@@ -28,6 +28,10 @@ describe VagrantPlugins::Cloudstack::Config do
     its("service_offering_id")    { should be_nil }
     its("template_id")            { should be_nil }
     its("zone_id")                { should be_nil }
+    its("keypair")                { should be_nil }
+    its("pf_ip_address_id")       { should be_nil }
+    its("pf_public_port")         { should be_nil }
+    its("pf_private_port")        { should be_nil }
   end
 
   describe "overriding defaults" do
@@ -75,6 +79,10 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_service_offering_id)    { "foo" }
     let(:config_template_id)            { "foo" }
     let(:config_zone_id)                { "foo" }
+    let(:config_keypair)                { "foo" }
+    let(:config_pf_ip_address_id)       { "foo" }
+    let(:config_pf_public_port)         { "foo" }
+    let(:config_pf_private_port)        { "foo" }
 
     def set_test_values(instance)
       instance.host                   = config_host
@@ -90,6 +98,10 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.service_offering_id    = config_service_offering_id
       instance.template_id            = config_template_id
       instance.zone_id                = config_zone_id
+      instance.keypair                = config_keypair
+      instance.pf_ip_address_id       = config_pf_ip_address_id
+      instance.pf_public_port         = config_pf_public_port
+      instance.pf_private_port        = config_pf_private_port
     end
 
     it "should raise an exception if not finalized" do
@@ -122,6 +134,10 @@ describe VagrantPlugins::Cloudstack::Config do
       its("service_offering_id")    { should == config_service_offering_id }
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
+      its("keypair")                { should == config_keypair }
+      its("pf_ip_address_id")       { should == config_pf_ip_address_id }
+      its("pf_public_port")         { should == config_pf_public_port }
+      its("pf_private_port")        { should == config_pf_private_port }
     end
 
     context "with a specific config set" do
@@ -153,6 +169,10 @@ describe VagrantPlugins::Cloudstack::Config do
       its("service_offering_id")    { should == config_service_offering_id }
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
+      its("keypair")                { should == config_keypair }
+      its("pf_ip_address_id")       { should == config_pf_ip_address_id }
+      its("pf_public_port")         { should == config_pf_public_port }
+      its("pf_private_port")        { should == config_pf_private_port }
     end
 
     describe "inheritance of parent config" do
