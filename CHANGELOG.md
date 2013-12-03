@@ -1,3 +1,14 @@
+# 0.1.0
+* Plugin now enables parallelization by default.
+  * This behaviour can be turned off by invoking vagrant with
+    --no-parallel (this flag requires vagrant 1.2.1)
+* Added support for starting, stoping and reloading machines.
+* Added support for portforwarding and adding ssh keys.
+* Added support for basic network type.
+  * Basic means that there is no need to specify a network_id
+    to connecto to.
+  * Default network type is advanced.
+
 # 0.0.2 (May 3, 2013)
 
 * Renamed module from CloudStack to Cloudstack
