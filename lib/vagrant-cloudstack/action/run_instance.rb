@@ -37,6 +37,7 @@ module VagrantPlugins
           pf_ip_address_id    = domain_config.pf_ip_address_id
           pf_public_port      = domain_config.pf_public_port
           pf_private_port     = domain_config.pf_private_port
+          security_group_ids  = domain_config.security_group_ids
 
           # If there is no keypair then warn the user
           if !keypair
@@ -51,6 +52,11 @@ module VagrantPlugins
           env[:ui].info(" -- Zone UUID: #{zone_id}")
           env[:ui].info(" -- Network UUID: #{network_id}") if network_id
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
+          if !security_group_ids.nil?
+            security_group_ids.each do |security_group_id|
+              env[:ui].info(" -- Security Group ID: #{security_group_id}")
+            end
+          end
 
           local_user = ENV['USER'].dup
           local_user.gsub!(/[^-a-z0-9_]/i, "")
@@ -73,7 +79,8 @@ module VagrantPlugins
                 :display_name       => display_name,
                 :zone_id            => zone_id,
                 :flavor_id          => service_offering_id,
-                :image_id           => template_id
+                :image_id           => template_id,
+                :security_group_ids => security_group_ids
               }
             end
 
