@@ -32,6 +32,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("pf_ip_address_id")       { should be_nil }
     its("pf_public_port")         { should be_nil }
     its("pf_private_port")        { should be_nil }
+    its("security_group_ids")     { should be_nil }
   end
 
   describe "overriding defaults" do
@@ -83,6 +84,7 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_pf_ip_address_id)       { "foo" }
     let(:config_pf_public_port)         { "foo" }
     let(:config_pf_private_port)        { "foo" }
+    let(:config_security_group_ids)     { ["foo", "bar"] }
 
     def set_test_values(instance)
       instance.host                   = config_host
@@ -102,6 +104,7 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.pf_ip_address_id       = config_pf_ip_address_id
       instance.pf_public_port         = config_pf_public_port
       instance.pf_private_port        = config_pf_private_port
+      instance.security_group_ids     = config_security_group_ids
     end
 
     it "should raise an exception if not finalized" do
@@ -138,6 +141,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_ip_address_id")       { should == config_pf_ip_address_id }
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
+      its("security_group_ids")     { should == config_security_group_ids }
     end
 
     context "with a specific config set" do
@@ -173,6 +177,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_ip_address_id")       { should == config_pf_ip_address_id }
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
+      its("security_group_ids")     { should == config_security_group_ids }
     end
 
     describe "inheritance of parent config" do
