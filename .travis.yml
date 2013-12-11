@@ -1,7 +1,7 @@
 language: ruby
 notifications:
   email:
-    - carl.loa.odin@klarna.com
+    - engineering.support@klarna.com
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq -y bsdtar

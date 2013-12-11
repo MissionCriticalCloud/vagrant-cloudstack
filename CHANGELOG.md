@@ -1,4 +1,10 @@
-# 0.1.0
+# 0.1.1 (Dec 11, 2013)
+
+* Enable Vagrant 1.4 compability
+* Add support for security groups
+* Add helper script to build a RPM for easier deployment
+
+# 0.1.0 (Dec 3, 2013)
 * Plugin now enables parallelization by default.
   * This behaviour can be turned off by invoking vagrant with
     --no-parallel (this flag requires vagrant 1.2.1)

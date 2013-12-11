@@ -76,7 +76,10 @@ no preconfigured defaults.
 
 And then run `vagrant up --provider=cloudstack`.
 
-This will start an instance in Cloudstack. And assuming your template on Cloudstack is Vagrant compatible _(vagrant user with official vagrant pub key in authorized_keys)_ SSH and provisioning will work as well.
+This will start an instance in Cloudstack. And assuming your template
+on Cloudstack is Vagrant compatible _(vagrant user with official
+vagrant pub key in authorized_keys)_ SSH and provisioning will work as
+well.
 
 ## Box Format
 
