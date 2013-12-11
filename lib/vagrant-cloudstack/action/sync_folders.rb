@@ -57,10 +57,11 @@ module VagrantPlugins
               "chown #{ssh_info[:username]} '#{guestpath}'")
 
             # Rsync over to the guest path using the SSH info
+            private_keys = (ssh_info[:private_key_path].class == Array ? ssh_info[:private_key_path].join(",") : ssh_info[:private_key_path])
             command = [
               "rsync", "--verbose", "--archive", "-z",
               "--exclude", ".vagrant/",
-              "-e", "ssh -p #{ssh_info[:port]} -o StrictHostKeyChecking=no -i '#{ssh_info[:private_key_path]}'",
+              "-e", "ssh -p #{ssh_info[:port]} -o StrictHostKeyChecking=no -i '#{private_keys}'",
               hostpath,
               "#{ssh_info[:username]}@#{ssh_info[:host]}:#{guestpath}"]
 
