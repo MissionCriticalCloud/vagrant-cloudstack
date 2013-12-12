@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.platform      = Gem::Platform::RUBY
   s.license       = "MIT"
   s.authors       = ["Mitchell Hashimoto", "Carl Loa Odin", "Tor-Åke Fransson", "Olle Lundberg", "Roeland Kuipers", "Yuichi Uemura", "Atsushi Sasaki", "Nicolas Brechet", "Peter Jönsson"]
-  s.email         = "carlodin@gmail.com"
+  s.email         = "engineering.support@klarna.com"
   s.homepage      = "https://github.com/klarna/vagrant-cloudstack/"
   s.summary       = "Enables Vagrant to manage machines in Cloudstack."
   s.description   = "Enables Vagrant to manage machines in Cloudstack."
