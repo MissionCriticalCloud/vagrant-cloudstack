@@ -1,3 +1,6 @@
+# 0.1.2 (Dec 12, 2013)
+* Version bump to gemspec configucation to use shared email
+
 # 0.1.1 (Dec 11, 2013)
 
 * Enable Vagrant 1.4 compability
