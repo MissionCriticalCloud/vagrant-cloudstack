@@ -33,6 +33,8 @@ describe VagrantPlugins::Cloudstack::Config do
     its("pf_public_port")         { should be_nil }
     its("pf_private_port")        { should be_nil }
     its("security_group_ids")     { should be_nil }
+    its("display_name")           { should be_nil }
+    its("group")                  { should be_nil }
   end
 
   describe "overriding defaults" do
@@ -85,6 +87,8 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_pf_public_port)         { "foo" }
     let(:config_pf_private_port)        { "foo" }
     let(:config_security_group_ids)     { ["foo", "bar"] }
+    let(:config_display_name)           { "foo" }
+    let(:config_group)                  { "foo" }
 
     def set_test_values(instance)
       instance.host                   = config_host
@@ -105,6 +109,8 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.pf_public_port         = config_pf_public_port
       instance.pf_private_port        = config_pf_private_port
       instance.security_group_ids     = config_security_group_ids
+      instance.display_name           = config_display_name
+      instance.group                  = config_group
     end
 
     it "should raise an exception if not finalized" do
@@ -142,6 +148,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
       its("security_group_ids")     { should == config_security_group_ids }
+      its("display_name")           { should == config_display_name }
+      its("group")                  { should == config_group }
     end
 
     context "with a specific config set" do
@@ -178,6 +186,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
       its("security_group_ids")     { should == config_security_group_ids }
+      its("display_name")           { should == config_display_name }
+      its("group")                  { should == config_group }
     end
 
     describe "inheritance of parent config" do

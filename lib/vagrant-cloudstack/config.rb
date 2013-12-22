@@ -100,6 +100,16 @@ module VagrantPlugins
       # @return [Array]
       attr_accessor :security_group_ids
 
+      # display name for the instance
+      #
+      # @return [String]
+      attr_accessor :display_name
+
+      # group for the instance
+      #
+      # @return [String]
+      attr_accessor :group
+
       def initialize(domain_specific=false)
         @host                   = UNSET_VALUE
         @path                   = UNSET_VALUE
@@ -120,6 +130,8 @@ module VagrantPlugins
         @pf_public_port         = UNSET_VALUE
         @pf_private_port        = UNSET_VALUE
         @security_group_ids     = UNSET_VALUE
+        @display_name           = UNSET_VALUE
+        @group                  = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -246,6 +258,12 @@ module VagrantPlugins
         
         # Security Group IDs must be nil, since we can't default that
         @security_group_ids = nil if @security_group_ids == UNSET_VALUE
+
+        # Display name must be nil, since we can't default that
+        @display_name = nil if @display_name == UNSET_VALUE
+
+        # Group must be nil, since we can't default that
+        @group = nil if @group == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

@@ -115,6 +115,8 @@ This provider exposes quite a few provider-specific configuration options:
 * `pf_ip_address_id` - IP address ID for port forwarding rule
 * `pf_public_port` - Public port for port forwarding rule
 * `pf_private_port` - Private port for port forwarding rule
+* `display_name` - Display name for the instance
+* `group` - Group for the instance
 
 These can be set like typical provider-specific configuration:
 
