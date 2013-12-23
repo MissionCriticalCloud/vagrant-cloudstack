@@ -99,6 +99,12 @@ module VagrantPlugins
       #
       # @return [Array]
       attr_accessor :security_group_ids
+      
+      # comma separated list of security groups name that going 
+      # to be applied to the virtual machine. 
+      #
+      # @return [Array]
+      attr_accessor :security_group_names
 
       def initialize(domain_specific=false)
         @host                   = UNSET_VALUE
@@ -120,6 +126,7 @@ module VagrantPlugins
         @pf_public_port         = UNSET_VALUE
         @pf_private_port        = UNSET_VALUE
         @security_group_ids     = UNSET_VALUE
+        @security_group_names   = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -246,6 +253,9 @@ module VagrantPlugins
         
         # Security Group IDs must be nil, since we can't default that
         @security_group_ids = nil if @security_group_ids == UNSET_VALUE
+        
+        # Security Group Names must be nil, since we can't default that
+        @security_group_names = nil if @security_group_names == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

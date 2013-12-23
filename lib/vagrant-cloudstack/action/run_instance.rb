@@ -25,23 +25,31 @@ module VagrantPlugins
           domain = env[:machine].provider_config.domain
 
           # Get the configs
-          domain_config       = env[:machine].provider_config.get_domain_config(domain)
-          zone_id             = domain_config.zone_id
-          network_id          = domain_config.network_id
-          network_type        = domain_config.network_type
-          project_id          = domain_config.project_id
-          service_offering_id = domain_config.service_offering_id
-          template_id         = domain_config.template_id
-          keypair             = domain_config.keypair
-
-          pf_ip_address_id    = domain_config.pf_ip_address_id
-          pf_public_port      = domain_config.pf_public_port
-          pf_private_port     = domain_config.pf_private_port
-          security_group_ids  = domain_config.security_group_ids
-
+          domain_config         = env[:machine].provider_config.get_domain_config(domain)
+          zone_id               = domain_config.zone_id
+          network_id            = domain_config.network_id
+          network_type          = domain_config.network_type
+          project_id            = domain_config.project_id
+          service_offering_id   = domain_config.service_offering_id
+          template_id           = domain_config.template_id
+          keypair               = domain_config.keypair
+                                
+          pf_ip_address_id      = domain_config.pf_ip_address_id
+          pf_public_port        = domain_config.pf_public_port
+          pf_private_port       = domain_config.pf_private_port
+          security_group_ids    = domain_config.security_group_ids
+          security_group_names  = domain_config.security_group_names
+          
           # If there is no keypair then warn the user
           if !keypair
             env[:ui].warn(I18n.t("vagrant_cloudstack.launch_no_keypair"))
+          end
+          
+          # Can't use Security Group IDs and Names at the same time
+          # Let's use IDs by default...
+          if !security_group_ids.nil? && !security_group_names.nil?
+            env[:ui].warn("Security Group Names won't be used since Security Group IDs are declared")
+            security_group_names = nil
           end
 
           # Launch!
@@ -55,6 +63,16 @@ module VagrantPlugins
           if !security_group_ids.nil?
             security_group_ids.each do |security_group_id|
               env[:ui].info(" -- Security Group ID: #{security_group_id}")
+            end
+          end
+          
+          if !security_group_names.nil? && security_group_ids.nil?
+            security_group_ids = []
+            security_group_names.each do |security_group_name|
+              env[:ui].info(" -- Security Group Name: #{security_group_name}")
+              # since we can't access Security Groups by name, we grab the ID and add it to the security_group_ids 
+              sg = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select{|sgrp| sgrp["name"] == security_group_name }
+              security_group_ids.push(sg[0]["id"])
             end
           end
 
