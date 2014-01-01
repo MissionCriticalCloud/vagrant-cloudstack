@@ -75,6 +75,12 @@ en:
         not created
       long_not_created: |-
         The instance is not created. Run `vagrant up` to create it.
+
+      short_starting: |-
+        starting
+      long_starting: |-
+        The instance is starting.
+
       short_stopped: |-
         stopped
       long_stopped: |-
