@@ -38,14 +38,27 @@ module VagrantPlugins
           pf_public_port      = domain_config.pf_public_port
           pf_private_port     = domain_config.pf_private_port
           security_group_ids  = domain_config.security_group_ids
+          display_name        = domain_config.display_name
+          group               = domain_config.group
 
           # If there is no keypair then warn the user
           if !keypair
             env[:ui].warn(I18n.t("vagrant_cloudstack.launch_no_keypair"))
           end
 
+          if display_name.nil?
+            local_user = ENV['USER'].dup
+            local_user.gsub!(/[^-a-z0-9_]/i, "")
+            prefix = env[:root_path].basename.to_s
+            prefix.gsub!(/[^-a-z0-9_]/i, "")
+            display_name = local_user + "_" + prefix + "_#{Time.now.to_i}"
+          end
+
           # Launch!
           env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
+          env[:ui].info(" -- Display Name: #{display_name}")
+          env[:ui].info(" -- Group: #{group}") if group
+          env[:ui].info(" -- Service offering UUID: #{service_offering_id}")
           env[:ui].info(" -- Service offering UUID: #{service_offering_id}")
           env[:ui].info(" -- Template UUID: #{template_id}")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
@@ -58,17 +71,12 @@ module VagrantPlugins
             end
           end
 
-          local_user = ENV['USER'].dup
-          local_user.gsub!(/[^-a-z0-9_]/i, "")
-          prefix = env[:root_path].basename.to_s
-          prefix.gsub!(/[^-a-z0-9_]/i, "")
-          display_name = local_user + "_" + prefix + "_#{Time.now.to_i}"
-
           begin
             case network_type
             when "Advanced"
               options = {
                 :display_name       => display_name,
+                :group              => group,
                 :zone_id            => zone_id,
                 :flavor_id          => service_offering_id,
                 :image_id           => template_id,
@@ -77,6 +85,7 @@ module VagrantPlugins
             when "Basic"
               options = {
                 :display_name       => display_name,
+                :group              => group,
                 :zone_id            => zone_id,
                 :flavor_id          => service_offering_id,
                 :image_id           => template_id,
