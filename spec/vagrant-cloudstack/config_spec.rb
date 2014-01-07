@@ -35,6 +35,8 @@ describe VagrantPlugins::Cloudstack::Config do
     its("security_group_ids")     { should be_nil }
     its("display_name")           { should be_nil }
     its("group")                  { should be_nil }
+    its("security_group_names")   { should be_nil }
+    its("security_groups")        { should be_nil }
   end
 
   describe "overriding defaults" do
@@ -89,6 +91,8 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_security_group_ids)     { ["foo", "bar"] }
     let(:config_display_name)           { "foo" }
     let(:config_group)                  { "foo" }
+    let(:config_security_group_names)   { ["foo", "bar"] }
+    let(:config_security_groups)        { [{:foo => "bar"}, {:bar => "foo"}] }
 
     def set_test_values(instance)
       instance.host                   = config_host
@@ -111,6 +115,8 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.security_group_ids     = config_security_group_ids
       instance.display_name           = config_display_name
       instance.group                  = config_group
+      instance.security_group_names   = config_security_group_names
+      instance.security_groups        = config_security_groups
     end
 
     it "should raise an exception if not finalized" do
@@ -150,6 +156,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("security_group_ids")     { should == config_security_group_ids }
       its("display_name")           { should == config_display_name }
       its("group")                  { should == config_group }
+      its("security_group_names")   { should == config_security_group_names }
+      its("security_groups")        { should == config_security_groups }
     end
 
     context "with a specific config set" do
@@ -188,6 +196,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("security_group_ids")     { should == config_security_group_ids }
       its("display_name")           { should == config_display_name }
       its("group")                  { should == config_group }
+      its("security_group_names")   { should == config_security_group_names }
+      its("security_groups")        { should == config_security_groups }
     end
 
     describe "inheritance of parent config" do

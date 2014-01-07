@@ -93,12 +93,25 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :pf_private_port
-      
-      # comma separated list of security groups id that going 
-      # to be applied to the virtual machine. 
+
+      # comma separated list of security groups id that going
+      # to be applied to the virtual machine.
       #
       # @return [Array]
       attr_accessor :security_group_ids
+
+      # comma separated list of security groups name that going
+      # to be applied to the virtual machine.
+      #
+      # @return [Array]
+      attr_accessor :security_group_names
+
+      # comma separated list of security groups
+      # (hash with ingress/egress rules)
+      # to be applied to the virtual machine.
+      #
+      # @return [Array]
+      attr_accessor :security_groups
 
       # display name for the instance
       #
@@ -132,6 +145,8 @@ module VagrantPlugins
         @security_group_ids     = UNSET_VALUE
         @display_name           = UNSET_VALUE
         @group                  = UNSET_VALUE
+        @security_group_names   = UNSET_VALUE
+        @security_groups        = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -255,9 +270,15 @@ module VagrantPlugins
 
         # Private port must be nil, since we can't default that
         @pf_private_port = nil if @pf_private_port == UNSET_VALUE
-        
+
         # Security Group IDs must be nil, since we can't default that
         @security_group_ids = nil if @security_group_ids == UNSET_VALUE
+
+        # Security Group Names must be nil, since we can't default that
+        @security_group_names = nil if @security_group_names == UNSET_VALUE
+
+        # Security Groups must be nil, since we can't default that
+        @security_groups = nil if @security_groups == UNSET_VALUE
 
         # Display name must be nil, since we can't default that
         @display_name = nil if @display_name == UNSET_VALUE
