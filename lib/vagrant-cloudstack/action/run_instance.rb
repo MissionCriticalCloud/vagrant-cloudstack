@@ -80,7 +80,6 @@ module VagrantPlugins
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
           env[:ui].info(" -- Service offering UUID: #{service_offering_id}")
-          env[:ui].info(" -- Service offering UUID: #{service_offering_id}")
           env[:ui].info(" -- Template UUID: #{template_id}")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone UUID: #{zone_id}")
