@@ -1,3 +1,9 @@
+# 0.2.0 (Jan 8, 2014)
+
+* Add display name and group support
+* Add support for security groups
+* Bump versions of dependencies
+
 # 0.1.2 (Dec 12, 2013)
 * Version bump to gemspec configucation to use shared email
 
