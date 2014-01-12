@@ -1,3 +1,7 @@
+# 0.2.1 (Jan 12, 2014)
+
+* Remove extranous printout
+
 # 0.2.0 (Jan 8, 2014)
 
 * Add display name and group support
