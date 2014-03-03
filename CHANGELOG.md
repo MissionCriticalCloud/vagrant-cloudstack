@@ -1,3 +1,9 @@
+# 0.3.0 (Mar 3, 2014)
+
+* Update fog to latest version (1.20.0)
+* Update ruby version to 2.0.0-p451
+* Add Gitter.im notification
+
 # 0.2.1 (Jan 12, 2014)
 
 * Remove extranous printout

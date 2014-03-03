@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = ">= 1.3.6"
   s.rubyforge_project         = "vagrant-cloudstack"
 
-  s.add_runtime_dependency "fog", "~> 1.19.0"
+  s.add_runtime_dependency "fog", "~> 1.20.0"
 
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec-core", "~> 2.14.7"
