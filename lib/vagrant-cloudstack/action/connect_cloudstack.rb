@@ -15,7 +15,7 @@ module VagrantPlugins
 
         def call(env)
           # Get the domain we're going to booting up in
-          domain = env[:machine].provider_config.domain
+          domain = env[:machine].provider_config.domain_id
 
           # Get the configs
           domain_config = env[:machine].provider_config.get_domain_config(domain)

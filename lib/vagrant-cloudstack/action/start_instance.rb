@@ -27,7 +27,7 @@ module VagrantPlugins
           begin
             server.start
 
-            domain = env[:machine].provider_config.domain
+            domain = env[:machine].provider_config.domain_id
             domain_config = env[:machine].provider_config.get_domain_config(domain)
 
             # Wait for the instance to be ready first
