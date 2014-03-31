@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version       = VagrantPlugins::Cloudstack::VERSION
   s.platform      = Gem::Platform::RUBY
   s.license       = "MIT"
-  s.authors       = ["Mitchell Hashimoto", "Carl Loa Odin", "Tor-Åke Fransson", "Olle Lundberg", "Roeland Kuipers", "Yuichi Uemura", "Atsushi Sasaki", "Nicolas Brechet", "Peter Jönsson"]
+  s.authors       = ["Mitchell Hashimoto", "Carl Loa Odin", "Tor-Åke Fransson", "Olle Lundberg", "Roeland Kuipers", "Yuichi Uemura", "Atsushi Sasaki", "Nicolas Brechet", "Peter Jönsson", "Christophe Roux"]
   s.email         = "engineering.support@klarna.com"
   s.homepage      = "https://github.com/klarna/vagrant-cloudstack/"
   s.summary       = "Enables Vagrant to manage machines in Cloudstack."

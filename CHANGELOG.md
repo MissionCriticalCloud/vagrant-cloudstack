@@ -1,3 +1,7 @@
+# 0.4.0 (Mar 30, 2014)
+
+* Fix for Vagrant > =1.5 [GH-29]
+
 # 0.3.0 (Mar 3, 2014)
 
 * Update fog to latest version (1.20.0)
