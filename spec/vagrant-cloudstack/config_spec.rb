@@ -37,6 +37,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("group")                  { should be_nil }
     its("security_group_names")   { should be_nil }
     its("security_groups")        { should be_nil }
+    its("user_data")              { should be_nil }
   end
 
   describe "overriding defaults" do
@@ -46,7 +47,7 @@ describe VagrantPlugins::Cloudstack::Config do
     # and asserts the proper result comes back out.
     [:api_key, :template_id, :zone_id, :instance_ready_timeout,
       :service_offering_id, :api_key,
-      :secret_key, :network_id].each do |attribute|
+      :secret_key, :network_id, :user_data].each do |attribute|
 
       it "should not default #{attribute} if overridden" do
         instance.send("#{attribute}=".to_sym, "foo")

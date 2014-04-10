@@ -123,6 +123,12 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :group
 
+      # The user data string
+      #
+      # @return [String]
+      attr_accessor :user_data
+      
+
       def initialize(domain_specific=false)
         @host                   = UNSET_VALUE
         @path                   = UNSET_VALUE
@@ -147,6 +153,8 @@ module VagrantPlugins
         @group                  = UNSET_VALUE
         @security_group_names   = UNSET_VALUE
         @security_groups        = UNSET_VALUE
+        @user_data              = UNSET_VALUE
+
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -285,6 +293,9 @@ module VagrantPlugins
 
         # Group must be nil, since we can't default that
         @group = nil if @group == UNSET_VALUE
+
+        # User Data is nil by default
+        @user_data = nil if @user_data == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

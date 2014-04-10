@@ -42,6 +42,7 @@ module VagrantPlugins
           security_group_ids    = domain_config.security_group_ids
           security_group_names  = domain_config.security_group_names
           security_groups       = domain_config.security_groups
+          user_data             = domain_config.user_data
 
           # If there is no keypair then warn the user
           if !keypair
@@ -85,6 +86,7 @@ module VagrantPlugins
           env[:ui].info(" -- Zone UUID: #{zone_id}")
           env[:ui].info(" -- Network UUID: #{network_id}") if network_id
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
+          env[:ui].info(" -- User Data: Yes") if user_data
           if !security_group_ids.nil?
             security_group_ids.each do |security_group_id|
               env[:ui].info(" -- Security Group ID: #{security_group_id}")
@@ -174,6 +176,8 @@ module VagrantPlugins
 
             options['project_id'] = project_id if project_id != nil
             options['key_name'] = keypair if keypair != nil
+            # TODO : Check length
+            options['user_data'] = Base64.encode64(user_data) if user_data != nil
 
             server = env[:cloudstack_compute].servers.create(options)
           rescue Fog::Compute::Cloudstack::NotFound => e
