@@ -186,16 +186,17 @@ You can specify user data for the instance being booted.
 Vagrant.configure("2") do |config|
   # ... other stuff
 
-  config.vm.provider "aws" do |aws|
+  config.vm.provider :cloudstack do |cloudstack|
     # Option 1: a single string
-    aws.user_data = "#!/bin/bash\necho 'got user data' > /tmp/user_data.log\necho"
+    cloudstack.user_data = "#!/bin/bash\necho 'got user data' > /tmp/user_data.log\necho"
 
     # Option 2: use a file
-    aws.user_data = File.read("user_data.txt")
+    cloudstack.user_data = File.read("user_data.txt")
   end
 end
 ```
 
+The maximum length of user_data is around 1500 bytes with Cloudstack API < 4.2 ( base64 encoded user_data musd be < 2048 bytes)
 
 ## Development
 
