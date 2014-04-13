@@ -180,7 +180,7 @@ module VagrantPlugins
 	    if user_data != nil
               options['user_data'] = Base64.encode64(user_data)
 	      if options['user_data'].length > 2048
-	        raise Error::UserdataError,
+	        raise Errors::UserdataError,
 		  :userdataLength => options['user_data'].length
 	      end
             end
