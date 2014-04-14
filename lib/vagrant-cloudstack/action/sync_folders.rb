@@ -47,6 +47,11 @@ module VagrantPlugins
               hostpath = hostpath.gsub(/^(\w):/) { "/cygdrive/#{$1}" }
             end
 
+            # on windows "rsync'ed" files require cygdrive-style paths
+            if env[:machine].config.vm.guest == :windows
+              guestpath = guestpath.gsub(/^(.*)$/, '/cygdrive/c\1')
+            end
+
             env[:ui].info(I18n.t("vagrant_cloudstack.rsync_folder",
                                 :hostpath => hostpath,
                                 :guestpath => guestpath))
