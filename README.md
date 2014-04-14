@@ -196,7 +196,7 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-The maximum length of user_data is around 1500 bytes with Cloudstack API < 4.2 ( base64 encoded user_data musd be < 2048 bytes)
+The maximum length of user_data is around 1500 bytes with Cloudstack API < 4.2 ( base64 encoded user_data must be < 2048 bytes)
 
 ## Development
 
