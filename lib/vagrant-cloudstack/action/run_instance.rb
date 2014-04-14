@@ -177,12 +177,12 @@ module VagrantPlugins
             options['project_id'] = project_id if project_id != nil
             options['key_name'] = keypair if keypair != nil
 
-	    if user_data != nil
+            if user_data != nil
               options['user_data'] = Base64.encode64(user_data)
-	      if options['user_data'].length > 2048
-	        raise Errors::UserdataError,
-		  :userdataLength => options['user_data'].length
-	      end
+              if options['user_data'].length > 2048
+                raise Errors::UserdataError,
+                  :userdataLength => options['user_data'].length
+              end
             end
 
             server = env[:cloudstack_compute].servers.create(options)
