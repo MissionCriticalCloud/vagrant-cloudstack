@@ -178,6 +178,26 @@ the remote machine over SSH.
 This is good enough for all built-in Vagrant provisioners (shell,
 chef, and puppet) to work!
 
+### User data
+
+You can specify user data for the instance being booted.
+
+```ruby
+Vagrant.configure("2") do |config|
+  # ... other stuff
+
+  config.vm.provider :cloudstack do |cloudstack|
+    # Option 1: a single string
+    cloudstack.user_data = "#!/bin/bash\necho 'got user data' > /tmp/user_data.log\necho"
+
+    # Option 2: use a file
+    cloudstack.user_data = File.read("user_data.txt")
+  end
+end
+```
+
+The maximum length of user_data is around 1500 bytes with Cloudstack API < 4.2 ( base64 encoded user_data must be < 2048 bytes)
+
 ## Development
 
 To work on the `vagrant-cloudstack` plugin, clone this repository out, and use

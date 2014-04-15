@@ -18,6 +18,10 @@ module VagrantPlugins
       class RsyncError < VagrantCloudstackError
         error_key(:rsync_error)
       end
+
+      class UserdataError < VagrantCloudstackError
+        error_key(:user_data_error)
+      end
     end
   end
 end

@@ -69,6 +69,8 @@ en:
         Host path: %{hostpath}
         Guest path: %{guestpath}
         Error: %{stderr}
+      user_data_error: |-
+        The base64 encoded user data length (%{userdataLength}) is greater than 2048.
 
     states:
       short_not_created: |-
