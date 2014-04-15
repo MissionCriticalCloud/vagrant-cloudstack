@@ -1,3 +1,7 @@
+# 0.4.3 (Apr 15, 2014)
+
+* Update README to reflect Vagrant version needed
+
 # 0.4.2 (Apr 15, 2014)
 
 * Add support for userdata
