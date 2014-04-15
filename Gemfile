@@ -8,3 +8,6 @@ group :development do
   # Vagrant environment itself using `vagrant plugin`.
   gem "vagrant", :git => "git://github.com/mitchellh/vagrant.git"
 end
+
+gem 'coveralls', require: false
+
