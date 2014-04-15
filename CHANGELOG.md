@@ -1,3 +1,11 @@
+# 0.4.2 (Apr 15, 2014)
+
+* Add support for userdata
+
+# 0.4.1 (Apr 14, 2014)
+
+* Add support for cygwin paths
+
 # 0.4.0 (Mar 30, 2014)
 
 * Fix for Vagrant > =1.5 [GH-29]
