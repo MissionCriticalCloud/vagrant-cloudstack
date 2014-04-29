@@ -1,3 +1,8 @@
+# 0.5.0 (Apr 29, 2014)
+
+* Use latest version of upstream fog which contains some much needed
+  improvements to the Cloudstack support. Closes #10 for example.
+
 # 0.4.3 (Apr 15, 2014)
 
 * Update README to reflect Vagrant version needed
