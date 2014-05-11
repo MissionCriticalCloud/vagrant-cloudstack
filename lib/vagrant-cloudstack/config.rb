@@ -237,11 +237,10 @@ module VagrantPlugins
         # Scheme is 'http' by default
         @scheme = "http" if @scheme == UNSET_VALUE
 
-        # Api key must be nil, since we can't default that
-        @api_key = nil if @api_key == UNSET_VALUE
-
-        # Secret key must be nil, since we can't default that
-        @secret_key = nil if @secret_key == UNSET_VALUE
+        # Try to get access keys from environment variables, they will
+        # default to nil if the environment variables are not present
+        @api_key = ENV['CLOUDSTACK_API_KEY'] if @api_key == UNSET_VALUE
+        @secret_key = ENV['CLOUDSTACK_SECRET_KEY'] if @secret_key == UNSET_VALUE
 
         # Set the default timeout for waiting for an instance to be ready
         @instance_ready_timeout = 120 if @instance_ready_timeout == UNSET_VALUE
