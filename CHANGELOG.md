@@ -1,3 +1,9 @@
+# 0.6.0 (May 13, 2014)
+
+* Bump the Ruby version to 2.0.0-p481
+* The API and secret keys can now be passed through environment
+  variables CLOUDSTACK_API_KEY and CLOUDSTACK_SECRET_KEY.
+
 # 0.5.0 (Apr 29, 2014)
 
 * Use latest version of upstream fog which contains some much needed
