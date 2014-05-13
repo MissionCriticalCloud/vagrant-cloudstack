@@ -43,6 +43,35 @@ describe VagrantPlugins::Cloudstack::Config do
     its("user_data")              { should be_nil }
   end
 
+  describe "getting credentials from environment" do
+    context "without CloudStack credential environment variables" do
+      subject do
+        instance.tap do |o|
+          o.finalize!
+        end
+      end
+
+      its("api_key")    { should be_nil }
+      its("secret_key") { should be_nil }
+    end
+
+    context "with CloudStack credential variables" do
+      before :each do
+        ENV.stub(:[]).with("CLOUDSTACK_API_KEY").and_return("api_key")
+        ENV.stub(:[]).with("CLOUDSTACK_SECRET_KEY").and_return("secret_key")
+      end
+
+      subject do
+        instance.tap do |o|
+          o.finalize!
+        end
+      end
+
+      its("api_key")    { should == "api_key" }
+      its("secret_key") { should == "secret_key" }
+    end
+  end
+
   describe "overriding defaults" do
     # I typically don't meta-program in tests, but this is a very
     # simple boilerplate test, so I cut corners here. It just sets
