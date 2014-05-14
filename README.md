@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/klarna/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/klarna/vagrant-cloudstack)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.png)](http://badge.fury.io/rb/vagrant-cloudstack)
 [![Dependency Status](https://gemnasium.com/klarna/vagrant-cloudstack.png)](https://gemnasium.com/klarna/vagrant-cloudstack)
-[![Code climate](https://codeclimate.com/github/klarna/vagrant-cloudstack.png)](https://codeclimate.com/github/klarna/vagrant-cloudstac)
+[![Code climate](https://codeclimate.com/github/klarna/vagrant-cloudstack.png)](https://codeclimate.com/github/klarna/vagrant-cloudstack)
 [![Coverage Status](https://coveralls.io/repos/klarna/vagrant-cloudstack/badge.png)](https://coveralls.io/r/klarna/vagrant-cloudstack)
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
