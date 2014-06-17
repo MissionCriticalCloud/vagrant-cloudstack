@@ -1,3 +1,7 @@
+# 0.7.0 (Jun 17, 2014)
+* Change the resolution order of how we discover the scheme to talk to the cloud.
+  This is a possibly breaking change.
+
 # 0.6.0 (May 13, 2014)
 
 * Bump the Ruby version to 2.0.0-p481
