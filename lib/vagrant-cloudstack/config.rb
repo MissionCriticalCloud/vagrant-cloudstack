@@ -234,8 +234,9 @@ module VagrantPlugins
         # Port must be nil, since we can't default that
         @port = nil if @port == UNSET_VALUE
 
-        # Scheme is 'http' by default
-        @scheme = "http" if @scheme == UNSET_VALUE
+        # We default the scheme to whatever the user has specifid in the .fog file
+        # *OR* whatever is default for the provider in the fog library
+        @scheme = nil if @scheme == UNSET_VALUE
 
         # Try to get access keys from environment variables, they will
         # default to nil if the environment variables are not present

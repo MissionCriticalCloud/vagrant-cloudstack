@@ -21,7 +21,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("host")                   { should be_nil }
     its("path")                   { should be_nil }
     its("port")                   { should be_nil }
-    its("scheme")                 { should == "http" }
+    its("scheme")                 { should be_nil }
     its("api_key")                { should be_nil }
     its("secret_key")             { should be_nil }
     its("instance_ready_timeout") { should == 120 }
