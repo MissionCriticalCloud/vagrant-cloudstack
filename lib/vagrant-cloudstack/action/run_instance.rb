@@ -36,7 +36,6 @@ module VagrantPlugins
           pf_ip_address_id      = domain_config.pf_ip_address_id
           pf_public_port        = domain_config.pf_public_port
           pf_private_port       = domain_config.pf_private_port
-          security_group_ids    = domain_config.security_group_ids
           display_name          = domain_config.display_name
           group                 = domain_config.group
           security_group_ids    = domain_config.security_group_ids
