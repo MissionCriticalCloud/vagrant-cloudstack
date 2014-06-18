@@ -336,8 +336,6 @@ module VagrantPlugins
             errors << I18n.t("vagrant_cloudstack.config.secret_key_required") if \
               config.secret_access_key.nil?
           end
-
-          errors << I18n.t("vagrant_cloudstack.config.ami_required") if config.ami.nil?
         end
 
         { "Cloudstack Provider" => errors }
