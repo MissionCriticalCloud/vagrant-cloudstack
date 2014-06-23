@@ -44,6 +44,14 @@ module VagrantPlugins
           security_groups      = domain_config.security_groups
           user_data            = domain_config.user_data
 
+          # If for some reason the user have specified both network_name and network_id, take the id since that is
+          # more specific than the name. But always try to fetch the name of the network to present to the user.
+          if network_id.nil? and network_name
+            network_id = name_to_id(env, network_name, "network")
+          elsif network_id
+            network_name = id_to_name(env, network_id, "network")
+          end
+
           # If there is no keypair then warn the user
           if !keypair
             env[:ui].warn(I18n.t("vagrant_cloudstack.launch_no_keypair"))
@@ -84,7 +92,7 @@ module VagrantPlugins
           env[:ui].info(" -- Template UUID: #{template_id}")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone UUID: #{zone_id}")
-          env[:ui].info(" -- Network UUID: #{network_id}") if network_id
+          env[:ui].info(" -- Network: #{network_name} (#{network_id})") if !network_id.nil? or !network_name.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(" -- User Data: Yes") if user_data
           if !security_group_ids.nil?
