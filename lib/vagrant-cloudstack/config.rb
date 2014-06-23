@@ -48,6 +48,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :network_id
 
+      # Network name that the instance should use
+      #
+      # @return [String]
+      attr_accessor :network_name
+
       # Network Type
       #
       # @return [String]
@@ -139,6 +144,7 @@ module VagrantPlugins
         @instance_ready_timeout = UNSET_VALUE
         @domain_id              = UNSET_VALUE
         @network_id             = UNSET_VALUE
+        @network_name           = UNSET_VALUE
         @network_type           = UNSET_VALUE
         @project_id             = UNSET_VALUE
         @service_offering_id    = UNSET_VALUE
@@ -251,6 +257,9 @@ module VagrantPlugins
 
         # Network uuid must be nil, since we can't default that
         @network_id = nil if @network_id == UNSET_VALUE
+
+        # Network uuid must be nil, since we can't default that
+        @network_name = nil if @network_name == UNSET_VALUE
 
         # NetworkType is 'Advanced' by default
         @network_type = "Advanced" if @network_type == UNSET_VALUE
