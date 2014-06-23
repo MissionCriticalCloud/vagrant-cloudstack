@@ -68,6 +68,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :service_offering_id
 
+      # Service offering name to use for the instance
+      #
+      # @return [String]
+      attr_accessor :service_offering_name
+
       # Template uuid to use for the instance
       #
       # @return [String]
@@ -154,6 +159,7 @@ module VagrantPlugins
         @network_type           = UNSET_VALUE
         @project_id             = UNSET_VALUE
         @service_offering_id    = UNSET_VALUE
+        @service_offering_name  = UNSET_VALUE
         @template_id            = UNSET_VALUE
         @zone_id                = UNSET_VALUE
         @zone_name              = UNSET_VALUE
@@ -276,6 +282,9 @@ module VagrantPlugins
 
         # Service offering uuid must be nil, since we can't default that
         @service_offering_id = nil if @service_offering_id == UNSET_VALUE
+
+        # Service offering name must be nil, since we can't default that
+        @service_offering_name = nil if @service_offering_name == UNSET_VALUE
 
         # Template uuid must be nil, since we can't default that
         @template_id = nil if @template_id == UNSET_VALUE

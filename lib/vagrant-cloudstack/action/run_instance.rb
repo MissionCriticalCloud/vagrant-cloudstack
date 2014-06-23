@@ -33,6 +33,7 @@ module VagrantPlugins
           network_type         = domain_config.network_type
           project_id           = domain_config.project_id
           service_offering_id  = domain_config.service_offering_id
+          service_offering_name  = domain_config.service_offering_name
           template_id          = domain_config.template_id
           keypair              = domain_config.keypair
           pf_ip_address_id     = domain_config.pf_ip_address_id
@@ -57,6 +58,12 @@ module VagrantPlugins
             zone_id = name_to_id(env, zone_name, "zone", {'available' => true})
           elsif zone_id
             zone_name = id_to_name(env, zone_id, "zone", {'available' => true})
+          end
+
+          if service_offering_id.nil? and service_offering_name
+            service_offering_id   = name_to_id(env, service_offering_name, "service_offering")
+          elsif service_offering_id
+            service_offering_name = id_to_name(env, service_offering_id, "service_offering")
           end
 
           # If there is no keypair then warn the user
@@ -95,7 +102,7 @@ module VagrantPlugins
           env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
-          env[:ui].info(" -- Service offering UUID: #{service_offering_id}")
+          env[:ui].info(" -- Service offering: #{service_offering_name} (#{service_offering_id})")
           env[:ui].info(" -- Template UUID: #{template_id}")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
