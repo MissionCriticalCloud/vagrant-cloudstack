@@ -35,6 +35,7 @@ module VagrantPlugins
           service_offering_id  = domain_config.service_offering_id
           service_offering_name  = domain_config.service_offering_name
           template_id          = domain_config.template_id
+          template_name        = domain_config.template_name
           keypair              = domain_config.keypair
           pf_ip_address_id     = domain_config.pf_ip_address_id
           pf_public_port       = domain_config.pf_public_port
@@ -64,6 +65,14 @@ module VagrantPlugins
             service_offering_id   = name_to_id(env, service_offering_name, "service_offering")
           elsif service_offering_id
             service_offering_name = id_to_name(env, service_offering_id, "service_offering")
+          end
+
+          if template_id.nil? and template_name
+            template_id = name_to_id(env, template_name, "template", {'zoneid' => zone_id,
+                                                                      'templatefilter' => 'executable'})
+          elsif template_id
+            template_name = id_to_name(env, template_id, "template", {'zoneid' => zone_id,
+                                                                      'templatefilter' => 'executable'})
           end
 
           # If there is no keypair then warn the user
@@ -103,7 +112,7 @@ module VagrantPlugins
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
           env[:ui].info(" -- Service offering: #{service_offering_name} (#{service_offering_id})")
-          env[:ui].info(" -- Template UUID: #{template_id}")
+          env[:ui].info(" -- Template: #{template_name} (#{template_id})")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
           env[:ui].info(" -- Network: #{network_name} (#{network_id})") if network_id or network_name

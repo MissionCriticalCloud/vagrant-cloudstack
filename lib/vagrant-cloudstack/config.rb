@@ -78,6 +78,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :template_id
 
+      # Template name to use for the instance
+      #
+      # @return [String]
+      attr_accessor :template_name
+
       # Zone uuid to launch the instance into. If nil, it will
       # launch in default project.
       #
@@ -161,6 +166,7 @@ module VagrantPlugins
         @service_offering_id    = UNSET_VALUE
         @service_offering_name  = UNSET_VALUE
         @template_id            = UNSET_VALUE
+        @template_name          = UNSET_VALUE
         @zone_id                = UNSET_VALUE
         @zone_name              = UNSET_VALUE
         @keypair                = UNSET_VALUE
@@ -288,6 +294,9 @@ module VagrantPlugins
 
         # Template uuid must be nil, since we can't default that
         @template_id = nil if @template_id == UNSET_VALUE
+
+        # Template name must be nil, since we can't default that
+        @template_name = nil if @template_name == UNSET_VALUE
 
         # Zone uuid must be nil, since we can't default that
         @zone_id = nil if @zone_id == UNSET_VALUE
