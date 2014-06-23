@@ -1,5 +1,5 @@
 require "log4r"
-require 'pp'   # XXX FIXME REMOVE WHEN NOT NEEDED
+require 'pp' # XXX FIXME REMOVE WHEN NOT NEEDED
 
 require 'vagrant/util/retryable'
 
@@ -19,29 +19,30 @@ module VagrantPlugins
 
         def call(env)
           # Initialize metrics if they haven't been
-          env[:metrics] ||= {}
+          env[:metrics]        ||= {}
 
           # Get the domain we're going to booting up in
-          domain = env[:machine].provider_config.domain_id
+          domain               = env[:machine].provider_config.domain_id
 
           # Get the configs
-          domain_config         = env[:machine].provider_config.get_domain_config(domain)
-          zone_id               = domain_config.zone_id
-          network_id            = domain_config.network_id
-          network_type          = domain_config.network_type
-          project_id            = domain_config.project_id
-          service_offering_id   = domain_config.service_offering_id
-          template_id           = domain_config.template_id
-          keypair               = domain_config.keypair
-          pf_ip_address_id      = domain_config.pf_ip_address_id
-          pf_public_port        = domain_config.pf_public_port
-          pf_private_port       = domain_config.pf_private_port
-          display_name          = domain_config.display_name
-          group                 = domain_config.group
-          security_group_ids    = domain_config.security_group_ids
-          security_group_names  = domain_config.security_group_names
-          security_groups       = domain_config.security_groups
-          user_data             = domain_config.user_data
+          domain_config        = env[:machine].provider_config.get_domain_config(domain)
+          zone_id              = domain_config.zone_id
+          network_id           = domain_config.network_id
+          network_name         = domain_config.network_name
+          network_type         = domain_config.network_type
+          project_id           = domain_config.project_id
+          service_offering_id  = domain_config.service_offering_id
+          template_id          = domain_config.template_id
+          keypair              = domain_config.keypair
+          pf_ip_address_id     = domain_config.pf_ip_address_id
+          pf_public_port       = domain_config.pf_public_port
+          pf_private_port      = domain_config.pf_private_port
+          display_name         = domain_config.display_name
+          group                = domain_config.group
+          security_group_ids   = domain_config.security_group_ids
+          security_group_names = domain_config.security_group_names
+          security_groups      = domain_config.security_groups
+          user_data            = domain_config.user_data
 
           # If there is no keypair then warn the user
           if !keypair
@@ -97,7 +98,7 @@ module VagrantPlugins
             security_group_names.each do |security_group_name|
               env[:ui].info(" -- Security Group Name: #{security_group_name}")
               # since we can't access Security Groups by name, we grab the ID and add it to the security_group_ids
-              sg = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select{|sgrp| sgrp["name"] == security_group_name }
+              sg = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select { |sgrp| sgrp["name"] == security_group_name }
               security_group_ids.push(sg[0]["id"])
             end
           end
@@ -108,13 +109,13 @@ module VagrantPlugins
               # Creating the security group and retrieving it's ID
               sgid = nil
               begin
-                sgid = env[:cloudstack_compute].create_security_group(:name => sg[:name],
+                sgid = env[:cloudstack_compute].create_security_group(:name        => sg[:name],
                                                                       :description => sg[:description])["createsecuritygroupresponse"]["securitygroup"]["id"]
                 env[:ui].info(" -- Security Group #{sg[:name]} created with ID: #{sgid}")
               rescue Exception => e
                 if e.message =~ /already exis/
-                  existingGroup = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select {|secgrp| secgrp["name"] == sg[:name] }
-                  sgid = existingGroup[0]["id"]
+                  existingGroup = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select { |secgrp| secgrp["name"] == sg[:name] }
+                  sgid          = existingGroup[0]["id"]
                   env[:ui].info(" -- Security Group #{sg[:name]} found with ID: #{sgid}")
                 end
               end
@@ -123,20 +124,20 @@ module VagrantPlugins
               # so we add the rules... Does it really matter if they already exist ? CLoudstack seems to take care of that!
               sg[:rules].each do |rule|
                 case rule[:type]
-                when "ingress"
-                  env[:cloudstack_compute].authorize_security_group_ingress(:securityGroupId => sgid,
-                                                                            :protocol => rule[:protocol],
-                                                                            :startport => rule[:startport],
-                                                                            :endport => rule[:endport],
-                                                                            :cidrlist => rule[:cidrlist])
-                  env[:ui].info(" --- Ingress Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
-                when "egress"
-                  env[:cloudstack_compute].authorize_security_group_egress(:securityGroupId => sgid,
-                                                                           :protocol => rule[:protocol],
-                                                                           :startport => rule[:startport],
-                                                                           :endport => rule[:endport],
-                                                                           :cidrlist => rule[:cidrlist])
-                  env[:ui].info(" --- Egress Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
+                  when "ingress"
+                    env[:cloudstack_compute].authorize_security_group_ingress(:securityGroupId => sgid,
+                                                                              :protocol        => rule[:protocol],
+                                                                              :startport       => rule[:startport],
+                                                                              :endport         => rule[:endport],
+                                                                              :cidrlist        => rule[:cidrlist])
+                    env[:ui].info(" --- Ingress Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
+                  when "egress"
+                    env[:cloudstack_compute].authorize_security_group_egress(:securityGroupId => sgid,
+                                                                             :protocol        => rule[:protocol],
+                                                                             :startport       => rule[:startport],
+                                                                             :endport         => rule[:endport],
+                                                                             :cidrlist        => rule[:cidrlist])
+                    env[:ui].info(" --- Egress Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
                 end
               end
 
@@ -153,34 +154,34 @@ module VagrantPlugins
 
           begin
             case network_type
-            when "Advanced"
-              options = {
-                :display_name       => display_name,
-                :group              => group,
-                :zone_id            => zone_id,
-                :flavor_id          => service_offering_id,
-                :image_id           => template_id,
-                :network_ids        => [network_id]
-              }
-            when "Basic"
-              options = {
-                :display_name       => display_name,
-                :group              => group,
-                :zone_id            => zone_id,
-                :flavor_id          => service_offering_id,
-                :image_id           => template_id,
-                :security_group_ids => security_group_ids
-              }
+              when "Advanced"
+                options = {
+                    :display_name => display_name,
+                    :group        => group,
+                    :zone_id      => zone_id,
+                    :flavor_id    => service_offering_id,
+                    :image_id     => template_id,
+                    :network_ids  => [network_id]
+                }
+              when "Basic"
+                options = {
+                    :display_name       => display_name,
+                    :group              => group,
+                    :zone_id            => zone_id,
+                    :flavor_id          => service_offering_id,
+                    :image_id           => template_id,
+                    :security_group_ids => security_group_ids
+                }
             end
 
             options['project_id'] = project_id if project_id != nil
-            options['key_name'] = keypair if keypair != nil
+            options['key_name']   = keypair if keypair != nil
 
             if user_data != nil
               options['user_data'] = Base64.encode64(user_data)
               if options['user_data'].length > 2048
                 raise Errors::UserdataError,
-                  :userdataLength => options['user_data'].length
+                      :userdataLength => options['user_data'].length
               end
             end
 
@@ -191,7 +192,7 @@ module VagrantPlugins
             # XXX FIXME vpc?
             if e.message =~ /subnet ID/
               raise Errors::FogError,
-                :message => "Subnet ID not found: #{network_id}"
+                    :message => "Subnet ID not found: #{network_id}"
             end
 
             raise
@@ -202,7 +203,7 @@ module VagrantPlugins
           # Immediately save the ID since it is created at this point.
           # XXX FIXME does cloudstack+fog return the job id rather than
           # server id?
-          env[:machine].id = server.id
+          env[:machine].id                     = server.id
 
           # Wait for the instance to be ready first
           env[:metrics]["instance_ready_time"] = Util::Timer.time do
@@ -223,7 +224,7 @@ module VagrantPlugins
 
               # Notify the user
               raise Errors::InstanceReadyTimeout,
-                timeout: domain_config.instance_ready_timeout
+                    timeout: domain_config.instance_ready_timeout
             end
           end
 
@@ -290,12 +291,12 @@ module VagrantPlugins
           env[:ui].info(" -- Private port: #{pf_private_port}")
 
           options = {
-            :ipaddressid      => pf_ip_address_id,
-            :publicport       => pf_public_port,
-            :privateport      => pf_private_port,
-            :protocol         => "tcp",
-            :virtualmachineid => env[:machine].id,
-            :openfirewall     => "true"
+              :ipaddressid      => pf_ip_address_id,
+              :publicport       => pf_public_port,
+              :privateport      => pf_private_port,
+              :protocol         => "tcp",
+              :virtualmachineid => env[:machine].id,
+              :openfirewall     => "true"
           }
 
           begin
@@ -303,7 +304,7 @@ module VagrantPlugins
             while true
               response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
               if response["queryasyncjobresultresponse"]["jobstatus"] != 0
-                port_forwarding_rule =  response["queryasyncjobresultresponse"]["jobresult"]["portforwardingrule"]
+                port_forwarding_rule = response["queryasyncjobresultresponse"]["jobresult"]["portforwardingrule"]
                 break
               else
                 sleep 2
@@ -323,7 +324,7 @@ module VagrantPlugins
         def terminate(env)
           destroy_env = env.dup
           destroy_env.delete(:interrupted)
-          destroy_env[:config_validate] = false
+          destroy_env[:config_validate]       = false
           destroy_env[:force_confirm_destroy] = true
           env[:action_runner].run(Action.action_destroy, destroy_env)
         end
