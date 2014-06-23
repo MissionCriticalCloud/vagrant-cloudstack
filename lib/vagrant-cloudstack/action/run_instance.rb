@@ -27,6 +27,7 @@ module VagrantPlugins
           # Get the configs
           domain_config        = env[:machine].provider_config.get_domain_config(domain)
           zone_id              = domain_config.zone_id
+          zone_name            = domain_config.zone_name
           network_id           = domain_config.network_id
           network_name         = domain_config.network_name
           network_type         = domain_config.network_type
@@ -50,6 +51,12 @@ module VagrantPlugins
             network_id = name_to_id(env, network_name, "network")
           elsif network_id
             network_name = id_to_name(env, network_id, "network")
+          end
+
+          if zone_id.nil? and zone_name
+            zone_id = name_to_id(env, zone_name, "zone", {'available' => true})
+          elsif zone_id
+            zone_name = id_to_name(env, zone_id, "zone", {'available' => true})
           end
 
           # If there is no keypair then warn the user
@@ -91,7 +98,7 @@ module VagrantPlugins
           env[:ui].info(" -- Service offering UUID: #{service_offering_id}")
           env[:ui].info(" -- Template UUID: #{template_id}")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
-          env[:ui].info(" -- Zone UUID: #{zone_id}")
+          env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
           env[:ui].info(" -- Network: #{network_name} (#{network_id})") if !network_id.nil? or !network_name.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(" -- User Data: Yes") if user_data

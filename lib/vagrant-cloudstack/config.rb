@@ -79,6 +79,12 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :zone_id
 
+      # Zone name to launch the instance into. If nil, it will
+      # launch in default project.
+      #
+      # @return [String]
+      attr_accessor :zone_name
+
       # The name of the keypair to use.
       #
       # @return [String]
@@ -150,6 +156,7 @@ module VagrantPlugins
         @service_offering_id    = UNSET_VALUE
         @template_id            = UNSET_VALUE
         @zone_id                = UNSET_VALUE
+        @zone_name              = UNSET_VALUE
         @keypair                = UNSET_VALUE
         @pf_ip_address_id       = UNSET_VALUE
         @pf_public_port         = UNSET_VALUE
@@ -275,6 +282,9 @@ module VagrantPlugins
 
         # Zone uuid must be nil, since we can't default that
         @zone_id = nil if @zone_id == UNSET_VALUE
+
+        # Zone uuid must be nil, since we can't default that
+        @zone_name = nil if @zone_name == UNSET_VALUE
 
         # Keypair defaults to nil
         @keypair = nil if @keypair == UNSET_VALUE
