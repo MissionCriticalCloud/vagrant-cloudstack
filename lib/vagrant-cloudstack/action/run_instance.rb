@@ -328,6 +328,25 @@ module VagrantPlugins
           destroy_env[:force_confirm_destroy] = true
           env[:action_runner].run(Action.action_destroy, destroy_env)
         end
+
+        private
+
+        def name_to_id(env, resource_name, resource_type)
+          env[:ui].info("Fetching UUID for #{resource_type} named '#{resource_name}'")
+          pluralised_type = "#{resource_type}s"
+          full_response   = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym)
+          result          = full_response["list#{pluralised_type.tr('_','')}response"][resource_type].find {
+              |type| type["name"] == resource_name
+          }
+          result['id']
+        end
+
+        def id_to_name(env, resource_id, resource_type)
+          env[:ui].info("Fetching name for #{resource_type} with UUID '#{resource_id}'")
+          pluralised_type = "#{resource_type}s"
+          full_response   = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, {"id" => resource_id})
+          full_response["list#{pluralised_type.tr('_','')}response"][resource_type][0]['name']
+        end
       end
     end
   end
