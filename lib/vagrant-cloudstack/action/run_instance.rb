@@ -339,21 +339,24 @@ module VagrantPlugins
 
         private
 
-        def name_to_id(env, resource_name, resource_type)
-          env[:ui].info("Fetching UUID for #{resource_type} named '#{resource_name}'")
+        def translate_from_to(env, resource_type, options)
           pluralised_type = "#{resource_type}s"
-          full_response   = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym)
-          result          = full_response["list#{pluralised_type.tr('_','')}response"][resource_type].find {
-              |type| type["name"] == resource_name
-          }
+          full_response = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
+          full_response["list#{pluralised_type.tr('_','')}response"][resource_type.tr('_','')]
+        end
+
+        def name_to_id(env, resource_name, resource_type, options={})
+          env[:ui].info("Fetching UUID for #{resource_type} named '#{resource_name}'")
+          full_response = translate_from_to(env, resource_type, options)
+          result = full_response.find { |type| type["name"] == resource_name }
           result['id']
         end
 
-        def id_to_name(env, resource_id, resource_type)
+        def id_to_name(env, resource_id, resource_type, options={})
           env[:ui].info("Fetching name for #{resource_type} with UUID '#{resource_id}'")
-          pluralised_type = "#{resource_type}s"
-          full_response   = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, {"id" => resource_id})
-          full_response["list#{pluralised_type.tr('_','')}response"][resource_type][0]['name']
+          options.merge({'id' => resource_id})
+          full_response   =  translate_from_to(env, resource_type, options)
+          full_response[0]['name']
         end
       end
     end
