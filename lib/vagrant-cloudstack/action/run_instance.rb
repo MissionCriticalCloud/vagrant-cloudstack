@@ -16,34 +16,34 @@ module VagrantPlugins
 
         def call(env)
           # Initialize metrics if they haven't been
-          env[:metrics]        ||= {}
+          env[:metrics]         ||= {}
 
           # Get the domain we're going to booting up in
-          domain               = env[:machine].provider_config.domain_id
+          domain                = env[:machine].provider_config.domain_id
 
           # Get the configs
-          domain_config        = env[:machine].provider_config.get_domain_config(domain)
-          zone_id              = domain_config.zone_id
-          zone_name            = domain_config.zone_name
-          network_id           = domain_config.network_id
-          network_name         = domain_config.network_name
-          network_type         = domain_config.network_type
+          domain_config         = env[:machine].provider_config.get_domain_config(domain)
+          zone_id               = domain_config.zone_id
+          zone_name             = domain_config.zone_name
+          network_id            = domain_config.network_id
+          network_name          = domain_config.network_name
+          network_type          = domain_config.network_type
           #TODO: Fog currently does not support the project apis, when that is fixed we should add that here too.
-          project_id           = domain_config.project_id
-          service_offering_id  = domain_config.service_offering_id
-          service_offering_name  = domain_config.service_offering_name
-          template_id          = domain_config.template_id
-          template_name        = domain_config.template_name
-          keypair              = domain_config.keypair
-          pf_ip_address_id     = domain_config.pf_ip_address_id
-          pf_public_port       = domain_config.pf_public_port
-          pf_private_port      = domain_config.pf_private_port
-          display_name         = domain_config.display_name
-          group                = domain_config.group
-          security_group_ids   = domain_config.security_group_ids
-          security_group_names = domain_config.security_group_names
-          security_groups      = domain_config.security_groups
-          user_data            = domain_config.user_data
+          project_id            = domain_config.project_id
+          service_offering_id   = domain_config.service_offering_id
+          service_offering_name = domain_config.service_offering_name
+          template_id           = domain_config.template_id
+          template_name         = domain_config.template_name
+          keypair               = domain_config.keypair
+          pf_ip_address_id      = domain_config.pf_ip_address_id
+          pf_public_port        = domain_config.pf_public_port
+          pf_private_port       = domain_config.pf_private_port
+          display_name          = domain_config.display_name
+          group                 = domain_config.group
+          security_group_ids    = domain_config.security_group_ids
+          security_group_names  = domain_config.security_group_names
+          security_groups       = domain_config.security_groups
+          user_data             = domain_config.user_data
 
           # If for some reason the user have specified both network_name and network_id, take the id since that is
           # more specific than the name. But always try to fetch the name of the network to present to the user.
@@ -60,16 +60,16 @@ module VagrantPlugins
           end
 
           if service_offering_id.nil? and service_offering_name
-            service_offering_id   = name_to_id(env, service_offering_name, "service_offering")
+            service_offering_id = name_to_id(env, service_offering_name, "service_offering")
           elsif service_offering_id
             service_offering_name = id_to_name(env, service_offering_id, "service_offering")
           end
 
           if template_id.nil? and template_name
-            template_id = name_to_id(env, template_name, "template", {'zoneid' => zone_id,
+            template_id = name_to_id(env, template_name, "template", {'zoneid'         => zone_id,
                                                                       'templatefilter' => 'executable'})
           elsif template_id
-            template_name = id_to_name(env, template_id, "template", {'zoneid' => zone_id,
+            template_name = id_to_name(env, template_id, "template", {'zoneid'         => zone_id,
                                                                       'templatefilter' => 'executable'})
           end
 
@@ -362,21 +362,21 @@ module VagrantPlugins
 
         def translate_from_to(env, resource_type, options)
           pluralised_type = "#{resource_type}s"
-          full_response = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
-          full_response["list#{pluralised_type.tr('_','')}response"][resource_type.tr('_','')]
+          full_response   = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
+          full_response["list#{pluralised_type.tr('_', '')}response"][resource_type.tr('_', '')]
         end
 
         def name_to_id(env, resource_name, resource_type, options={})
           env[:ui].info("Fetching UUID for #{resource_type} named '#{resource_name}'")
           full_response = translate_from_to(env, resource_type, options)
-          result = full_response.find { |type| type["name"] == resource_name }
+          result        = full_response.find { |type| type["name"] == resource_name }
           result['id']
         end
 
         def id_to_name(env, resource_id, resource_type, options={})
           env[:ui].info("Fetching name for #{resource_type} with UUID '#{resource_id}'")
           options.merge({'id' => resource_id})
-          full_response   =  translate_from_to(env, resource_type, options)
+          full_response = translate_from_to(env, resource_type, options)
           full_response[0]['name']
         end
       end

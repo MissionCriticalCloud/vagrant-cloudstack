@@ -25,8 +25,8 @@ module VagrantPlugins
           begin
             server.start
 
-            domain = env[:machine].provider_config.domain_id
-            domain_config = env[:machine].provider_config.get_domain_config(domain)
+            domain                               = env[:machine].provider_config.domain_id
+            domain_config                        = env[:machine].provider_config.get_domain_config(domain)
 
             # Wait for the instance to be ready first
             env[:metrics]["instance_ready_time"] = Util::Timer.time do
@@ -44,7 +44,7 @@ module VagrantPlugins
               rescue Fog::Errors::TimeoutError
                 # Notify the user
                 raise Errors::InstanceReadyTimeout,
-                  timeout: domain_config.instance_ready_timeout
+                      timeout: domain_config.instance_ready_timeout
               end
             end
           rescue Fog::Compute::Cloudstack::Error => e

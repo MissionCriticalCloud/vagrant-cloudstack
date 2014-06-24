@@ -148,45 +148,45 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :user_data
-      
+
 
       def initialize(domain_specific=false)
-        @host                   = UNSET_VALUE
-        @path                   = UNSET_VALUE
-        @port                   = UNSET_VALUE
-        @scheme                 = UNSET_VALUE
-        @api_key                = UNSET_VALUE
-        @secret_key             = UNSET_VALUE
-        @instance_ready_timeout = UNSET_VALUE
-        @domain_id              = UNSET_VALUE
-        @network_id             = UNSET_VALUE
-        @network_name           = UNSET_VALUE
-        @network_type           = UNSET_VALUE
-        @project_id             = UNSET_VALUE
-        @service_offering_id    = UNSET_VALUE
-        @service_offering_name  = UNSET_VALUE
-        @template_id            = UNSET_VALUE
-        @template_name          = UNSET_VALUE
-        @zone_id                = UNSET_VALUE
-        @zone_name              = UNSET_VALUE
-        @keypair                = UNSET_VALUE
-        @pf_ip_address_id       = UNSET_VALUE
-        @pf_public_port         = UNSET_VALUE
-        @pf_private_port        = UNSET_VALUE
-        @security_group_ids     = UNSET_VALUE
-        @display_name           = UNSET_VALUE
-        @group                  = UNSET_VALUE
-        @security_group_names   = UNSET_VALUE
-        @security_groups        = UNSET_VALUE
-        @user_data              = UNSET_VALUE
+        @host                      = UNSET_VALUE
+        @path                      = UNSET_VALUE
+        @port                      = UNSET_VALUE
+        @scheme                    = UNSET_VALUE
+        @api_key                   = UNSET_VALUE
+        @secret_key                = UNSET_VALUE
+        @instance_ready_timeout    = UNSET_VALUE
+        @domain_id                 = UNSET_VALUE
+        @network_id                = UNSET_VALUE
+        @network_name              = UNSET_VALUE
+        @network_type              = UNSET_VALUE
+        @project_id                = UNSET_VALUE
+        @service_offering_id       = UNSET_VALUE
+        @service_offering_name     = UNSET_VALUE
+        @template_id               = UNSET_VALUE
+        @template_name             = UNSET_VALUE
+        @zone_id                   = UNSET_VALUE
+        @zone_name                 = UNSET_VALUE
+        @keypair                   = UNSET_VALUE
+        @pf_ip_address_id          = UNSET_VALUE
+        @pf_public_port            = UNSET_VALUE
+        @pf_private_port           = UNSET_VALUE
+        @security_group_ids        = UNSET_VALUE
+        @display_name              = UNSET_VALUE
+        @group                     = UNSET_VALUE
+        @security_group_names      = UNSET_VALUE
+        @security_groups           = UNSET_VALUE
+        @user_data                 = UNSET_VALUE
 
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
         @__compiled_domain_configs = {}
-        @__finalized = false
-        @__domain_config = {}
-        @__domain_specific = domain_specific
+        @__finalized               = false
+        @__domain_config           = {}
+        @__domain_specific         = domain_specific
       end
 
       # Allows domain-specific overrides of any of the settings on this
@@ -230,7 +230,7 @@ module VagrantPlugins
           # has it.
           new_domain_specific = other.instance_variable_get(:@__domain_specific)
           result.instance_variable_set(
-            :@__domain_specific, new_domain_specific || @__domain_specific)
+              :@__domain_specific, new_domain_specific || @__domain_specific)
 
           # Go through all the domain configs and prepend ours onto
           # theirs.
@@ -251,88 +251,88 @@ module VagrantPlugins
 
       def finalize!
         # Domain_id must be nil, since we can't default that
-        @host = nil if @host == UNSET_VALUE
+        @host                   = nil if @host == UNSET_VALUE
 
         # Path must be nil, since we can't default that
-        @path = nil if @path == UNSET_VALUE
+        @path                   = nil if @path == UNSET_VALUE
 
         # Port must be nil, since we can't default that
-        @port = nil if @port == UNSET_VALUE
+        @port                   = nil if @port == UNSET_VALUE
 
         # We default the scheme to whatever the user has specifid in the .fog file
         # *OR* whatever is default for the provider in the fog library
-        @scheme = nil if @scheme == UNSET_VALUE
+        @scheme                 = nil if @scheme == UNSET_VALUE
 
         # Try to get access keys from environment variables, they will
         # default to nil if the environment variables are not present
-        @api_key = ENV['CLOUDSTACK_API_KEY'] if @api_key == UNSET_VALUE
-        @secret_key = ENV['CLOUDSTACK_SECRET_KEY'] if @secret_key == UNSET_VALUE
+        @api_key                = ENV['CLOUDSTACK_API_KEY'] if @api_key == UNSET_VALUE
+        @secret_key             = ENV['CLOUDSTACK_SECRET_KEY'] if @secret_key == UNSET_VALUE
 
         # Set the default timeout for waiting for an instance to be ready
         @instance_ready_timeout = 120 if @instance_ready_timeout == UNSET_VALUE
 
         # Domain id must be nil, since we can't default that
-        @domain_id = nil if @domain_id == UNSET_VALUE
+        @domain_id              = nil if @domain_id == UNSET_VALUE
 
         # Network uuid must be nil, since we can't default that
-        @network_id = nil if @network_id == UNSET_VALUE
+        @network_id             = nil if @network_id == UNSET_VALUE
 
         # Network uuid must be nil, since we can't default that
-        @network_name = nil if @network_name == UNSET_VALUE
+        @network_name           = nil if @network_name == UNSET_VALUE
 
         # NetworkType is 'Advanced' by default
-        @network_type = "Advanced" if @network_type == UNSET_VALUE
+        @network_type           = "Advanced" if @network_type == UNSET_VALUE
 
         # Project uuid must be nil, since we can't default that
-        @project_id = nil if @project_id == UNSET_VALUE
+        @project_id             = nil if @project_id == UNSET_VALUE
 
         # Service offering uuid must be nil, since we can't default that
-        @service_offering_id = nil if @service_offering_id == UNSET_VALUE
+        @service_offering_id    = nil if @service_offering_id == UNSET_VALUE
 
         # Service offering name must be nil, since we can't default that
-        @service_offering_name = nil if @service_offering_name == UNSET_VALUE
+        @service_offering_name  = nil if @service_offering_name == UNSET_VALUE
 
         # Template uuid must be nil, since we can't default that
-        @template_id = nil if @template_id == UNSET_VALUE
+        @template_id            = nil if @template_id == UNSET_VALUE
 
         # Template name must be nil, since we can't default that
-        @template_name = nil if @template_name == UNSET_VALUE
+        @template_name          = nil if @template_name == UNSET_VALUE
 
         # Zone uuid must be nil, since we can't default that
-        @zone_id = nil if @zone_id == UNSET_VALUE
+        @zone_id                = nil if @zone_id == UNSET_VALUE
 
         # Zone uuid must be nil, since we can't default that
-        @zone_name = nil if @zone_name == UNSET_VALUE
+        @zone_name              = nil if @zone_name == UNSET_VALUE
 
         # Keypair defaults to nil
-        @keypair = nil if @keypair == UNSET_VALUE
+        @keypair                = nil if @keypair == UNSET_VALUE
 
         # IP address id must be nil, since we can't default that
-        @pf_ip_address_id = nil if @pf_ip_address_id == UNSET_VALUE
+        @pf_ip_address_id       = nil if @pf_ip_address_id == UNSET_VALUE
 
         # Public port must be nil, since we can't default that
-        @pf_public_port = nil if @pf_public_port == UNSET_VALUE
+        @pf_public_port         = nil if @pf_public_port == UNSET_VALUE
 
         # Private port must be nil, since we can't default that
-        @pf_private_port = nil if @pf_private_port == UNSET_VALUE
+        @pf_private_port        = nil if @pf_private_port == UNSET_VALUE
 
         # Security Group IDs must be nil, since we can't default that
-        @security_group_ids = nil if @security_group_ids == UNSET_VALUE
+        @security_group_ids     = nil if @security_group_ids == UNSET_VALUE
 
         # Security Group Names must be nil, since we can't default that
-        @security_group_names = nil if @security_group_names == UNSET_VALUE
+        @security_group_names   = nil if @security_group_names == UNSET_VALUE
 
         # Security Groups must be nil, since we can't default that
-        @security_groups = nil if @security_groups == UNSET_VALUE
+        @security_groups        = nil if @security_groups == UNSET_VALUE
 
         # Display name must be nil, since we can't default that
-        @display_name = nil if @display_name == UNSET_VALUE
+        @display_name           = nil if @display_name == UNSET_VALUE
 
         # Group must be nil, since we can't default that
-        @group = nil if @group == UNSET_VALUE
+        @group                  = nil if @group == UNSET_VALUE
 
         # User Data is nil by default
-        @user_data = nil if @user_data == UNSET_VALUE
+        @user_data              = nil if @user_data == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.
@@ -369,13 +369,13 @@ module VagrantPlugins
 
           if !config.use_fog_profile
             errors << I18n.t("vagrant_cloudstack.config.api_key_required") if \
-              config.access_key_id.nil?
+               config.access_key_id.nil?
             errors << I18n.t("vagrant_cloudstack.config.secret_key_required") if \
-              config.secret_access_key.nil?
+               config.secret_access_key.nil?
           end
         end
 
-        { "Cloudstack Provider" => errors }
+        {"Cloudstack Provider" => errors}
       end
 
       # This gets the configuration for a specific domain. It shouldn't

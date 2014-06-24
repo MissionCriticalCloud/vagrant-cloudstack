@@ -37,7 +37,7 @@ module VagrantPlugins
 
             # Make sure there is a trailing slash on the host path to
             # avoid creating an additional directory with rsync
-            hostpath = "#{hostpath}/" if hostpath !~ /\/$/
+            hostpath  = "#{hostpath}/" if hostpath !~ /\/$/
 
             # on windows rsync.exe requires cygdrive-style paths
             if Vagrant::Util::Platform.windows?
@@ -50,22 +50,22 @@ module VagrantPlugins
             end
 
             env[:ui].info(I18n.t("vagrant_cloudstack.rsync_folder",
-                                :hostpath => hostpath,
-                                :guestpath => guestpath))
+                                 :hostpath  => hostpath,
+                                 :guestpath => guestpath))
 
             # Create the guest path
             env[:machine].communicate.sudo("mkdir -p '#{guestpath}'")
             env[:machine].communicate.sudo(
-              "chown #{ssh_info[:username]} '#{guestpath}'")
+                "chown #{ssh_info[:username]} '#{guestpath}'")
 
             # Rsync over to the guest path using the SSH info
             private_keys = (ssh_info[:private_key_path].class == Array ? ssh_info[:private_key_path].join(",") : ssh_info[:private_key_path])
-            command = [
-              "rsync", "--verbose", "--archive", "-z",
-              "--exclude", ".vagrant/",
-              "-e", "ssh -p #{ssh_info[:port]} -o StrictHostKeyChecking=no -i '#{private_keys}'",
-              hostpath,
-              "#{ssh_info[:username]}@#{ssh_info[:host]}:#{guestpath}"]
+            command      = [
+                "rsync", "--verbose", "--archive", "-z",
+                "--exclude", ".vagrant/",
+                "-e", "ssh -p #{ssh_info[:port]} -o StrictHostKeyChecking=no -i '#{private_keys}'",
+                hostpath,
+                "#{ssh_info[:username]}@#{ssh_info[:host]}:#{guestpath}"]
 
             # we need to fix permissions when using rsync.exe on windows, see
             # http://stackoverflow.com/questions/5798807/rsync-permission-denied-created-directories-have-no-permissions
@@ -76,9 +76,9 @@ module VagrantPlugins
             r = Vagrant::Util::Subprocess.execute(*command)
             if r.exit_code != 0
               raise Errors::RsyncError,
-                :guestpath => guestpath,
-                :hostpath => hostpath,
-                :stderr => r.stderr
+                    :guestpath => guestpath,
+                    :hostpath  => hostpath,
+                    :stderr    => r.stderr
             end
           end
         end

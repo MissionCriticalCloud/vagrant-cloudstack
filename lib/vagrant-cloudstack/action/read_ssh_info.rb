@@ -30,11 +30,11 @@ module VagrantPlugins
           end
 
           # Get the Port forwarding config
-          domain = machine.provider_config.domain_id
+          domain        = machine.provider_config.domain_id
           domain_config = machine.provider_config.get_domain_config(domain)
 
           pf_ip_address_id = domain_config.pf_ip_address_id
-          pf_public_port = domain_config.pf_public_port
+          pf_public_port   = domain_config.pf_public_port
 
           if pf_ip_address_id and pf_public_port
             begin
