@@ -8,10 +8,8 @@
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
-This is a [Vagrant](http://www.vagrantup.com) 1.2+ plugin that adds an [Cloudstack](http://cloudstack.apache.org)
+This is a [Vagrant](http://www.vagrantup.com) 1.5+ plugin that adds a [Cloudstack](http://cloudstack.apache.org)
 provider to Vagrant.
-
-**NOTE:** This plugin requires Vagrant 1.5+, since v0.4.0.
 
 ## Features
 
