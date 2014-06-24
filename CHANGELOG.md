@@ -1,3 +1,10 @@
+# 0.8.0 (Jun 24, 2014)
+* Remove unused code.
+* Add support for specifying most resources by name. Where applicable there is
+  a matching _name config for the _id configs.
+  Note: in this release there were no support for the project apis in fog,
+  therefore there is no project_name config.
+
 # 0.7.0 (Jun 17, 2014)
 * Change the resolution order of how we discover the scheme to talk to the cloud.
   This is a possibly breaking change.

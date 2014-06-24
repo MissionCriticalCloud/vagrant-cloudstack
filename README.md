@@ -72,6 +72,32 @@ Vagrant.configure("2") do |config|
 end
 ```
 
+Or with names instead of ids:
+
+```
+Vagrant.configure("2") do |config|
+  config.vm.box = "dummy"
+
+  config.vm.provider :cloudstack do |cloudstack, override|
+    cloudstack.host = "cloudstack.local"
+    cloudstack.path = "/client/api"
+    cloudstack.port = "8080"
+    cloudstack.scheme = "http"
+    cloudstack.api_key = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.secret_key = "AAAAAAAAAAAAAAAAAAA"
+
+    cloudstack.template_name = "GENERIC-Awesome-Linux"
+    cloudstack.service_offering_name = "THE-BESTEST"
+    cloudstack.network_name = "WOW-SUCH-FAST-OFFERING"
+    cloudstack.zone_name = "District-9"
+    # Sadly there is currently no support for the project api in fog.
+    cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.network_type = "Advanced" # or "Basic"
+  end
+end
+```
+
+
 Note that normally a lot of this boilerplate is encoded within the box
 file, but the box file used for the quick start, the "dummy" box, has
 no preconfigured defaults.
@@ -96,7 +122,11 @@ provider-specific configuration for this provider.
 
 ## Configuration
 
-This provider exposes quite a few provider-specific configuration options:
+This provider exposes quite a few provider-specific configuration options. Most of the settings
+have both an id and a name setting and you can chose to use either (i.e network_id or network_name).
+This gives the possibility to use the easier to remember name instead of the UUID,
+this will also enable you to upgrade the different settings in your cloud without having
+to update UUIDs in your Vagrantfile. If both are specified, the id parameter takes precedence.
 
 * `host` - Cloudstack api host
 * `path` - Cloudstack api path
@@ -108,11 +138,15 @@ This provider exposes quite a few provider-specific configuration options:
   to become "ready" in Cloudstack. Defaults to 120 seconds.
 * `domain_id` - Domain id to launch the instance into
 * `network_id` - Network uuid that the instance should use
+* `network_name` - Network name that the instance should use
 * `network_type` - CloudStack Network Type(default: Advanced)
 * `project_id` - Project uuid that the instance should belong to 
 * `service_offering_id`- Service offering uuid to use for the instance
+* `service_offering_name`- Service offering name to use for the instance
 * `template_id` - Template uuid to use for the instance
+* `template_name` - Template name to use for the instance
 * `zone_id` - Zone uuid to launch the instance into
+* `zone_name` - Zone uuid to launch the instance into
 * `keypair` - SSH keypair name
 * `pf_ip_address_id` - IP address ID for port forwarding rule
 * `pf_public_port` - Public port for port forwarding rule
