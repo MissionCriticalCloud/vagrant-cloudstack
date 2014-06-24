@@ -48,6 +48,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :network_id
 
+      # Network name that the instance should use
+      #
+      # @return [String]
+      attr_accessor :network_name
+
       # Network Type
       #
       # @return [String]
@@ -63,16 +68,32 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :service_offering_id
 
+      # Service offering name to use for the instance
+      #
+      # @return [String]
+      attr_accessor :service_offering_name
+
       # Template uuid to use for the instance
       #
       # @return [String]
       attr_accessor :template_id
+
+      # Template name to use for the instance
+      #
+      # @return [String]
+      attr_accessor :template_name
 
       # Zone uuid to launch the instance into. If nil, it will
       # launch in default project.
       #
       # @return [String]
       attr_accessor :zone_id
+
+      # Zone name to launch the instance into. If nil, it will
+      # launch in default project.
+      #
+      # @return [String]
+      attr_accessor :zone_name
 
       # The name of the keypair to use.
       #
@@ -139,11 +160,15 @@ module VagrantPlugins
         @instance_ready_timeout = UNSET_VALUE
         @domain_id              = UNSET_VALUE
         @network_id             = UNSET_VALUE
+        @network_name           = UNSET_VALUE
         @network_type           = UNSET_VALUE
         @project_id             = UNSET_VALUE
         @service_offering_id    = UNSET_VALUE
+        @service_offering_name  = UNSET_VALUE
         @template_id            = UNSET_VALUE
+        @template_name          = UNSET_VALUE
         @zone_id                = UNSET_VALUE
+        @zone_name              = UNSET_VALUE
         @keypair                = UNSET_VALUE
         @pf_ip_address_id       = UNSET_VALUE
         @pf_public_port         = UNSET_VALUE
@@ -252,6 +277,9 @@ module VagrantPlugins
         # Network uuid must be nil, since we can't default that
         @network_id = nil if @network_id == UNSET_VALUE
 
+        # Network uuid must be nil, since we can't default that
+        @network_name = nil if @network_name == UNSET_VALUE
+
         # NetworkType is 'Advanced' by default
         @network_type = "Advanced" if @network_type == UNSET_VALUE
 
@@ -261,11 +289,20 @@ module VagrantPlugins
         # Service offering uuid must be nil, since we can't default that
         @service_offering_id = nil if @service_offering_id == UNSET_VALUE
 
+        # Service offering name must be nil, since we can't default that
+        @service_offering_name = nil if @service_offering_name == UNSET_VALUE
+
         # Template uuid must be nil, since we can't default that
         @template_id = nil if @template_id == UNSET_VALUE
 
+        # Template name must be nil, since we can't default that
+        @template_name = nil if @template_name == UNSET_VALUE
+
         # Zone uuid must be nil, since we can't default that
         @zone_id = nil if @zone_id == UNSET_VALUE
+
+        # Zone uuid must be nil, since we can't default that
+        @zone_name = nil if @zone_name == UNSET_VALUE
 
         # Keypair defaults to nil
         @keypair = nil if @keypair == UNSET_VALUE
