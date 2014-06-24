@@ -250,7 +250,7 @@ module VagrantPlugins
       end
 
       def finalize!
-        # Domain_id must be nil, since we can't default that
+        # Host must be nil, since we can't default that
         @host                   = nil if @host == UNSET_VALUE
 
         # Path must be nil, since we can't default that
