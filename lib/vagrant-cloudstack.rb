@@ -1,5 +1,4 @@
 require "pathname"
-
 require "vagrant-cloudstack/plugin"
 
 module VagrantPlugins

@@ -1,8 +1,6 @@
 require "log4r"
-
-require 'vagrant/util/retryable'
-
-require 'vagrant-cloudstack/util/timer'
+require "vagrant/util/retryable"
+require "vagrant-cloudstack/util/timer"
 
 module VagrantPlugins
   module Cloudstack

@@ -1,9 +1,7 @@
 require "log4r"
-require 'pp' # XXX FIXME REMOVE WHEN NOT NEEDED
-
-require 'vagrant/util/retryable'
-
-require 'vagrant-cloudstack/util/timer'
+require "pp" # XXX FIXME REMOVE WHEN NOT NEEDED
+require "vagrant/util/retryable"
+require "vagrant-cloudstack/util/timer"
 
 module VagrantPlugins
   module Cloudstack

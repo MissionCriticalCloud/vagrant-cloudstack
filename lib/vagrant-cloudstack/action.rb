@@ -1,5 +1,4 @@
 require "pathname"
-
 require "vagrant/action/builder"
 
 module VagrantPlugins

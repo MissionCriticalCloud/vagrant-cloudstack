@@ -1,9 +1,6 @@
 require "log4r"
-
 require "vagrant/util/subprocess"
-
 require "vagrant/util/scoped_hash_override"
-
 require "vagrant/util/which"
 
 module VagrantPlugins
