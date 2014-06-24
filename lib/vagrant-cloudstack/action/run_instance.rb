@@ -31,6 +31,7 @@ module VagrantPlugins
           network_id           = domain_config.network_id
           network_name         = domain_config.network_name
           network_type         = domain_config.network_type
+          #TODO: Fog currently does not support the project apis, when that is fixed we should add that here too.
           project_id           = domain_config.project_id
           service_offering_id  = domain_config.service_offering_id
           service_offering_name  = domain_config.service_offering_name
