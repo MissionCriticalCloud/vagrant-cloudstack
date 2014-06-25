@@ -23,6 +23,7 @@ module VagrantPlugins
 
           # Get the configs
           domain_config         = env[:machine].provider_config.get_domain_config(domain)
+          hostname              = domain_config.name
           zone_id               = domain_config.zone_id
           zone_name             = domain_config.zone_name
           network_id            = domain_config.network_id
@@ -205,6 +206,7 @@ module VagrantPlugins
 
             options['project_id'] = project_id if project_id != nil
             options['key_name']   = keypair if keypair != nil
+            options['name']       = hostname if hostname != nil
 
             if user_data != nil
               options['user_data'] = Base64.encode64(user_data)

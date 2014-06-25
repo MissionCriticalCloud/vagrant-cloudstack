@@ -8,6 +8,12 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :host
 
+      # Hostname for the machine instance
+      # This will be passed through to the api.
+      #
+      # @return [String]
+      attr_accessor :name
+
       # Cloudstack api path.
       #
       # @return [String]
@@ -152,6 +158,7 @@ module VagrantPlugins
 
       def initialize(domain_specific=false)
         @host                      = UNSET_VALUE
+        @name                      = UNSET_VALUE
         @path                      = UNSET_VALUE
         @port                      = UNSET_VALUE
         @scheme                    = UNSET_VALUE
@@ -252,6 +259,9 @@ module VagrantPlugins
       def finalize!
         # Host must be nil, since we can't default that
         @host                   = nil if @host == UNSET_VALUE
+
+        # Name must be nil, since we can't default that
+        @name                   = nil if @name == UNSET_VALUE
 
         # Path must be nil, since we can't default that
         @path                   = nil if @path == UNSET_VALUE
