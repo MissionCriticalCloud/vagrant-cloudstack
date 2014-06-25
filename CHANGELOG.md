@@ -1,3 +1,10 @@
+# 0.9.0 (Jun 25, 2014)
+* Clean up of dead code and comments.
+* Re-organize imports and code.
+* Corrects the dependency on Vagrant 1.5+
+* Updates documentation to refelect the above.
+* Now supports setting the machine hostname in Vagrantfile
+
 # 0.8.0 (Jun 24, 2014)
 * Remove unused code.
 * Add support for specifying most resources by name. Where applicable there is

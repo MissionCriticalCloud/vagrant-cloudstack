@@ -88,6 +88,7 @@ Vagrant.configure("2") do |config|
     cloudstack.service_offering_name = "THE-BESTEST"
     cloudstack.network_name = "WOW-SUCH-FAST-OFFERING"
     cloudstack.zone_name = "District-9"
+    cloudstack.name = "doge-is-a-hostname-now"
     # Sadly there is currently no support for the project api in fog.
     cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.network_type = "Advanced" # or "Basic"
@@ -126,10 +127,11 @@ This gives the possibility to use the easier to remember name instead of the UUI
 this will also enable you to upgrade the different settings in your cloud without having
 to update UUIDs in your Vagrantfile. If both are specified, the id parameter takes precedence.
 
+* `name` - Hostname of the created machine
 * `host` - Cloudstack api host
 * `path` - Cloudstack api path
 * `port` - Cloudstack api port
-* `scheme` - Cloudstack api scheme _(default: http)_
+* `scheme` - Cloudstack api scheme _(defaults: https (thanks to the resolution order in fog))_
 * `api_key` - The api key for accessing Cloudstack
 * `secret_key` - The secret key for accessing Cloudstack
 * `instance_ready_timeout` - The number of seconds to wait for the instance
