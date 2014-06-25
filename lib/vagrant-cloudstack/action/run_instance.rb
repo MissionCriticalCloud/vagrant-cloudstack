@@ -232,8 +232,6 @@ module VagrantPlugins
           end
 
           # Immediately save the ID since it is created at this point.
-          # XXX FIXME does cloudstack+fog return the job id rather than
-          # server id?
           env[:machine].id                     = server.id
 
           # Wait for the instance to be ready first
