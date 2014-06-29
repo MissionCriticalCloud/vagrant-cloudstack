@@ -375,7 +375,7 @@ module VagrantPlugins
 
         def id_to_name(env, resource_id, resource_type, options={})
           env[:ui].info("Fetching name for #{resource_type} with UUID '#{resource_id}'")
-          options.merge({'id' => resource_id})
+          options = options.merge({'id' => resource_id})
           full_response = translate_from_to(env, resource_type, options)
           full_response[0]['name']
         end
