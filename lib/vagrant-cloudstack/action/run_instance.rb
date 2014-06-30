@@ -176,27 +176,19 @@ module VagrantPlugins
           end
 
           begin
-            case network_type
-              when "Advanced"
-                options = {
-                    :display_name => display_name,
-                    :group        => group,
-                    :zone_id      => zone_id,
-                    :flavor_id    => service_offering_id,
-                    :image_id     => template_id,
-                    :network_ids  => [network_id]
-                }
-              when "Basic"
-                options = {
-                    :display_name       => display_name,
-                    :group              => group,
-                    :zone_id            => zone_id,
-                    :flavor_id          => service_offering_id,
-                    :image_id           => template_id,
-                    :security_group_ids => security_group_ids
-                }
-            end
+            options = {
+                :display_name => display_name,
+                :group        => group,
+                :zone_id      => zone_id,
+                :flavor_id    => service_offering_id,
+                :image_id     => template_id
+            }
 
+            if network_type == "Advanced"
+              options['network_ids'] = [network_id]
+            elsif network_type == "Basic"
+              options['security_group_ids'] = security_group_ids
+            end
             options['project_id'] = project_id if project_id != nil
             options['key_name']   = keypair if keypair != nil
             options['name']       = hostname if hostname != nil
