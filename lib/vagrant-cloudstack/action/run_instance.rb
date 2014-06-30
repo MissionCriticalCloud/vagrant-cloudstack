@@ -126,10 +126,8 @@ module VagrantPlugins
           if !security_group_names.nil? && security_group_ids.nil?
             security_group_ids = []
             security_group_names.each do |security_group_name|
-              env[:ui].info(" -- Security Group Name: #{security_group_name}")
-              # since we can't access Security Groups by name, we grab the ID and add it to the security_group_ids
-              sg = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select { |sgrp| sgrp["name"] == security_group_name }
-              security_group_ids.push(sg[0]["id"])
+              sg = name_to_id(env, security_group_name, "security_group")
+              security_group_ids.push(sg)
             end
           end
 
