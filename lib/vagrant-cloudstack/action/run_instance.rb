@@ -153,22 +153,15 @@ module VagrantPlugins
               # security group is created and we have it's ID
               # so we add the rules... Does it really matter if they already exist ? CLoudstack seems to take care of that!
               sg[:rules].each do |rule|
-                case rule[:type]
-                  when "ingress"
-                    env[:cloudstack_compute].authorize_security_group_ingress(:securityGroupId => sgid,
-                                                                              :protocol        => rule[:protocol],
-                                                                              :startport       => rule[:startport],
-                                                                              :endport         => rule[:endport],
-                                                                              :cidrlist        => rule[:cidrlist])
-                    env[:ui].info(" --- Ingress Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
-                  when "egress"
-                    env[:cloudstack_compute].authorize_security_group_egress(:securityGroupId => sgid,
-                                                                             :protocol        => rule[:protocol],
-                                                                             :startport       => rule[:startport],
-                                                                             :endport         => rule[:endport],
-                                                                             :cidrlist        => rule[:cidrlist])
-                    env[:ui].info(" --- Egress Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
-                end
+                rule_options = {
+                    :securityGroupId => sgid,
+                    :protocol        => rule[:protocol],
+                    :startport       => rule[:startport],
+                    :endport         => rule[:endport],
+                    :cidrlist        => rule[:cidrlist]
+                }
+                env[:cloudstack_compute].send("authorize_security_group_#{rule[:type]}".to_sym, rule_options)
+                env[:ui].info(" --- #{rule[:type].capitalize} Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
               end
 
               # We want to use the Security groups we created
