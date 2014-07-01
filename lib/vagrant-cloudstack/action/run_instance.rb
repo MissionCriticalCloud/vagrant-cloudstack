@@ -76,14 +76,20 @@ module VagrantPlugins
 
           # Can't use Security Group IDs and Names at the same time
           # Let's use IDs by default...
-          if security_group_ids.nil? and !security_group_names.nil?
+          if security_group_ids.empty? and !security_group_names.empty?
             security_group_ids = security_group_names.map { |name| name_to_id(env, name, "security_group") }
-          elsif !security_group_ids.nil?
+          elsif !security_group_ids.empty?
             security_group_names = security_group_ids.map { |id| id_to_name(env, id, "security_group") }
           end
 
-          if security_group_ids.nil? or security_group_ids.empty?
-            security_group_ids, security_group_names = create_security_groups(env, security_groups)
+          # Still no security group ids huh?
+          # Let's try to create some security groups from specifcation, if provided.
+          if !security_groups.empty? and security_group_ids.empty?
+            security_groups.each do |security_group|
+              sgname, sgid = create_security_group(env, security_group)
+              security_group_names.push(sgname)
+              security_group_ids.push(sgid)
+            end
           end
 
           # If there is no keypair then warn the user
@@ -110,10 +116,8 @@ module VagrantPlugins
           env[:ui].info(" -- Network: #{network_name} (#{network_id})") if !network_id.nil? or !network_name.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(" -- User Data: Yes") if user_data
-          if !security_group_ids.nil?
-            security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
+          security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
               env[:ui].info(" -- Security Group: #{security_group_name} (#{security_group_id})")
-            end
           end
 
           begin
@@ -214,49 +218,38 @@ module VagrantPlugins
           @app.call(env)
         end
 
-        def create_security_groups(env, security_groups)
-            security_group_ids = []
-            security_group_names = []
-            security_groups.each do |sg|
-              # Creating the security group and retrieving it's ID
-              sgid = nil
-              begin
-                sgid = env[:cloudstack_compute].create_security_group(:name        => sg[:name],
-                                                                      :description => sg[:description])["createsecuritygroupresponse"]["securitygroup"]["id"]
-                env[:ui].info(" -- Security Group #{sg[:name]} created with ID: #{sgid}")
-              rescue Exception => e
-                if e.message =~ /already exis/
-                  sgid = name_to_id(env, sg[:name], "security_group")
-                  env[:ui].info(" -- Security Group #{sg[:name]} found with ID: #{sgid}")
-                end
-              end
-
-              # security group is created and we have it's ID
-              # so we add the rules... Does it really matter if they already exist ? CLoudstack seems to take care of that!
-              sg[:rules].each do |rule|
-                rule_options = {
-                    :securityGroupId => sgid,
-                    :protocol        => rule[:protocol],
-                    :startport       => rule[:startport],
-                    :endport         => rule[:endport],
-                    :cidrlist        => rule[:cidrlist]
-                }
-                env[:cloudstack_compute].send("authorize_security_group_#{rule[:type]}".to_sym, rule_options)
-                env[:ui].info(" --- #{rule[:type].capitalize} Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
-              end
-
-              # We want to use the Security groups we created
-              security_group_ids.push(sgid)
-              security_group_names.push(sg[:name])
-
-              # and record the security group ids for future deletion (of rules and groups if possible)
-              security_groups_file = env[:machine].data_dir.join('security_groups')
-              security_groups_file.open('a+') do |f|
-                f.write("#{sgid}\n")
-              end
+        def create_security_group(env, security_group)
+          begin
+            sgid = env[:cloudstack_compute].create_security_group(:name        => security_group[:name],
+                                                                  :description => security_group[:description])["createsecuritygroupresponse"]["securitygroup"]["id"]
+            env[:ui].info(" -- Security Group #{security_group[:name]} created with ID: #{sgid}")
+          rescue Exception => e
+            if e.message =~ /already exis/
+              sgid = name_to_id(env, security_group[:name], "security_group")
+              env[:ui].info(" -- Security Group #{security_group[:name]} found with ID: #{sgid}")
             end
           end
-          [security_group_ids, security_group_names]
+
+          # security group is created and we have it's ID
+          # so we add the rules... Does it really matter if they already exist ? CLoudstack seems to take care of that!
+          security_group[:rules].each do |rule|
+            rule_options = {
+                :securityGroupId => sgid,
+                :protocol        => rule[:protocol],
+                :startport       => rule[:startport],
+                :endport         => rule[:endport],
+                :cidrlist        => rule[:cidrlist]
+            }
+            env[:cloudstack_compute].send("authorize_security_group_#{rule[:type]}".to_sym, rule_options)
+            env[:ui].info(" --- #{rule[:type].capitalize} Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
+          end
+
+          # and record the security group ids for future deletion (of rules and groups if possible)
+          security_groups_file = env[:machine].data_dir.join('security_groups')
+          security_groups_file.open('a+') do |f|
+            f.write("#{sgid}\n")
+          end
+          [security_group[:name], sgid]
         end
 
         def recover(env)

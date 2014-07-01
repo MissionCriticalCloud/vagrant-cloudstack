@@ -35,11 +35,11 @@ describe VagrantPlugins::Cloudstack::Config do
     its("pf_ip_address_id")       { should be_nil }
     its("pf_public_port")         { should be_nil }
     its("pf_private_port")        { should be_nil }
-    its("security_group_ids")     { should be_nil }
+    its("security_group_ids")     { should == []  }
     its("display_name")           { should be_nil }
     its("group")                  { should be_nil }
-    its("security_group_names")   { should be_nil }
-    its("security_groups")        { should be_nil }
+    its("security_group_names")   { should == []  }
+    its("security_groups")        { should == []  }
     its("user_data")              { should be_nil }
   end
 
