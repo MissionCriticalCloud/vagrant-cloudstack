@@ -106,6 +106,8 @@ module VagrantPlugins
             end
           end
 
+          security_group_ids = create_security_groups(env, security_group_ids, security_group_names, security_groups)
+
           # Launch!
           env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
           env[:ui].info(" -- Display Name: #{display_name}")
@@ -120,56 +122,6 @@ module VagrantPlugins
           if !security_group_ids.nil?
             security_group_ids.each do |security_group_id|
               env[:ui].info(" -- Security Group ID: #{security_group_id}")
-            end
-          end
-
-          if !security_group_names.nil? && security_group_ids.nil?
-            security_group_ids = []
-            security_group_names.each do |security_group_name|
-              sg = name_to_id(env, security_group_name, "security_group")
-              security_group_ids.push(sg)
-            end
-          end
-
-          if !security_groups.nil? && security_group_names.nil? && security_group_ids.nil?
-            security_group_ids = []
-            security_groups.each do |sg|
-              # Creating the security group and retrieving it's ID
-              sgid = nil
-              begin
-                sgid = env[:cloudstack_compute].create_security_group(:name        => sg[:name],
-                                                                      :description => sg[:description])["createsecuritygroupresponse"]["securitygroup"]["id"]
-                env[:ui].info(" -- Security Group #{sg[:name]} created with ID: #{sgid}")
-              rescue Exception => e
-                if e.message =~ /already exis/
-                  existingGroup = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select { |secgrp| secgrp["name"] == sg[:name] }
-                  sgid          = existingGroup[0]["id"]
-                  env[:ui].info(" -- Security Group #{sg[:name]} found with ID: #{sgid}")
-                end
-              end
-
-              # security group is created and we have it's ID
-              # so we add the rules... Does it really matter if they already exist ? CLoudstack seems to take care of that!
-              sg[:rules].each do |rule|
-                rule_options = {
-                    :securityGroupId => sgid,
-                    :protocol        => rule[:protocol],
-                    :startport       => rule[:startport],
-                    :endport         => rule[:endport],
-                    :cidrlist        => rule[:cidrlist]
-                }
-                env[:cloudstack_compute].send("authorize_security_group_#{rule[:type]}".to_sym, rule_options)
-                env[:ui].info(" --- #{rule[:type].capitalize} Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
-              end
-
-              # We want to use the Security groups we created
-              security_group_ids.push(sgid)
-
-              # and record the security group ids for future deletion (of rules and groups if possible)
-              security_groups_file = env[:machine].data_dir.join('security_groups')
-              security_groups_file.open('a+') do |f|
-                f.write("#{sgid}\n")
-              end
             end
           end
 
@@ -269,6 +221,52 @@ module VagrantPlugins
           terminate(env) if env[:interrupted]
 
           @app.call(env)
+        end
+
+        def create_security_groups(env, security_groups)
+            security_group_ids = []
+            security_group_names = []
+            security_groups.each do |sg|
+              # Creating the security group and retrieving it's ID
+              sgid = nil
+              begin
+                sgid = env[:cloudstack_compute].create_security_group(:name        => sg[:name],
+                                                                      :description => sg[:description])["createsecuritygroupresponse"]["securitygroup"]["id"]
+                env[:ui].info(" -- Security Group #{sg[:name]} created with ID: #{sgid}")
+              rescue Exception => e
+                if e.message =~ /already exis/
+                  existingGroup = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select { |secgrp| secgrp["name"] == sg[:name] }
+                  sgid          = existingGroup[0]["id"]
+                  env[:ui].info(" -- Security Group #{sg[:name]} found with ID: #{sgid}")
+                end
+              end
+
+              # security group is created and we have it's ID
+              # so we add the rules... Does it really matter if they already exist ? CLoudstack seems to take care of that!
+              sg[:rules].each do |rule|
+                rule_options = {
+                    :securityGroupId => sgid,
+                    :protocol        => rule[:protocol],
+                    :startport       => rule[:startport],
+                    :endport         => rule[:endport],
+                    :cidrlist        => rule[:cidrlist]
+                }
+                env[:cloudstack_compute].send("authorize_security_group_#{rule[:type]}".to_sym, rule_options)
+                env[:ui].info(" --- #{rule[:type].capitalize} Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
+              end
+
+              # We want to use the Security groups we created
+              security_group_ids.push(sgid)
+              security_group_names.push(sg[:name])
+
+              # and record the security group ids for future deletion (of rules and groups if possible)
+              security_groups_file = env[:machine].data_dir.join('security_groups')
+              security_groups_file.open('a+') do |f|
+                f.write("#{sgid}\n")
+              end
+            end
+          end
+          [security_group_ids, security_group_names]
         end
 
         def recover(env)
