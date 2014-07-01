@@ -74,6 +74,18 @@ module VagrantPlugins
                                                                       'templatefilter' => 'executable'})
           end
 
+          # Can't use Security Group IDs and Names at the same time
+          # Let's use IDs by default...
+          if security_group_ids.nil? and !security_group_names.nil?
+            security_group_ids = security_group_names.map { |name| name_to_id(env, name, "security_group") }
+          elsif !security_group_ids.nil?
+            security_group_names = security_group_ids.map { |id| id_to_name(env, id, "security_group") }
+          end
+
+          if security_group_ids.nil? or security_group_ids.empty?
+            security_group_ids, security_group_names = create_security_groups(env, security_groups)
+          end
+
           # If there is no keypair then warn the user
           if !keypair
             env[:ui].warn(I18n.t("vagrant_cloudstack.launch_no_keypair"))
@@ -87,27 +99,6 @@ module VagrantPlugins
             display_name = local_user + "_" + prefix + "_#{Time.now.to_i}"
           end
 
-          # Can't use Security Group IDs and Names at the same time
-          # Let's use IDs by default...
-          if !security_group_ids.nil?
-            if !security_group_names.nil?
-              env[:ui].warn("Security Group Names won't be used since Security Group IDs are declared")
-              security_group_names = nil
-            end
-
-            if !security_groups.nil?
-              env[:ui].warn("Security Groups defined in Vagrantfile won't be used since Security Group IDs are declared")
-              security_groups = nil
-            end
-          else # security_group_ids is nil
-            if !security_group_names.nil? && !security_groups.nil?
-              env[:ui].warn("Security Groups defined in Vagrantfile won't be used since Security Group Names are declared")
-              security_groups = nil
-            end
-          end
-
-          security_group_ids = create_security_groups(env, security_group_ids, security_group_names, security_groups)
-
           # Launch!
           env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
           env[:ui].info(" -- Display Name: #{display_name}")
@@ -120,8 +111,8 @@ module VagrantPlugins
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(" -- User Data: Yes") if user_data
           if !security_group_ids.nil?
-            security_group_ids.each do |security_group_id|
-              env[:ui].info(" -- Security Group ID: #{security_group_id}")
+            security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
+              env[:ui].info(" -- Security Group: #{security_group_name} (#{security_group_id})")
             end
           end
 
