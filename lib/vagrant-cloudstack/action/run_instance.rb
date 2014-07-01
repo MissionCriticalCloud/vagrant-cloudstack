@@ -240,6 +240,9 @@ module VagrantPlugins
                 :endport         => rule[:endport],
                 :cidrlist        => rule[:cidrlist]
             }
+
+            # The rule[:type] is either ingress or egress, but the method call looks the same.
+            # We build a dynamic method name and then send it off.
             env[:cloudstack_compute].send("authorize_security_group_#{rule[:type]}".to_sym, rule_options)
             env[:ui].info(" --- #{rule[:type].capitalize} Rule added: #{rule[:protocol]} from #{rule[:startport]} to #{rule[:endport]} (#{rule[:cidrlist]})")
           end
