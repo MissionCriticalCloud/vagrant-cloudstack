@@ -226,8 +226,7 @@ module VagrantPlugins
                 env[:ui].info(" -- Security Group #{sg[:name]} created with ID: #{sgid}")
               rescue Exception => e
                 if e.message =~ /already exis/
-                  existingGroup = env[:cloudstack_compute].list_security_groups["listsecuritygroupsresponse"]["securitygroup"].select { |secgrp| secgrp["name"] == sg[:name] }
-                  sgid          = existingGroup[0]["id"]
+                  sgid = name_to_id(env, sg[:name], "security_group")
                   env[:ui].info(" -- Security Group #{sg[:name]} found with ID: #{sgid}")
                 end
               end
