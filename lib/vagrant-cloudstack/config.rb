@@ -327,13 +327,13 @@ module VagrantPlugins
         @pf_private_port        = nil if @pf_private_port == UNSET_VALUE
 
         # Security Group IDs must be nil, since we can't default that
-        @security_group_ids     = nil if @security_group_ids == UNSET_VALUE
+        @security_group_ids     = [] if @security_group_ids == UNSET_VALUE
 
         # Security Group Names must be nil, since we can't default that
-        @security_group_names   = nil if @security_group_names == UNSET_VALUE
+        @security_group_names   = [] if @security_group_names == UNSET_VALUE
 
         # Security Groups must be nil, since we can't default that
-        @security_groups        = nil if @security_groups == UNSET_VALUE
+        @security_groups        = [] if @security_groups == UNSET_VALUE
 
         # Display name must be nil, since we can't default that
         @display_name           = nil if @display_name == UNSET_VALUE
