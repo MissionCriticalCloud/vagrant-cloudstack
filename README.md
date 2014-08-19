@@ -204,6 +204,69 @@ supported with `vagrant-cloudstack`, currently. If any of these are
 specified, Vagrant will emit a warning, but will otherwise boot
 the Cloudstack machine.
 
+### Basic Networking
+
+If you set the `network_type` to `basic`, you can use Security 
+Groups and associate rules in your Vagrantfile.
+
+If you already have Security Groups, you can associate them to your
+instance, with their IDs:
+
+```ruby
+Vagrant.configure("2") do |config|
+  # ... other stuff
+
+  config.vm.provider :cloudstack do |cloudstack|
+    cloudstack.api_key = "foo"
+    cloudstack.secret_key = "bar"
+    cloudstack.network_type = "basic"
+    cloudstack.security_group_ids = ['aaaa-bbbb-cccc-dddd', '1111-2222-3333-4444']
+  end
+end
+```
+
+or their names:
+
+```ruby
+Vagrant.configure("2") do |config|
+  # ... other stuff
+
+  config.vm.provider :cloudstack do |cloudstack|
+    cloudstack.api_key = "foo"
+    cloudstack.secret_key = "bar"
+    cloudstack.network_type = "basic"
+    cloudstack.security_group_names = ['
+min_fantastiska_security_group', 'another_security_grupp']
+  end
+end
+```
+
+But you can also create your Security Groups in the Vagrantfile:
+
+```ruby
+Vagrant.configure("2") do |config|
+  # ... other stuff
+
+  config.vm.provider :cloudstack do |cloudstack|
+    cloudstack.api_key = "foo"
+    cloudstack.secret_key = "bar"
+    cloudstack.network_type = "basic"
+    cloudstack.security_groups = [
+      { 
+        :name         => "Awesome_security_group",
+        :description  => "Created from the Vagrantfile",
+    		:rules 				=> [
+				  {:type => "ingress", :protocol => "TCP", :startport => 22, :endport => 22, :cidrlist => "0.0.0.0/0"},
+				  {:type => "ingress", :protocol => "TCP", :startport => 80, :endport => 80, :cidrlist => "0.0.0.0/0"},
+          {:type => "egress",  :protocol => "TCP", :startport => 81, :endport => 82, :cidrlist => "1.2.3.4/24"},
+			  ]
+      }
+    ]
+  end
+end
+```
+
+
 ## Synced Folders
 
 There is minimal support for synced folders. Upon `vagrant up`,
