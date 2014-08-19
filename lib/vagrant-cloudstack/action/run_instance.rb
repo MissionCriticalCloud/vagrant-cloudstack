@@ -139,7 +139,7 @@ module VagrantPlugins
             options['name']       = hostname if hostname != nil
 
             if user_data != nil
-              options['user_data'] = Base64.encode64(user_data)
+              options['user_data'] = Base64.urlsafe_encode64(user_data)
               if options['user_data'].length > 2048
                 raise Errors::UserdataError,
                       :userdataLength => options['user_data'].length
