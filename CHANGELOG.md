@@ -1,3 +1,8 @@
+# 0.10.0 (Sep 11, 2014)
+* Clean up code base DRY
+* Improve documentation
+* Use URL safe base 64 encoding
+
 # 0.9.1 (Jun 29, 2014)
 * Fixed a bug intrcduced in 0.9.0, where we failed to fetch correct
   name because we didn't pass the correct parameters.
