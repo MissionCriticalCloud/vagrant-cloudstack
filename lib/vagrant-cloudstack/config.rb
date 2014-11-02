@@ -194,9 +194,12 @@ module VagrantPlugins
         @zone_id                   = UNSET_VALUE
         @zone_name                 = UNSET_VALUE
         @keypair                   = UNSET_VALUE
+        @static_nat                = UNSET_VALUE
         @pf_ip_address_id          = UNSET_VALUE
         @pf_public_port            = UNSET_VALUE
         @pf_private_port           = UNSET_VALUE
+        @port_forwarding_rules     = UNSET_VALUE
+        @firewall_rules            = UNSET_VALUE
         @security_group_ids        = UNSET_VALUE
         @display_name              = UNSET_VALUE
         @group                     = UNSET_VALUE
@@ -334,6 +337,9 @@ module VagrantPlugins
         # Keypair defaults to nil
         @keypair                = nil if @keypair == UNSET_VALUE
 
+        # Static NAT must be empty array 
+        @static_nat             = [] if @static_nat == UNSET_VALUE
+
         # IP address id must be nil, since we can't default that
         @pf_ip_address_id       = nil if @pf_ip_address_id == UNSET_VALUE
 
@@ -342,6 +348,12 @@ module VagrantPlugins
 
         # Private port must be nil, since we can't default that
         @pf_private_port        = nil if @pf_private_port == UNSET_VALUE
+
+        # Port forwarding rules  must be empty array 
+        @port_forwarding_rules  = [] if @port_forwarding_rules == UNSET_VALUE
+
+        # Firewall rules  must be empty array 
+        @firewall_rules         = [] if @firewall_rules == UNSET_VALUE
 
         # Security Group IDs must be nil, since we can't default that
         @security_group_ids     = [] if @security_group_ids == UNSET_VALUE

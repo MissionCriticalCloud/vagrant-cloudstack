@@ -192,7 +192,7 @@ module VagrantPlugins
 
           @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
 
-          if !static_nat.nil?
+          if !static_nat.empty?
             static_nat.each do |rule|
               enable_static_nat(env, rule)
             end
@@ -209,13 +209,13 @@ module VagrantPlugins
             create_port_forwarding_rule(env, port_forwarding_rule)
           end
 
-          if !port_forwarding_rules.nil?
+          if !port_forwarding_rules.empty?
             port_forwarding_rules.each do |port_forwarding_rule|
               create_port_forwarding_rule(env, port_forwarding_rule)
             end
           end
 
-          if !firewall_rules.nil?
+          if !firewall_rules.empty?
             firewall_rules.each do |firewall_rule|
               create_firewall_rule(env, firewall_rule)
             end
