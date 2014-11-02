@@ -151,6 +151,8 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `pf_ip_address_id` - IP address ID for port forwarding rule
 * `pf_public_port` - Public port for port forwarding rule
 * `pf_private_port` - Private port for port forwarding rule
+* `port_forwarding_rules` - Port forwarding rules for the virtual machine
+* `firewall_rules` - Firewall rules
 * `display_name` - Display name for the instance
 * `group` - Group for the instance
 
@@ -266,6 +268,33 @@ Vagrant.configure("2") do |config|
 end
 ```
 
+### Firewall, Port forwarding
+
+You can create your firewall and port forwarding rules in the Vagrantfile.
+You can use this rule to access virtual machine from an external machine.
+
+The rules created in Vagrantfile are removed when the virtual machine is destroyed.
+
+```ruby
+Vagrant.configure("2") do |config|
+  # ... other stuff
+
+  config.vm.provider :cloudstack do |cloudstack|
+
+    override.ssh.host = "X.X.X.X"
+
+    cloudstack.port_forwarding_rules = [
+      { :ipaddress => "X.X.X.X", :protocol => "tcp", :publicport => 22, :privateport  => 22, :openfirewall => false },
+      { :ipaddress => "X.X.X.X", :protocol => "tcp", :publicport => 80, :privateport  => 80, :openfirewall => false },
+    ]
+
+    cloudstack.firewall_rules = [
+      { :ipaddress => "X.X.X.X", :cidrlist  => "1.2.3.4/24", :protocol => "tcp", :startport => 22, :endport => 22 },
+      { :ipaddress => "X.X.X.X", :cidrlist  => "1.2.3.4/24", :protocol => "tcp", :startport => 80, :endport => 80 },
+    ]
+  end
+end
+```
 
 ## Synced Folders
 

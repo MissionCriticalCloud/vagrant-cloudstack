@@ -121,6 +121,18 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :pf_private_port
 
+      # comma separated list of port forwarding rules
+      # (hash with rule parameters)
+      #
+      # @return [Array]
+      attr_accessor :port_forwarding_rules
+
+      # comma separated list of firewall rules
+      # (hash with rule parameters)
+      #
+      # @return [Array]
+      attr_accessor :firewall_rules
+
       # comma separated list of security groups id that going
       # to be applied to the virtual machine.
       #
