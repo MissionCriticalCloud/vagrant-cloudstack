@@ -11,6 +11,34 @@ module VagrantPlugins
         end
 
         def call(env)
+          # Disable Static NAT
+          env[:ui].info(I18n.t("vagrant_cloudstack.disabling_static_nat"))
+          static_nat_file = env[:machine].data_dir.join("static_nat")
+          if static_nat_file.file?
+            File.open(static_nat_file, "r").each_line do |line|
+              ip_address_id = line.strip
+              begin
+                options = {
+                  :command => "disableStaticNat",
+                  :ipaddressid => ip_address_id
+                }
+                resp = env[:cloudstack_compute].request(options)
+                job_id = resp["disablestaticnatresponse"]["jobid"]
+                while true
+                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+                  if response["queryasyncjobresultresponse"]["jobstatus"] != 0
+                    break
+                  else
+                    sleep 2
+                  end
+                end
+              rescue Fog::Compute::Cloudstack::Error => e
+                raise Errors::FogError, :message => e.message
+              end
+            end
+            static_nat_file.delete
+          end
+
           # Delete the Port forwarding rule
           env[:ui].info(I18n.t("vagrant_cloudstack.deleting_port_forwarding_rule"))
           port_forwarding_file = env[:machine].data_dir.join("port_forwarding")

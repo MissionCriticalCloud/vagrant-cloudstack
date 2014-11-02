@@ -106,6 +106,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :keypair
 
+      # Paramters for Static NAT
+      #
+      # @return [String]
+      attr_accessor :static_nat
+
       # IP address id to use for port forwarding rule
       #
       # @return [String]

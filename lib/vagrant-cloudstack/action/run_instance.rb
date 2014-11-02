@@ -36,6 +36,7 @@ module VagrantPlugins
           template_id           = domain_config.template_id
           template_name         = domain_config.template_name
           keypair               = domain_config.keypair
+          static_nat            = domain_config.static_nat
           pf_ip_address_id      = domain_config.pf_ip_address_id
           pf_public_port        = domain_config.pf_public_port
           pf_private_port       = domain_config.pf_private_port
@@ -191,6 +192,12 @@ module VagrantPlugins
 
           @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
 
+          if !static_nat.nil?
+            static_nat.each do |rule|
+              enable_static_nat(env, rule)
+            end
+          end
+
           if pf_ip_address_id and pf_public_port and pf_private_port
             port_forwarding_rule = {
               :ipaddressid  => pf_ip_address_id,
@@ -281,6 +288,53 @@ module VagrantPlugins
           if env[:machine].provider.state.id != :not_created
             # Undo the import
             terminate(env)
+          end
+        end
+
+        def enable_static_nat(env, rule)
+          env[:ui].info(I18n.t("vagrant_cloudstack.enabling_static_nat"))
+
+          ip_address_id = rule[:ipaddressid]
+          ip_address    = rule[:ipaddress]
+
+          if ip_address_id.nil? and ip_address.nil?
+            @logger.info("IP address is not specified. Skip creating port forwarding rule.")
+            env[:ui].info(I18n.t("IP address is not specified. Skip creating port forwarding rule."))
+            return
+          end
+
+          if ip_address_id.nil? and ip_address
+            ip_address_id = ip_to_id(env, ip_address)
+          elsif ip_address_id
+            ip_address = id_to_ip(env, ip_address_id)
+          end
+
+          env[:ui].info(" -- Static NAT")
+          env[:ui].info(" -- IP address ID : #{ip_address_id}")
+          env[:ui].info(" -- IP address    : #{ip_address}")
+
+          options = {
+              :command          => "enableStaticNat",
+              :ipaddressid      => ip_address_id,
+              :virtualmachineid => env[:machine].id
+          }
+
+          begin
+            resp = env[:cloudstack_compute].request(options)
+            is_success = resp["enablestaticnatresponse"]["success"]
+
+            if is_success != "true"
+              env[:ui].warn(" -- Failed to enable static nat: #{resp["enablestaticnatresponse"]["errortext"]}")
+              return
+            end
+          rescue Fog::Compute::Cloudstack::Error => e
+            raise Errors::FogError, :message => e.message
+          end
+
+          # Save ipaddress id to the data dir so it can be disabled when the instance is destroyed
+          static_nat_file = env[:machine].data_dir.join('static_nat')
+          static_nat_file.open('a+') do |f|
+            f.write("#{ip_address_id}\n")
           end
         end
 
