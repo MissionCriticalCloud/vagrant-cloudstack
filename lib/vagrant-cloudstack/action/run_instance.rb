@@ -130,7 +130,7 @@ module VagrantPlugins
             }
 
             if network_type == "Advanced"
-              options['network_ids'] = [network_id]
+              options['network_ids'] = [network_id] if !network_id.nil?
             elsif network_type == "Basic"
               options['security_group_ids'] = security_group_ids
             end
