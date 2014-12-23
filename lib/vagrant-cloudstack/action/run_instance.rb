@@ -481,38 +481,44 @@ module VagrantPlugins
         private
 
         def translate_from_to(env, resource_type, options)
-          pluralised_type = "#{resource_type}s"
-          full_response   = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
+          if resource_type == "public_ip_address"
+            pluralised_type = "public_ip_addresses"
+          else
+            pluralised_type = "#{resource_type}s"
+          end
+
+          full_response = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
           full_response["list#{pluralised_type.tr('_', '')}response"][resource_type.tr('_', '')]
         end
 
-        def name_to_id(env, resource_name, resource_type, options={})
-          env[:ui].info("Fetching UUID for #{resource_type} named '#{resource_name}'")
+        def resourcefield_to_id(env, resource_type, resource_field, resource_field_value, options={})
+          env[:ui].info("Fetching UUID for #{resource_type} with #{resource_field} '#{resource_field_value}'")
           full_response = translate_from_to(env, resource_type, options)
-          result        = full_response.find { |type| type["name"] == resource_name }
+          result        = full_response.find {|type| type[resource_field] == resource_field_value }
           result['id']
+        end
+
+        def id_to_resourcefield(env, resource_id, resource_type, resource_field, options={})
+          env[:ui].info("Fetching #{resource_field} for #{resource_type} with UUID '#{resource_id}'")
+          options = options.merge({'id' => resource_id})
+          full_response = translate_from_to(env, resource_type, options)
+          full_response[0][resource_field]
+        end
+
+        def name_to_id(env, resource_name, resource_type, options={})
+          resourcefield_to_id(env, resource_type, 'name', resource_name, options)
         end
 
         def id_to_name(env, resource_id, resource_type, options={})
-          env[:ui].info("Fetching name for #{resource_type} with UUID '#{resource_id}'")
-          options = options.merge({'id' => resource_id})
-          full_response = translate_from_to(env, resource_type, options)
-          full_response[0]['name']
+          id_to_resourcefield(env, resource_id, resource_type, 'name', options)
         end
 
         def ip_to_id(env, ip_address, options={})
-          env[:ui].info("Fetching UUID for public_ip_address '#{ip_address}'")
-          full_response = env[:cloudstack_compute].send("list_public_ip_addresses".to_sym, options)
-          full_response = full_response["listpublicipaddressesresponse"]["publicipaddress"]
-          result        = full_response.find { |type| type["ipaddress"] == ip_address }
-          result['id']
+          resourcefield_to_id(env, 'public_ip_address', 'ipaddress', ip_address, options)
         end
 
         def id_to_ip(env, ip_address_id, options={})
-          env[:ui].info("Fetching name for public_ip_address with UUID '#{ip_address_id}'")
-          options = options.merge({'id' => ip_address_id})
-          full_response   = env[:cloudstack_compute].send("list_public_ip_addresses".to_sym, options)
-          full_response["listpublicipaddressesresponse"]["publicipaddress"][0]['ipaddress']
+          id_to_resourcefield(env, ip_address_id, 'public_ip_address', 'ipaddress', options)
         end
       end
     end
