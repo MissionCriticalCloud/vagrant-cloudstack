@@ -298,8 +298,8 @@ module VagrantPlugins
           ip_address    = rule[:ipaddress]
 
           if ip_address_id.nil? and ip_address.nil?
-            @logger.info("IP address is not specified. Skip creating port forwarding rule.")
-            env[:ui].info(I18n.t("IP address is not specified. Skip creating port forwarding rule."))
+            @logger.info("IP address is not specified. Skip enabling static nat.")
+            env[:ui].info(I18n.t("IP address is not specified. Skip enabling static nat."))
             return
           end
 
@@ -309,7 +309,6 @@ module VagrantPlugins
             ip_address = id_to_ip(env, ip_address_id)
           end
 
-          env[:ui].info(" -- Static NAT")
           env[:ui].info(" -- IP address ID : #{ip_address_id}")
           env[:ui].info(" -- IP address    : #{ip_address}")
 
@@ -356,7 +355,6 @@ module VagrantPlugins
             ip_address = id_to_ip(env, ip_address_id)
           end
 
-          env[:ui].info(" -- Portforwarding rule")
           env[:ui].info(" -- IP address ID : #{ip_address_id}")
           env[:ui].info(" -- IP address    : #{ip_address}")
           env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
@@ -420,7 +418,6 @@ module VagrantPlugins
             ip_address = id_to_ip(env, ip_address_id)
           end
 
-          env[:ui].info(" -- Firewall rule")
           env[:ui].info(" -- IP address ID : #{ip_address_id}")
           env[:ui].info(" -- IP address    : #{ip_address}")
           env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
