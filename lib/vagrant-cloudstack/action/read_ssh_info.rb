@@ -34,9 +34,10 @@ module VagrantPlugins
           domain_config = machine.provider_config.get_domain_config(domain)
 
           pf_ip_address_id = domain_config.pf_ip_address_id
+          pf_ip_address    = domain_config.pf_ip_address
           pf_public_port   = domain_config.pf_public_port
 
-          if pf_ip_address_id and pf_public_port
+          if not pf_ip_address and pf_ip_address_id and pf_public_port
             begin
               response = cloudstack.list_public_ip_addresses({:id => pf_ip_address_id})
             rescue Fog::Compute::Cloudstack::Error => e

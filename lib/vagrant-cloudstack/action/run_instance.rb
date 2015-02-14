@@ -38,6 +38,7 @@ module VagrantPlugins
           keypair               = domain_config.keypair
           static_nat            = domain_config.static_nat
           pf_ip_address_id      = domain_config.pf_ip_address_id
+          pf_ip_address         = domain_config.pf_ip_address
           pf_public_port        = domain_config.pf_public_port
           pf_private_port       = domain_config.pf_private_port
           port_forwarding_rules = domain_config.port_forwarding_rules
@@ -198,9 +199,10 @@ module VagrantPlugins
             end
           end
 
-          if pf_ip_address_id and pf_public_port and pf_private_port
+          if (pf_ip_address_id or pf_ip_address) and pf_public_port and pf_private_port
             port_forwarding_rule = {
               :ipaddressid  => pf_ip_address_id,
+              :ipaddress    => pf_ip_address,
               :protocol     => "tcp",
               :publicport   => pf_public_port,
               :privateport  => pf_private_port,

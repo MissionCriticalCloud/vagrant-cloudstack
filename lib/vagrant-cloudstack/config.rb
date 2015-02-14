@@ -116,6 +116,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :pf_ip_address_id
 
+      # IP address to use for port forwarding rule
+      #
+      # @return [String]
+      attr_accessor :pf_ip_address
+
       # public port to use for port forwarding rule
       #
       # @return [String]
@@ -196,6 +201,7 @@ module VagrantPlugins
         @keypair                   = UNSET_VALUE
         @static_nat                = UNSET_VALUE
         @pf_ip_address_id          = UNSET_VALUE
+        @pf_ip_address             = UNSET_VALUE
         @pf_public_port            = UNSET_VALUE
         @pf_private_port           = UNSET_VALUE
         @port_forwarding_rules     = UNSET_VALUE
@@ -342,6 +348,9 @@ module VagrantPlugins
 
         # IP address id must be nil, since we can't default that
         @pf_ip_address_id       = nil if @pf_ip_address_id == UNSET_VALUE
+
+        # IP address must be nil, since we can't default that
+        @pf_ip_address          = nil if @pf_ip_address == UNSET_VALUE
 
         # Public port must be nil, since we can't default that
         @pf_public_port         = nil if @pf_public_port == UNSET_VALUE

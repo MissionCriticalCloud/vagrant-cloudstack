@@ -150,6 +150,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `keypair` - SSH keypair name
 * `static_nat` - static nat for the virtual machine
 * `pf_ip_address_id` - IP address ID for port forwarding rule
+* `pf_ip_address` - IP address for port forwarding rule
 * `pf_public_port` - Public port for port forwarding rule
 * `pf_private_port` - Private port for port forwarding rule
 * `port_forwarding_rules` - Port forwarding rules for the virtual machine
