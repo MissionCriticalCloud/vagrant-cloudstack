@@ -311,8 +311,7 @@ module VagrantPlugins
             ip_address = id_to_ip(env, ip_address_id)
           end
 
-          env[:ui].info(" -- IP address ID : #{ip_address_id}")
-          env[:ui].info(" -- IP address    : #{ip_address}")
+          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
 
           options = {
               :command          => "enableStaticNat",
@@ -357,8 +356,7 @@ module VagrantPlugins
             ip_address = id_to_ip(env, ip_address_id)
           end
 
-          env[:ui].info(" -- IP address ID : #{ip_address_id}")
-          env[:ui].info(" -- IP address    : #{ip_address}")
+          env[:ui].info(" -- IP address    : #{ip_address} (#{ip_address_id})")
           env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
           env[:ui].info(" -- Public port   : #{rule[:publicport]}")
           env[:ui].info(" -- Private port  : #{rule[:privateport]}")
@@ -420,14 +418,13 @@ module VagrantPlugins
             ip_address = id_to_ip(env, ip_address_id)
           end
 
-          env[:ui].info(" -- IP address ID : #{ip_address_id}")
-          env[:ui].info(" -- IP address    : #{ip_address}")
-          env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
-          env[:ui].info(" -- CIDR list     : #{rule[:cidrlist]}")
-          env[:ui].info(" -- Start port    : #{rule[:startport]}")
-          env[:ui].info(" -- End port      : #{rule[:endport]}")
-          env[:ui].info(" -- ICMP code     : #{rule[:icmpcode]}")
-          env[:ui].info(" -- ICMP type     : #{rule[:icmptype]}")
+          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
+          env[:ui].info(" -- CIDR list  : #{rule[:cidrlist]}")
+          env[:ui].info(" -- Start port : #{rule[:startport]}")
+          env[:ui].info(" -- End port   : #{rule[:endport]}")
+          env[:ui].info(" -- ICMP code  : #{rule[:icmpcode]}")
+          env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
 
           options = {
               :command          => "createFirewallRule",
