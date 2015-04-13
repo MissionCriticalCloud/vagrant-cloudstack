@@ -155,6 +155,16 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :user_data
 
+      # The key to be used when loging in to the vm via ssh
+      #
+      # @return [String]
+      attr_accessor :ssh_key
+
+      # The username to be used when loging in to the vm via ssh
+      #
+      # @return [String]
+      attr_accessor :ssh_user
+
 
       def initialize(domain_specific=false)
         @host                      = UNSET_VALUE
@@ -186,7 +196,8 @@ module VagrantPlugins
         @security_group_names      = UNSET_VALUE
         @security_groups           = UNSET_VALUE
         @user_data                 = UNSET_VALUE
-
+        @ssh_key                   = UNSET_VALUE
+        @ssh_user                  = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -343,6 +354,12 @@ module VagrantPlugins
 
         # User Data is nil by default
         @user_data              = nil if @user_data == UNSET_VALUE
+
+        # ssh key is nil by default
+        @ssh_key                = nil if @ssh_key == UNSET_VALUE
+
+        # ssh key is nil by default
+        @ssh_user               = nil if @ssh_user == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

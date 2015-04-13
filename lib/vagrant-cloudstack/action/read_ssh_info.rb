@@ -52,11 +52,18 @@ module VagrantPlugins
             end
           end
 
-          unless pf_ip_address.nil?
-            return {:host => pf_ip_address, :port => pf_public_port}
-          else
-            return {:host => server.nics[0]['ipaddress'], :port => 22}
-          end
+          ssh_info = {
+                       :host => pf_ip_address || server.nics[0]['ipaddress'],
+                       :port => pf_public_port
+                     }
+
+          ssh_info = ssh_info.merge({
+            :private_key_path => domain_config.ssh_key,
+            :password         => nil
+          }) unless domain_config.ssh_key.nil?
+          ssh_info = ssh_info.merge({ :username => domain_config.ssh_user }) unless domain_config.ssh_user.nil?
+
+          return ssh_info
         end
       end
     end
