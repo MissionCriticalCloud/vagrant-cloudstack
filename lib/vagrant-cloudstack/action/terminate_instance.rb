@@ -92,7 +92,9 @@ module VagrantPlugins
           end
 
           # Destroy the server and remove the tracking ID
-          server = env[:cloudstack_compute].servers.get(env[:machine].id)
+          unless env[:machine].id.nil?
+              server = env[:cloudstack_compute].servers.get(env[:machine].id)
+
           env[:ui].info(I18n.t("vagrant_cloudstack.terminating"))
 
           job = server.destroy
@@ -104,6 +106,11 @@ module VagrantPlugins
               env[:ui].info("Waiting for instance to be deleted")
               sleep 2
             end
+          end
+
+            else
+                env[:ui].info(I18n.t("vagrant_cloudstack.no_instance_found"))
+                return
           end
 
           security_groups_file = env[:machine].data_dir.join("security_groups")

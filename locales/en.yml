@@ -50,6 +50,8 @@ en:
     will_not_destroy: |-
       The instance '%{name}' will not be destroyed, since the confirmation
       was declined.
+    no_instance_found : |-
+      No instance found, already destroyed?
 
     config:
       api_key_required: |-
