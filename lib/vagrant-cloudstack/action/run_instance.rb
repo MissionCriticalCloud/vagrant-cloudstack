@@ -36,9 +36,13 @@ module VagrantPlugins
           template_id           = domain_config.template_id
           template_name         = domain_config.template_name
           keypair               = domain_config.keypair
+          static_nat            = domain_config.static_nat
           pf_ip_address_id      = domain_config.pf_ip_address_id
+          pf_ip_address         = domain_config.pf_ip_address
           pf_public_port        = domain_config.pf_public_port
           pf_private_port       = domain_config.pf_private_port
+          port_forwarding_rules = domain_config.port_forwarding_rules
+          firewall_rules        = domain_config.firewall_rules
           display_name          = domain_config.display_name
           group                 = domain_config.group
           security_group_ids    = domain_config.security_group_ids
@@ -189,9 +193,34 @@ module VagrantPlugins
 
           @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
 
-          if pf_ip_address_id and pf_public_port and pf_private_port
-            create_port_forwarding_rule(env, pf_ip_address_id,
-                                        pf_public_port, pf_private_port)
+          if !static_nat.empty?
+            static_nat.each do |rule|
+              enable_static_nat(env, rule)
+            end
+          end
+
+          if (pf_ip_address_id or pf_ip_address) and pf_public_port and pf_private_port
+            port_forwarding_rule = {
+              :ipaddressid  => pf_ip_address_id,
+              :ipaddress    => pf_ip_address,
+              :protocol     => "tcp",
+              :publicport   => pf_public_port,
+              :privateport  => pf_private_port,
+              :openfirewall => true
+            }
+            create_port_forwarding_rule(env, port_forwarding_rule)
+          end
+
+          if !port_forwarding_rules.empty?
+            port_forwarding_rules.each do |port_forwarding_rule|
+              create_port_forwarding_rule(env, port_forwarding_rule)
+            end
+          end
+
+          if !firewall_rules.empty?
+            firewall_rules.each do |firewall_rule|
+              create_firewall_rule(env, firewall_rule)
+            end
           end
 
           if !env[:interrupted]
@@ -264,39 +293,93 @@ module VagrantPlugins
           end
         end
 
-        def create_port_forwarding_rule(env, pf_ip_address_id, pf_public_port, pf_private_port)
-          env[:ui].info(I18n.t("vagrant_cloudstack.creating_port_forwarding_rule"))
+        def enable_static_nat(env, rule)
+          env[:ui].info(I18n.t("vagrant_cloudstack.enabling_static_nat"))
+
+          ip_address_id = rule[:ipaddressid]
+          ip_address    = rule[:ipaddress]
+
+          if ip_address_id.nil? and ip_address.nil?
+            @logger.info("IP address is not specified. Skip enabling static nat.")
+            env[:ui].info(I18n.t("IP address is not specified. Skip enabling static nat."))
+            return
+          end
+
+          if ip_address_id.nil? and ip_address
+            ip_address_id = ip_to_id(env, ip_address)
+          elsif ip_address_id
+            ip_address = id_to_ip(env, ip_address_id)
+          end
+
+          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
+
+          options = {
+              :command          => "enableStaticNat",
+              :ipaddressid      => ip_address_id,
+              :virtualmachineid => env[:machine].id
+          }
 
           begin
-            response = env[:cloudstack_compute].list_public_ip_addresses({:id => pf_ip_address_id})
+            resp = env[:cloudstack_compute].request(options)
+            is_success = resp["enablestaticnatresponse"]["success"]
+
+            if is_success != "true"
+              env[:ui].warn(" -- Failed to enable static nat: #{resp["enablestaticnatresponse"]["errortext"]}")
+              return
+            end
           rescue Fog::Compute::Cloudstack::Error => e
             raise Errors::FogError, :message => e.message
           end
 
-          if response["listpublicipaddressesresponse"]["count"] == 0
-            @logger.info("IP address #{pf_ip_address_id} not exists. Skip creating port forwarding rule.")
-            env[:ui].info(I18n.t("IP address #{pf_ip_address_id} not exists. Skip creating port forwarding rule."))
+          # Save ipaddress id to the data dir so it can be disabled when the instance is destroyed
+          static_nat_file = env[:machine].data_dir.join('static_nat')
+          static_nat_file.open('a+') do |f|
+            f.write("#{ip_address_id}\n")
+          end
+        end
+
+        def create_port_forwarding_rule(env, rule)
+          env[:ui].info(I18n.t("vagrant_cloudstack.creating_port_forwarding_rule"))
+
+          ip_address_id = rule[:ipaddressid]
+          ip_address    = rule[:ipaddress]
+
+          if ip_address_id.nil? and ip_address.nil?
+            @logger.info("IP address is not specified. Skip creating port forwarding rule.")
+            env[:ui].info(I18n.t("IP address is not specified. Skip creating port forwarding rule."))
             return
           end
 
-          pf_ip_address = response["listpublicipaddressesresponse"]["publicipaddress"][0]["ipaddress"]
+          if ip_address_id.nil? and ip_address
+            ip_address_id = ip_to_id(env, ip_address)
+          elsif ip_address_id
+            ip_address = id_to_ip(env, ip_address_id)
+          end
 
-          env[:ui].info(" -- IP address ID: #{pf_ip_address_id}")
-          env[:ui].info(" -- IP address: #{pf_ip_address}")
-          env[:ui].info(" -- Public port: #{pf_public_port}")
-          env[:ui].info(" -- Private port: #{pf_private_port}")
+          env[:ui].info(" -- IP address    : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
+          env[:ui].info(" -- Public port   : #{rule[:publicport]}")
+          env[:ui].info(" -- Private port  : #{rule[:privateport]}")
+          env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
 
           options = {
-              :ipaddressid      => pf_ip_address_id,
-              :publicport       => pf_public_port,
-              :privateport      => pf_private_port,
-              :protocol         => "tcp",
-              :virtualmachineid => env[:machine].id,
-              :openfirewall     => "true"
+              :ipaddressid      => ip_address_id,
+              :publicport       => rule[:publicport],
+              :privateport      => rule[:privateport],
+              :protocol         => rule[:protocol],
+              :openfirewall     => rule[:openfirewall],
+              :virtualmachineid => env[:machine].id
           }
 
           begin
-            job_id = env[:cloudstack_compute].create_port_forwarding_rule(options)["createportforwardingruleresponse"]["jobid"]
+            resp = env[:cloudstack_compute].create_port_forwarding_rule(options)
+            job_id = resp["createportforwardingruleresponse"]["jobid"]
+
+            if job_id.nil?
+              env[:ui].warn(" -- Failed to create port forwarding rule: #{resp["createportforwardingruleresponse"]["errortext"]}")
+              return
+            end
+
             while true
               response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
               if response["queryasyncjobresultresponse"]["jobstatus"] != 0
@@ -312,8 +395,74 @@ module VagrantPlugins
 
           # Save port forwarding rule id to the data dir so it can be released when the instance is destroyed
           port_forwarding_file = env[:machine].data_dir.join('port_forwarding')
-          port_forwarding_file.open('w+') do |f|
-            f.write(port_forwarding_rule["id"])
+          port_forwarding_file.open('a+') do |f|
+            f.write("#{port_forwarding_rule["id"]}\n")
+          end
+        end
+
+        def create_firewall_rule(env, rule)
+          env[:ui].info(I18n.t("vagrant_cloudstack.creating_firewall_rule"))
+
+          ip_address_id = rule[:ipaddressid]
+          ip_address    = rule[:ipaddress]
+
+          if ip_address_id.nil? and ip_address.nil?
+            @logger.info("IP address is not specified. Skip creating firewall rule.")
+            env[:ui].info(I18n.t("IP address is not specified. Skip creating firewall rule."))
+            return
+          end
+
+          if ip_address_id.nil? and ip_address
+            ip_address_id = ip_to_id(env, ip_address)
+          elsif ip_address_id
+            ip_address = id_to_ip(env, ip_address_id)
+          end
+
+          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
+          env[:ui].info(" -- CIDR list  : #{rule[:cidrlist]}")
+          env[:ui].info(" -- Start port : #{rule[:startport]}")
+          env[:ui].info(" -- End port   : #{rule[:endport]}")
+          env[:ui].info(" -- ICMP code  : #{rule[:icmpcode]}")
+          env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
+
+          options = {
+              :command          => "createFirewallRule",
+              :ipaddressid      => ip_address_id,
+              :protocol         => rule[:protocol],
+              :cidrlist         => rule[:cidrlist],
+              :startport        => rule[:startport],
+              :endeport         => rule[:endport],
+              :icmpcode         => rule[:icmpcode],
+              :icmptype         => rule[:icmptype]
+          }
+
+          begin
+            resp = env[:cloudstack_compute].request(options)
+            job_id = resp["createfirewallruleresponse"]["jobid"]
+
+            if job_id.nil?
+              env[:ui].warn(" -- Failed to create firewall rule: #{resp["createfirewallruleresponse"]["errortext"]}")
+              return
+            end
+
+            while true
+              response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+              if response["queryasyncjobresultresponse"]["jobstatus"] != 0
+                firewall_rule = response["queryasyncjobresultresponse"]["jobresult"]["firewallrule"]
+                break
+              else
+                sleep 2
+              end
+            end
+          rescue Fog::Compute::Cloudstack::Error => e
+            raise Errors::FogError, :message => e.message
+          end
+
+          # Save firewall rule id to the data dir so it can be released when the instance is destroyed
+          firewall_file = env[:machine].data_dir.join('firewall')
+          firewall_file.open('a+') do |f|
+            f.write("#{firewall_rule["id"]}\n")
           end
         end
 
@@ -328,23 +477,44 @@ module VagrantPlugins
         private
 
         def translate_from_to(env, resource_type, options)
-          pluralised_type = "#{resource_type}s"
-          full_response   = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
+          if resource_type == "public_ip_address"
+            pluralised_type = "public_ip_addresses"
+          else
+            pluralised_type = "#{resource_type}s"
+          end
+
+          full_response = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
           full_response["list#{pluralised_type.tr('_', '')}response"][resource_type.tr('_', '')]
         end
 
-        def name_to_id(env, resource_name, resource_type, options={})
-          env[:ui].info("Fetching UUID for #{resource_type} named '#{resource_name}'")
+        def resourcefield_to_id(env, resource_type, resource_field, resource_field_value, options={})
+          env[:ui].info("Fetching UUID for #{resource_type} with #{resource_field} '#{resource_field_value}'")
           full_response = translate_from_to(env, resource_type, options)
-          result        = full_response.find { |type| type["name"] == resource_name }
+          result        = full_response.find {|type| type[resource_field] == resource_field_value }
           result['id']
         end
 
-        def id_to_name(env, resource_id, resource_type, options={})
-          env[:ui].info("Fetching name for #{resource_type} with UUID '#{resource_id}'")
+        def id_to_resourcefield(env, resource_id, resource_type, resource_field, options={})
+          env[:ui].info("Fetching #{resource_field} for #{resource_type} with UUID '#{resource_id}'")
           options = options.merge({'id' => resource_id})
           full_response = translate_from_to(env, resource_type, options)
-          full_response[0]['name']
+          full_response[0][resource_field]
+        end
+
+        def name_to_id(env, resource_name, resource_type, options={})
+          resourcefield_to_id(env, resource_type, 'name', resource_name, options)
+        end
+
+        def id_to_name(env, resource_id, resource_type, options={})
+          id_to_resourcefield(env, resource_id, resource_type, 'name', options)
+        end
+
+        def ip_to_id(env, ip_address, options={})
+          resourcefield_to_id(env, 'public_ip_address', 'ipaddress', ip_address, options)
+        end
+
+        def id_to_ip(env, ip_address_id, options={})
+          id_to_resourcefield(env, ip_address_id, 'public_ip_address', 'ipaddress', options)
         end
       end
     end

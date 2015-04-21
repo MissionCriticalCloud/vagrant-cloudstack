@@ -106,10 +106,20 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :keypair
 
+      # Paramters for Static NAT
+      #
+      # @return [String]
+      attr_accessor :static_nat
+
       # IP address id to use for port forwarding rule
       #
       # @return [String]
       attr_accessor :pf_ip_address_id
+
+      # IP address to use for port forwarding rule
+      #
+      # @return [String]
+      attr_accessor :pf_ip_address
 
       # public port to use for port forwarding rule
       #
@@ -120,6 +130,18 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :pf_private_port
+
+      # comma separated list of port forwarding rules
+      # (hash with rule parameters)
+      #
+      # @return [Array]
+      attr_accessor :port_forwarding_rules
+
+      # comma separated list of firewall rules
+      # (hash with rule parameters)
+      #
+      # @return [Array]
+      attr_accessor :firewall_rules
 
       # comma separated list of security groups id that going
       # to be applied to the virtual machine.
@@ -177,9 +199,13 @@ module VagrantPlugins
         @zone_id                   = UNSET_VALUE
         @zone_name                 = UNSET_VALUE
         @keypair                   = UNSET_VALUE
+        @static_nat                = UNSET_VALUE
         @pf_ip_address_id          = UNSET_VALUE
+        @pf_ip_address             = UNSET_VALUE
         @pf_public_port            = UNSET_VALUE
         @pf_private_port           = UNSET_VALUE
+        @port_forwarding_rules     = UNSET_VALUE
+        @firewall_rules            = UNSET_VALUE
         @security_group_ids        = UNSET_VALUE
         @display_name              = UNSET_VALUE
         @group                     = UNSET_VALUE
@@ -317,14 +343,26 @@ module VagrantPlugins
         # Keypair defaults to nil
         @keypair                = nil if @keypair == UNSET_VALUE
 
+        # Static NAT must be empty array 
+        @static_nat             = [] if @static_nat == UNSET_VALUE
+
         # IP address id must be nil, since we can't default that
         @pf_ip_address_id       = nil if @pf_ip_address_id == UNSET_VALUE
+
+        # IP address must be nil, since we can't default that
+        @pf_ip_address          = nil if @pf_ip_address == UNSET_VALUE
 
         # Public port must be nil, since we can't default that
         @pf_public_port         = nil if @pf_public_port == UNSET_VALUE
 
         # Private port must be nil, since we can't default that
         @pf_private_port        = nil if @pf_private_port == UNSET_VALUE
+
+        # Port forwarding rules  must be empty array 
+        @port_forwarding_rules  = [] if @port_forwarding_rules == UNSET_VALUE
+
+        # Firewall rules  must be empty array 
+        @firewall_rules         = [] if @firewall_rules == UNSET_VALUE
 
         # Security Group IDs must be nil, since we can't default that
         @security_group_ids     = [] if @security_group_ids == UNSET_VALUE

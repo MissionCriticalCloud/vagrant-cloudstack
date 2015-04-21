@@ -32,9 +32,13 @@ describe VagrantPlugins::Cloudstack::Config do
     its("template_id")            { should be_nil }
     its("zone_id")                { should be_nil }
     its("keypair")                { should be_nil }
+    its("static_nat")             { should == []  }
     its("pf_ip_address_id")       { should be_nil }
+    its("pf_ip_address")          { should be_nil }
     its("pf_public_port")         { should be_nil }
     its("pf_private_port")        { should be_nil }
+    its("port_forwarding_rules")  { should == []  }
+    its("firewall_rules")         { should == []  }
     its("security_group_ids")     { should == []  }
     its("display_name")           { should be_nil }
     its("group")                  { should be_nil }
@@ -118,9 +122,13 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_template_id)            { "foo" }
     let(:config_zone_id)                { "foo" }
     let(:config_keypair)                { "foo" }
+    let(:config_static_nat)             { [{:foo => "bar"}, {:bar => "foo"}] }
     let(:config_pf_ip_address_id)       { "foo" }
+    let(:config_pf_ip_address)          { "foo" }
     let(:config_pf_public_port)         { "foo" }
     let(:config_pf_private_port)        { "foo" }
+    let(:config_port_forwarding_rules)  { [{:foo => "bar"}, {:bar => "foo"}] }
+    let(:config_firewall_rules)         { [{:foo => "bar"}, {:bar => "foo"}] }
     let(:config_security_group_ids)     { ["foo", "bar"] }
     let(:config_display_name)           { "foo" }
     let(:config_group)                  { "foo" }
@@ -142,9 +150,13 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.template_id            = config_template_id
       instance.zone_id                = config_zone_id
       instance.keypair                = config_keypair
+      instance.static_nat             = config_static_nat
       instance.pf_ip_address_id       = config_pf_ip_address_id
+      instance.pf_ip_address          = config_pf_ip_address
       instance.pf_public_port         = config_pf_public_port
       instance.pf_private_port        = config_pf_private_port
+      instance.port_forwarding_rules  = config_port_forwarding_rules
+      instance.firewall_rules         = config_firewall_rules
       instance.security_group_ids     = config_security_group_ids
       instance.display_name           = config_display_name
       instance.group                  = config_group
@@ -183,9 +195,13 @@ describe VagrantPlugins::Cloudstack::Config do
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
       its("keypair")                { should == config_keypair }
+      its("static_nat")             { should == config_static_nat }
       its("pf_ip_address_id")       { should == config_pf_ip_address_id }
+      its("pf_ip_address")          { should == config_pf_ip_address }
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
+      its("port_forwarding_rules")  { should == config_port_forwarding_rules }
+      its("firewall_rules")         { should == config_firewall_rules }
       its("security_group_ids")     { should == config_security_group_ids }
       its("display_name")           { should == config_display_name }
       its("group")                  { should == config_group }
@@ -223,9 +239,13 @@ describe VagrantPlugins::Cloudstack::Config do
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
       its("keypair")                { should == config_keypair }
+      its("static_nat")             { should == config_static_nat }
       its("pf_ip_address_id")       { should == config_pf_ip_address_id }
+      its("pf_ip_address")          { should == config_pf_ip_address }
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
+      its("port_forwarding_rules")  { should == config_port_forwarding_rules }
+      its("firewall_rules")         { should == config_firewall_rules }
       its("security_group_ids")     { should == config_security_group_ids }
       its("display_name")           { should == config_display_name }
       its("group")                  { should == config_group }
