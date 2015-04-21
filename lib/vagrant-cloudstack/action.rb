@@ -55,7 +55,7 @@ module VagrantPlugins
             end
 
             b2.use Provision
-            b2.use SyncFolders
+            b2.use SyncedFolders
           end
         end
       end
@@ -114,7 +114,7 @@ module VagrantPlugins
       def self.action_prepare_boot
         Vagrant::Action::Builder.new.tap do |b|
           b.use Provision
-          b.use SyncFolders
+          b.use SyncedFolders
           b.use WarnNetworks
         end
       end
@@ -177,7 +177,6 @@ module VagrantPlugins
       autoload :RunInstance, action_root.join("run_instance")
       autoload :StartInstance, action_root.join("start_instance")
       autoload :StopInstance, action_root.join("stop_instance")
-      autoload :SyncFolders, action_root.join("sync_folders")
       autoload :TimedProvision, action_root.join("timed_provision")
       autoload :WaitForState, action_root.join("wait_for_state")
       autoload :WarnNetworks, action_root.join("warn_networks")
