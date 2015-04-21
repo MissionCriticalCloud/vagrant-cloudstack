@@ -1,5 +1,3 @@
-# WARNING: Klarna does not actively use Vagrant to manage any Cloudstack instances anymore, therefore we are not maintaining this repository.
-
 # Vagrant Cloudstack Provider
 
 [![Build Status](https://travis-ci.org/klarna/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/klarna/vagrant-cloudstack)
