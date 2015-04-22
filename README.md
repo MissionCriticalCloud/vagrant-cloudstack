@@ -157,6 +157,8 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `firewall_rules` - Firewall rules
 * `display_name` - Display name for the instance
 * `group` - Group for the instance
+* `ssh_key` - Path to a private key to be used with ssh
+* `ssh_user` - User name to be used with ssh
 
 These can be set like typical provider-specific configuration:
 

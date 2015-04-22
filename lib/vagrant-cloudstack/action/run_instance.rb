@@ -49,6 +49,8 @@ module VagrantPlugins
           security_group_names  = domain_config.security_group_names
           security_groups       = domain_config.security_groups
           user_data             = domain_config.user_data
+          ssh_key               = domain_config.ssh_key
+          ssh_user              = domain_config.ssh_user
 
           # If for some reason the user have specified both network_name and network_id, take the id since that is
           # more specific than the name. But always try to fetch the name of the network to present to the user.

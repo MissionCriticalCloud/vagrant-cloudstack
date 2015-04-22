@@ -45,6 +45,8 @@ describe VagrantPlugins::Cloudstack::Config do
     its("security_group_names")   { should == []  }
     its("security_groups")        { should == []  }
     its("user_data")              { should be_nil }
+    its("ssh_key")                { should be_nil }
+    its("ssh_user")               { should be_nil }
   end
 
   describe "getting credentials from environment" do
@@ -134,6 +136,8 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_group)                  { "foo" }
     let(:config_security_group_names)   { ["foo", "bar"] }
     let(:config_security_groups)        { [{:foo => "bar"}, {:bar => "foo"}] }
+    let(:config_ssh_key)                { "./foo.pem" }
+    let(:config_ssh_user)               { "foo" }
 
     def set_test_values(instance)
       instance.host                   = config_host
@@ -162,6 +166,8 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.group                  = config_group
       instance.security_group_names   = config_security_group_names
       instance.security_groups        = config_security_groups
+      instance.ssh_key                = config_ssh_key
+      instance.ssh_user               = config_ssh_user
     end
 
     it "should raise an exception if not finalized" do
@@ -207,6 +213,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("group")                  { should == config_group }
       its("security_group_names")   { should == config_security_group_names }
       its("security_groups")        { should == config_security_groups }
+      its("ssh_key")                { should == config_ssh_key }
+      its("ssh_user")               { should == config_ssh_user }
     end
 
     context "with a specific config set" do
@@ -251,6 +259,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("group")                  { should == config_group }
       its("security_group_names")   { should == config_security_group_names }
       its("security_groups")        { should == config_security_groups }
+      its("ssh_key")                { should == config_ssh_key }
+      its("ssh_user")               { should == config_ssh_user }
     end
 
     describe "inheritance of parent config" do
