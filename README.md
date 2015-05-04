@@ -1,10 +1,9 @@
 # Vagrant Cloudstack Provider
 
-[![Build Status](https://travis-ci.org/klarna/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/klarna/vagrant-cloudstack)
+[![Build Status](https://travis-ci.org/schubergphilis/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/schubergphilis/vagrant-cloudstack)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.png)](http://badge.fury.io/rb/vagrant-cloudstack)
-[![Dependency Status](https://gemnasium.com/klarna/vagrant-cloudstack.png)](https://gemnasium.com/klarna/vagrant-cloudstack)
-[![Code climate](https://codeclimate.com/github/klarna/vagrant-cloudstack.png)](https://codeclimate.com/github/klarna/vagrant-cloudstack)
-[![Coverage Status](https://coveralls.io/repos/klarna/vagrant-cloudstack/badge.png)](https://coveralls.io/r/klarna/vagrant-cloudstack)
+[![Code climate](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack.png)](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack)
+[![Coverage Status](https://coveralls.io/repos/schubergphilis/vagrant-cloudstack/badge.png)](https://coveralls.io/r/schubergphilis/vagrant-cloudstack)
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
@@ -41,7 +40,7 @@ manually within a `config.vm.provider` block. So first, add the dummy
 box using any name you want:
 
 ```
-$ vagrant box add dummy https://github.com/klarna/vagrant-cloudstack/raw/master/dummy.box
+$ vagrant box add dummy https://github.com/schubergphilis/vagrant-cloudstack/raw/master/dummy.box
 ...
 ```
 
@@ -112,7 +111,7 @@ well.
 
 Every provider in Vagrant must introduce a custom box format. This
 provider introduces `cloudstack` boxes. You can view an example box in
-the [example_box/ directory](https://github.com/klarna/vagrant-cloudstack/tree/master/example_box).
+the [example_box/ directory](https://github.com/schubergphilis/vagrant-cloudstack/tree/master/example_box).
 That directory also contains instructions on how to build a box.
 
 The box format is basically just the required `metadata.json` file
@@ -140,7 +139,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `network_id` - Network uuid that the instance should use
 * `network_name` - Network name that the instance should use
 * `network_type` - CloudStack Network Type(default: Advanced)
-* `project_id` - Project uuid that the instance should belong to 
+* `project_id` - Project uuid that the instance should belong to
 * `service_offering_id`- Service offering uuid to use for the instance
 * `service_offering_name`- Service offering name to use for the instance
 * `template_id` - Template uuid to use for the instance
@@ -212,7 +211,7 @@ the Cloudstack machine.
 
 ### Basic Networking
 
-If you set the `network_type` to `basic`, you can use Security 
+If you set the `network_type` to `basic`, you can use Security
 Groups and associate rules in your Vagrantfile.
 
 If you already have Security Groups, you can associate them to your
@@ -258,7 +257,7 @@ Vagrant.configure("2") do |config|
     cloudstack.secret_key = "bar"
     cloudstack.network_type = "basic"
     cloudstack.security_groups = [
-      { 
+      {
         :name         => "Awesome_security_group",
         :description  => "Created from the Vagrantfile",
     		:rules 				=> [
@@ -353,7 +352,7 @@ $ bundle exec rake
 If those pass, you're ready to start developing the plugin. You can test
 the plugin without installing it into your Vagrant environment by just
 creating a `Vagrantfile` in the top level of this directory (it is gitignored)
-and add the following line to your `Vagrantfile` 
+and add the following line to your `Vagrantfile`
 ```ruby
 Vagrant.require_plugin "vagrant-cloudstack"
 ```
