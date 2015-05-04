@@ -1,7 +1,5 @@
+require "spec_helper"
 require "vagrant-cloudstack/config"
-
-require 'coveralls'
-Coveralls.wear!
 
 describe VagrantPlugins::Cloudstack::Config do
   let(:instance) { described_class.new }
