@@ -152,6 +152,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `pf_ip_address` - IP address for port forwarding rule
 * `pf_public_port` - Public port for port forwarding rule
 * `pf_private_port` - Private port for port forwarding rule
+* `pf_open_firewall` - Flag to enable/disable automatic open firewall rule
 * `port_forwarding_rules` - Port forwarding rules for the virtual machine
 * `firewall_rules` - Firewall rules
 * `display_name` - Display name for the instance
