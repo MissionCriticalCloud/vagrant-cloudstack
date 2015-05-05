@@ -131,6 +131,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :pf_private_port
 
+      # flag to enable/disable automatic open firewall rule
+      #
+      # @return [Boolean]
+      attr_accessor :pf_open_firewall
+
       # comma separated list of port forwarding rules
       # (hash with rule parameters)
       #
@@ -214,6 +219,7 @@ module VagrantPlugins
         @pf_ip_address             = UNSET_VALUE
         @pf_public_port            = UNSET_VALUE
         @pf_private_port           = UNSET_VALUE
+        @pf_open_firewall          = UNSET_VALUE
         @port_forwarding_rules     = UNSET_VALUE
         @firewall_rules            = UNSET_VALUE
         @security_group_ids        = UNSET_VALUE
@@ -354,7 +360,7 @@ module VagrantPlugins
         # Keypair defaults to nil
         @keypair                = nil if @keypair == UNSET_VALUE
 
-        # Static NAT must be empty array 
+        # Static NAT must be empty array
         @static_nat             = [] if @static_nat == UNSET_VALUE
 
         # IP address id must be nil, since we can't default that
@@ -369,10 +375,13 @@ module VagrantPlugins
         # Private port must be nil, since we can't default that
         @pf_private_port        = nil if @pf_private_port == UNSET_VALUE
 
-        # Port forwarding rules  must be empty array 
+        # Open firewall is true by default (for backwards compatibility)
+        @pf_open_firewall       = true if @pf_open_firewall == UNSET_VALUE
+
+        # Port forwarding rules  must be empty array
         @port_forwarding_rules  = [] if @port_forwarding_rules == UNSET_VALUE
 
-        # Firewall rules  must be empty array 
+        # Firewall rules  must be empty array
         @firewall_rules         = [] if @firewall_rules == UNSET_VALUE
 
         # Security Group IDs must be nil, since we can't default that
