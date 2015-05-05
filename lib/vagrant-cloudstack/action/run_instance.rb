@@ -41,6 +41,7 @@ module VagrantPlugins
           pf_ip_address         = domain_config.pf_ip_address
           pf_public_port        = domain_config.pf_public_port
           pf_private_port       = domain_config.pf_private_port
+          pf_open_firewall      = domain_config.pf_open_firewall
           port_forwarding_rules = domain_config.port_forwarding_rules
           firewall_rules        = domain_config.firewall_rules
           display_name          = domain_config.display_name
@@ -208,7 +209,7 @@ module VagrantPlugins
               :protocol     => "tcp",
               :publicport   => pf_public_port,
               :privateport  => pf_private_port,
-              :openfirewall => true
+              :openfirewall => pf_open_firewall
             }
             create_port_forwarding_rule(env, port_forwarding_rule)
           end
