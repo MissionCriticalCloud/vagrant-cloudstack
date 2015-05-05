@@ -1,3 +1,11 @@
+# 1.0.0 (May 5, 2015)
+* Use vagrant's built-in rsync synced folder (PR #57)
+* Enable creating custom static NAT, port forwarding, firewall rules (PR #59)
+* Fixed bug when `network_id` and `network_name` are not specified in Vagrantfile (PR #59)
+* Enable setting SSH user name and private key to access VM (PR #64)
+* Fixed bug when `vagrant destroy` destroys other VMs (PR #66)
+* Enable toggling port forwarding automatically adding an open firewall rule (PR #70)
+
 # 0.10.0 (Sep 11, 2014)
 * Clean up code base DRY
 * Improve documentation
