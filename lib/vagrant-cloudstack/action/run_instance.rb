@@ -52,6 +52,7 @@ module VagrantPlugins
           user_data             = domain_config.user_data
           ssh_key               = domain_config.ssh_key
           ssh_user              = domain_config.ssh_user
+          private_ip_address    = domain_config.private_ip_address
 
           # If for some reason the user have specified both network_name and network_id, take the id since that is
           # more specific than the name. But always try to fetch the name of the network to present to the user.
@@ -144,6 +145,7 @@ module VagrantPlugins
             options['project_id'] = project_id if project_id != nil
             options['key_name']   = keypair if keypair != nil
             options['name']       = hostname if hostname != nil
+            options['ip_address'] = private_ip_address if private_ip_address != nil
 
             if user_data != nil
               options['user_data'] = Base64.urlsafe_encode64(user_data)
