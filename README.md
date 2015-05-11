@@ -262,11 +262,11 @@ Vagrant.configure("2") do |config|
       {
         :name         => "Awesome_security_group",
         :description  => "Created from the Vagrantfile",
-    		:rules 				=> [
-				  {:type => "ingress", :protocol => "TCP", :startport => 22, :endport => 22, :cidrlist => "0.0.0.0/0"},
-				  {:type => "ingress", :protocol => "TCP", :startport => 80, :endport => 80, :cidrlist => "0.0.0.0/0"},
-          {:type => "egress",  :protocol => "TCP", :startport => 81, :endport => 82, :cidrlist => "1.2.3.4/24"},
-			  ]
+        	:rules => [
+				{:type => "ingress", :protocol => "TCP", :startport => 22, :endport => 22, :cidrlist => "0.0.0.0/0"},
+				{:type => "ingress", :protocol => "TCP", :startport => 80, :endport => 80, :cidrlist => "0.0.0.0/0"},
+				{:type => "egress",  :protocol => "TCP", :startport => 81, :endport => 82, :cidrlist => "1.2.3.4/24"},
+		]
       }
     ]
   end
