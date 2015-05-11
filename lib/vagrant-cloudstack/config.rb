@@ -192,6 +192,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :ssh_user
 
+      # Private ip for the instance
+      #
+      # @return [String]
+      attr_accessor :private_ip_address
+
 
       def initialize(domain_specific=false)
         @host                      = UNSET_VALUE
@@ -230,6 +235,7 @@ module VagrantPlugins
         @user_data                 = UNSET_VALUE
         @ssh_key                   = UNSET_VALUE
         @ssh_user                  = UNSET_VALUE
+        @private_ip_address        = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -407,6 +413,9 @@ module VagrantPlugins
 
         # ssh key is nil by default
         @ssh_user               = nil if @ssh_user == UNSET_VALUE
+
+        # private ip is nil by default
+        @private_ip_address     = nil if @private_ip_address == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

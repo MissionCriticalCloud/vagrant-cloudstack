@@ -159,6 +159,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `group` - Group for the instance
 * `ssh_key` - Path to a private key to be used with ssh
 * `ssh_user` - User name to be used with ssh
+* `private_ip_address` - private (static)ip address to be used by the virtual machine
 
 These can be set like typical provider-specific configuration:
 
