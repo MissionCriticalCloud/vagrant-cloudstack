@@ -102,7 +102,7 @@ module VagrantPlugins
 
           env[:ui].info(I18n.t("vagrant_cloudstack.terminating"))
           options = {}
-          options['expunge'] = expunge_on_destroy if expunge_on_destroy != nil
+          options['expunge'] = expunge_on_destroy
 
           job = server.destroy(options)
           while true
