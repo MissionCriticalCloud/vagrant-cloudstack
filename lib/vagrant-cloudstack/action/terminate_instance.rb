@@ -102,7 +102,7 @@ module VagrantPlugins
           expunge_on_destroy    = domain_config.expunge_on_destroy
 
           options = {}
-          options['expunge'] = expunge_on_destroy if expunge_on_destroy != nil
+          options['expunge'] = expunge_on_destroy
 
           job = server.destroy(options)
           while true
