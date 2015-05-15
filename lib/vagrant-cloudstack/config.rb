@@ -423,7 +423,7 @@ module VagrantPlugins
         @private_ip_address     = nil if @private_ip_address == UNSET_VALUE
 
         # expunge on destroy is nil by default
-        @expunge_on_destroy     = nil if @expunge_on_destroy == UNSET_VALUE
+        @expunge_on_destroy     = false if @expunge_on_destroy == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.
