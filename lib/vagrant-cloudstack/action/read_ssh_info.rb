@@ -1,4 +1,4 @@
-require "log4r"
+require 'log4r'
 
 module VagrantPlugins
   module Cloudstack
