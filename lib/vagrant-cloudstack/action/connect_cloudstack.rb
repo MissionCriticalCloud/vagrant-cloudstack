@@ -36,7 +36,7 @@ module VagrantPlugins
           fog_config[:cloudstack_port]   = domain_config.port if domain_config.port
           fog_config[:cloudstack_scheme] = domain_config.scheme if domain_config.scheme
 
-          @logger.info("Connecting to Cloudstack...")
+          @logger.info('Connecting to Cloudstack...')
           env[:cloudstack_compute] = Fog::Compute.new(fog_config)
 
           @app.call(env)
