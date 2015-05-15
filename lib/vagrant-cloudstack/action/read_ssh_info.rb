@@ -1,4 +1,4 @@
-require "log4r"
+require 'log4r'
 
 module VagrantPlugins
   module Cloudstack
@@ -63,8 +63,7 @@ module VagrantPlugins
             :password         => nil
           }) unless domain_config.ssh_key.nil?
           ssh_info = ssh_info.merge({ :username => domain_config.ssh_user }) unless domain_config.ssh_user.nil?
-
-          return ssh_info
+          ssh_info
         end
       end
     end

@@ -1,5 +1,5 @@
-require "fog"
-require "log4r"
+require 'fog'
+require 'log4r'
 
 module VagrantPlugins
   module Cloudstack
@@ -10,7 +10,7 @@ module VagrantPlugins
       class ConnectCloudstack
         def initialize(app, env)
           @app    = app
-          @logger = Log4r::Logger.new("vagrant_cloudstack::action::connect_cloudstack")
+          @logger = Log4r::Logger.new('vagrant_cloudstack::action::connect_cloudstack')
         end
 
         def call(env)
@@ -36,7 +36,7 @@ module VagrantPlugins
           fog_config[:cloudstack_port]   = domain_config.port if domain_config.port
           fog_config[:cloudstack_scheme] = domain_config.scheme if domain_config.scheme
 
-          @logger.info("Connecting to Cloudstack...")
+          @logger.info('Connecting to Cloudstack...')
           env[:cloudstack_compute] = Fog::Compute.new(fog_config)
 
           @app.call(env)
