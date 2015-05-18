@@ -47,7 +47,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("ssh_key")                { should be_nil  }
     its("ssh_user")               { should be_nil  }
     its("private_ip_address")     { should be_nil  }
-    its("expunge_on_destroy")     { should be_nil  }
+    its("expunge_on_destroy")     { should == false  }
   end
 
   describe "getting credentials from environment" do
