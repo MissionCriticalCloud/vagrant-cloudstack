@@ -197,6 +197,10 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :private_ip_address
 
+      # flag to enable/disable expunge vm on destroy
+      #
+      # @return [Boolean]
+      attr_accessor :expunge_on_destroy
 
       def initialize(domain_specific=false)
         @host                      = UNSET_VALUE
@@ -236,6 +240,7 @@ module VagrantPlugins
         @ssh_key                   = UNSET_VALUE
         @ssh_user                  = UNSET_VALUE
         @private_ip_address        = UNSET_VALUE
+        @expunge_on_destroy        = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -416,6 +421,9 @@ module VagrantPlugins
 
         # private ip is nil by default
         @private_ip_address     = nil if @private_ip_address == UNSET_VALUE
+
+        # expunge on destroy is nil by default
+        @expunge_on_destroy     = false if @expunge_on_destroy == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.

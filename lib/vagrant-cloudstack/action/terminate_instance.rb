@@ -11,6 +11,11 @@ module VagrantPlugins
         end
 
         def call(env)
+          # Get the configs
+          domain                = env[:machine].provider_config.domain_id
+          domain_config         = env[:machine].provider_config.get_domain_config(domain)
+          expunge_on_destroy    = domain_config.expunge_on_destroy
+
           # Disable Static NAT
           env[:ui].info(I18n.t("vagrant_cloudstack.disabling_static_nat"))
           static_nat_file = env[:machine].data_dir.join("static_nat")
@@ -96,8 +101,10 @@ module VagrantPlugins
               server = env[:cloudstack_compute].servers.get(env[:machine].id)
 
           env[:ui].info(I18n.t("vagrant_cloudstack.terminating"))
+          options = {}
+          options['expunge'] = expunge_on_destroy
 
-          job = server.destroy
+          job = server.destroy(options)
           while true
             response = env[:cloudstack_compute].query_async_job_result({:jobid => job.id})
             if response["queryasyncjobresultresponse"]["jobstatus"] != 0
