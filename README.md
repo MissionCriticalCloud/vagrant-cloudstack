@@ -4,6 +4,7 @@
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.png)](http://badge.fury.io/rb/vagrant-cloudstack)
 [![Code climate](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack.png)](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack)
 [![Coverage Status](https://coveralls.io/repos/schubergphilis/vagrant-cloudstack/badge.svg?branch=master)](https://coveralls.io/r/schubergphilis/vagrant-cloudstack?branch=master)
+[![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.svg)](http://badge.fury.io/rb/vagrant-cloudstack)
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
