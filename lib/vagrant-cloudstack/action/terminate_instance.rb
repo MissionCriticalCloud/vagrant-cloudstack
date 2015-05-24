@@ -11,6 +11,34 @@ module VagrantPlugins
         end
 
         def call(env)
+          # Delete the Firewall rule
+          env[:ui].info(I18n.t("vagrant_cloudstack.deleting_firewall_rule"))
+          firewall_file = env[:machine].data_dir.join("firewall")
+          if firewall_file.file?
+            File.open(firewall_file, "r").each_line do |line|
+              rule_id = line.strip
+              begin
+                options = {
+                  :command => "deleteFirewallRule",
+                  :id      => rule_id
+                }
+                resp = env[:cloudstack_compute].request(options)
+                job_id = resp["deletefirewallruleresponse"]["jobid"]
+                while true
+                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+                  if response["queryasyncjobresultresponse"]["jobstatus"] != 0
+                    break
+                  else
+                    sleep 2
+                  end
+                end
+              rescue Fog::Compute::Cloudstack::Error => e
+                raise Errors::FogError, :message => e.message
+              end
+            end
+            firewall_file.delete
+          end
+
           # Disable Static NAT
           env[:ui].info(I18n.t("vagrant_cloudstack.disabling_static_nat"))
           static_nat_file = env[:machine].data_dir.join("static_nat")
@@ -61,34 +89,6 @@ module VagrantPlugins
               end
             end
             port_forwarding_file.delete
-          end
-
-          # Delete the Firewall rule
-          env[:ui].info(I18n.t("vagrant_cloudstack.deleting_firewall_rule"))
-          firewall_file = env[:machine].data_dir.join("firewall")
-          if firewall_file.file?
-            File.open(firewall_file, "r").each_line do |line|
-              rule_id = line.strip
-              begin
-                options = {
-                  :command => "deleteFirewallRule",
-                  :id      => rule_id
-                }
-                resp = env[:cloudstack_compute].request(options)
-                job_id = resp["deletefirewallruleresponse"]["jobid"]
-                while true
-                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-                  if response["queryasyncjobresultresponse"]["jobstatus"] != 0
-                    break
-                  else
-                    sleep 2
-                  end
-                end
-              rescue Fog::Compute::Cloudstack::Error => e
-                raise Errors::FogError, :message => e.message
-              end
-            end
-            firewall_file.delete
           end
 
           # Destroy the server and remove the tracking ID
