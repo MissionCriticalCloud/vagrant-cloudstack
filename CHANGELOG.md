@@ -1,3 +1,8 @@
+# 1.1.0 (May 26, 2015)
+* Allow setting VM private IP in config (PR #73)
+* Fixed several coding style issues (PR #76, #77, #78)
+* Fixed bug when destroying VM created with Static NAT and firewall rules (PR #81)
+
 # 1.0.0 (May 5, 2015)
 * Use vagrant's built-in rsync synced folder (PR #57)
 * Enable creating custom static NAT, port forwarding, firewall rules (PR #59)

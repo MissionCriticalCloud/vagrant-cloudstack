@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.0
+VERSION=1.1.0
 mkdir -p /tmp/vagrant-cloudstack-build_rpm.$$/vagrant-cloudstack-$VERSION
 cp -r . /tmp/vagrant-cloudstack-build_rpm.$$/vagrant-cloudstack-$VERSION/
 tar -C /tmp/vagrant-cloudstack-build_rpm.$$/ -czf ~/rpmbuild/SOURCES/vagrant-cloudstack-$VERSION.tar.gz vagrant-cloudstack-$VERSION
