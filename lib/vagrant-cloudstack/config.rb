@@ -79,6 +79,16 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :service_offering_name
 
+      # Disk offering uuid to use for the instance
+      #
+      # @return [String]
+      attr_accessor :disk_offering_id
+
+      # Disk offering name to use for the instance
+      #
+      # @return [String]
+      attr_accessor :disk_offering_name
+
       # Template uuid to use for the instance
       #
       # @return [String]

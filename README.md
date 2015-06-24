@@ -62,6 +62,7 @@ Vagrant.configure("2") do |config|
 
     cloudstack.template_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.service_offering_id = "AAAAAAAAAAAAAAAAAAA"
+    cloudstack.disk_offering_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.network_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.zone_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
@@ -86,6 +87,7 @@ Vagrant.configure("2") do |config|
 
     cloudstack.template_name = "GENERIC-Awesome-Linux"
     cloudstack.service_offering_name = "THE-BESTEST"
+    cloudstack.disk_offering_name = "THE-LARGEST-OFFER-AVAILABLE"
     cloudstack.network_name = "WOW-SUCH-FAST-OFFERING"
     cloudstack.zone_name = "District-9"
     cloudstack.name = "doge-is-a-hostname-now"
