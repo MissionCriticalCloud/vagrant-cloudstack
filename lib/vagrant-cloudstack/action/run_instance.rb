@@ -32,6 +32,8 @@ module VagrantPlugins
           project_id            = domain_config.project_id
           service_offering_id   = domain_config.service_offering_id
           service_offering_name = domain_config.service_offering_name
+          disk_offering_id      = domain_config.disk_offering_id
+          disk_offering_name    = domain_config.disk_offering_name
           template_id           = domain_config.template_id
           template_name         = domain_config.template_name
           keypair               = domain_config.keypair
@@ -71,6 +73,12 @@ module VagrantPlugins
             service_offering_id = name_to_id(env, service_offering_name, "service_offering")
           elsif service_offering_id
             service_offering_name = id_to_name(env, service_offering_id, "service_offering")
+          end
+
+          if disk_offering_id.nil? and disk_offering_name
+            disk_offering_id = name_to_id(env, disk_offering_name, "disk_offering")
+          elsif disk_offering_id
+            disk_offering_name = id_to_name(env, disk_offering_id, "disk_offering")
           end
 
           if template_id.nil? and template_name
@@ -117,6 +125,7 @@ module VagrantPlugins
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
           env[:ui].info(" -- Service offering: #{service_offering_name} (#{service_offering_id})")
+          env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})")
           env[:ui].info(" -- Template: #{template_name} (#{template_id})")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
@@ -142,6 +151,7 @@ module VagrantPlugins
             options['key_name']   = keypair if keypair != nil
             options['name']       = hostname if hostname != nil
             options['ip_address'] = private_ip_address if private_ip_address != nil
+            options['disk_offering_id'] = disk_offering_id if disk_offering_id != nil
 
             if user_data != nil
               options['user_data'] = Base64.urlsafe_encode64(user_data)

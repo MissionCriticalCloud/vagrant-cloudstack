@@ -27,6 +27,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("network_id")             { should be_nil  }
     its("project_id")             { should be_nil  }
     its("service_offering_id")    { should be_nil  }
+    its("disk_offering_id")       { should be_nil  }
     its("template_id")            { should be_nil  }
     its("zone_id")                { should be_nil  }
     its("keypair")                { should be_nil  }
@@ -85,7 +86,7 @@ describe VagrantPlugins::Cloudstack::Config do
     # each of these attributes to "foo" in isolation, and reads the value
     # and asserts the proper result comes back out.
     [:api_key, :template_id, :zone_id, :instance_ready_timeout,
-      :service_offering_id, :api_key,
+      :service_offering_id, :disk_offering_id, :api_key,
       :secret_key, :network_id, :user_data].each do |attribute|
 
       it "should not default #{attribute} if overridden" do
@@ -130,6 +131,7 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_network_id)             { "foo" }
     let(:config_project_id)             { "foo" }
     let(:config_service_offering_id)    { "foo" }
+    let(:config_disk_offering_id)       { "foo" }
     let(:config_template_id)            { "foo" }
     let(:config_zone_id)                { "foo" }
     let(:config_keypair)                { "foo" }
@@ -163,6 +165,7 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.network_id             = config_network_id
       instance.project_id             = config_project_id
       instance.service_offering_id    = config_service_offering_id
+      instance.disk_offering_id       = config_disk_offering_id
       instance.template_id            = config_template_id
       instance.zone_id                = config_zone_id
       instance.keypair                = config_keypair
@@ -213,6 +216,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("network_id")             { should == config_network_id }
       its("project_id")             { should == config_project_id }
       its("service_offering_id")    { should == config_service_offering_id }
+      its("disk_offering_id")       { should == config_disk_offering_id }
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
       its("keypair")                { should == config_keypair }
@@ -262,6 +266,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("network_id")             { should == config_network_id }
       its("project_id")             { should == config_project_id }
       its("service_offering_id")    { should == config_service_offering_id }
+      its("disk_offering_id")       { should == config_disk_offering_id }
       its("template_id")            { should == config_template_id }
       its("zone_id")                { should == config_zone_id }
       its("keypair")                { should == config_keypair }
