@@ -31,14 +31,12 @@ module VagrantPlugins
           @zone             = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
           @network          = CloudstackResource.new(domain_config.network_id, domain_config.network_name, 'network')
           @service_offering = CloudstackResource.new(domain_config.service_offering_id, domain_config.service_offering_name, 'service_offering')
+          @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
+          @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name, 'template')
 
           hostname              = domain_config.name
           network_type          = domain_config.network_type
           project_id            = domain_config.project_id
-          disk_offering_id      = domain_config.disk_offering_id
-          disk_offering_name    = domain_config.disk_offering_name
-          template_id           = domain_config.template_id
-          template_name         = domain_config.template_name
           keypair               = domain_config.keypair
           static_nat            = domain_config.static_nat
           pf_ip_address_id      = domain_config.pf_ip_address_id
@@ -63,20 +61,8 @@ module VagrantPlugins
           @resource_service.sync_resource(@zone, { 'available' => true })
           @resource_service.sync_resource(@network)
           @resource_service.sync_resource(@service_offering)
-
-          if disk_offering_id.nil? and disk_offering_name
-            disk_offering_id = name_to_id(env, disk_offering_name, 'disk_offering')
-          elsif disk_offering_id
-            disk_offering_name = id_to_name(env, disk_offering_id, 'disk_offering')
-          end
-
-          if template_id.nil? and template_name
-            template_id = name_to_id(env, template_name, 'template', {'zoneid'         => @zone.id,
-                                                                      'templatefilter' => 'executable'})
-          elsif template_id
-            template_name = id_to_name(env, template_id, 'template', {'zoneid'         => @zone.id,
-                                                                      'templatefilter' => 'executable'})
-          end
+          @resource_service.sync_resource(@disk_offering)
+          @resource_service.sync_resource(@template, {'zoneid' => @zone.id, 'templatefilter' => 'executable' })
 
           # Can't use Security Group IDs and Names at the same time
           # Let's use IDs by default...
@@ -114,8 +100,8 @@ module VagrantPlugins
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
           env[:ui].info(" -- Service offering: #{@service_offering.name} (#{@service_offering.id})")
-          env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})") unless disk_offering_id.nil?
-          env[:ui].info(" -- Template: #{template_name} (#{template_id})")
+          env[:ui].info(" -- Disk offering: #{@disk_offering.name} (#{@disk_offering.id})") unless @disk_offering.id.nil?
+          env[:ui].info(" -- Template: #{@template.name} (#{@template.id})")
           env[:ui].info(" -- Project UUID: #{project_id}") unless project_id.nil?
           env[:ui].info(" -- Zone: #{@zone.name} (#{@zone.id})")
           env[:ui].info(" -- Network: #{@network.name} (#{@network.id})") unless @network.id.nil?
@@ -131,7 +117,7 @@ module VagrantPlugins
                 :group        => group,
                 :zone_id      => @zone.id,
                 :flavor_id    => @service_offering.id,
-                :image_id     => template_id
+                :image_id     => @template.id
             }
 
             options['network_ids'] = @network.id unless @network.id.nil?
@@ -140,7 +126,7 @@ module VagrantPlugins
             options['key_name']   = keypair unless keypair.nil?
             options['name']       = hostname unless hostname.nil?
             options['ip_address'] = private_ip_address unless private_ip_address.nil?
-            options['disk_offering_id'] = disk_offering_id unless disk_offering_id.nil?
+            options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
 
             if user_data != nil
               options['user_data'] = Base64.urlsafe_encode64(user_data)
