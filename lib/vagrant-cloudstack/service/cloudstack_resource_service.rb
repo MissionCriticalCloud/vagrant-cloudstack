@@ -44,11 +44,13 @@ module VagrantPlugins
         end
 
         def name_to_id(resource_name, resource_type, options={})
-          resourcefield_to_id(resource_type, 'name', resource_name, options)
+          resource_field = resource_type == 'public_ip_address' ? 'ipaddress' : 'name'
+          resourcefield_to_id(resource_type, resource_field, resource_name, options)
         end
 
         def id_to_name(resource_id, resource_type, options={})
-          id_to_resourcefield(resource_id, resource_type, 'name', options)
+          resource_field = resource_type == 'public_ip_address' ? 'ipaddress' : 'name'
+          id_to_resourcefield(resource_id, resource_type, resource_field, options)
         end
       end
     end
