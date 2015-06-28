@@ -1,6 +1,8 @@
 require 'log4r'
 require 'vagrant/util/retryable'
 require 'vagrant-cloudstack/util/timer'
+require 'vagrant-cloudstack/model/cloudstack_resource'
+require 'vagrant-cloudstack/service/cloudstack_resource_service'
 
 module VagrantPlugins
   module Cloudstack
@@ -8,10 +10,13 @@ module VagrantPlugins
       # This runs the configured instance.
       class RunInstance
         include Vagrant::Util::Retryable
+        include VagrantPlugins::Cloudstack::Model
+        include VagrantPlugins::Cloudstack::Service
 
         def initialize(app, env)
-          @app    = app
-          @logger = Log4r::Logger.new('vagrant_cloudstack::action::run_instance')
+          @app              = app
+          @logger           = Log4r::Logger.new('vagrant_cloudstack::action::run_instance')
+          @resource_service = CloudstackResourceService.new(env[:cloudstack_compute], env[:ui])
         end
 
         def call(env)
@@ -19,13 +24,13 @@ module VagrantPlugins
           env[:metrics]         ||= {}
 
           # Get the domain we're going to booting up in
-          domain                = env[:machine].provider_config.domain_id
-
+          domain        = env[:machine].provider_config.domain_id
           # Get the configs
-          domain_config         = env[:machine].provider_config.get_domain_config(domain)
+          domain_config = env[:machine].provider_config.get_domain_config(domain)
+
+          @zone = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
+
           hostname              = domain_config.name
-          zone_id               = domain_config.zone_id
-          zone_name             = domain_config.zone_name
           network_id            = domain_config.network_id
           network_name          = domain_config.network_name
           network_type          = domain_config.network_type
@@ -63,11 +68,7 @@ module VagrantPlugins
             network_name = id_to_name(env, network_id, 'network')
           end
 
-          if zone_id.nil? and zone_name
-            zone_id = name_to_id(env, zone_name, 'zone', {'available' => true})
-          elsif zone_id
-            zone_name = id_to_name(env, zone_id, 'zone', {'available' => true})
-          end
+          @resource_service.sync_resource(@zone, { 'available' => true })
 
           if service_offering_id.nil? and service_offering_name
             service_offering_id = name_to_id(env, service_offering_name, 'service_offering')
@@ -82,10 +83,10 @@ module VagrantPlugins
           end
 
           if template_id.nil? and template_name
-            template_id = name_to_id(env, template_name, 'template', {'zoneid'         => zone_id,
+            template_id = name_to_id(env, template_name, 'template', {'zoneid'         => @zone.id,
                                                                       'templatefilter' => 'executable'})
           elsif template_id
-            template_name = id_to_name(env, template_id, 'template', {'zoneid'         => zone_id,
+            template_name = id_to_name(env, template_id, 'template', {'zoneid'         => @zone.id,
                                                                       'templatefilter' => 'executable'})
           end
 
@@ -128,7 +129,7 @@ module VagrantPlugins
           env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})") unless disk_offering_id.nil?
           env[:ui].info(" -- Template: #{template_name} (#{template_id})")
           env[:ui].info(" -- Project UUID: #{project_id}") unless project_id.nil?
-          env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
+          env[:ui].info(" -- Zone: #{@zone.name} (#{@zone.id})")
           env[:ui].info(" -- Network: #{network_name} (#{network_id})") unless network_id.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(' -- User Data: Yes') if user_data
@@ -140,7 +141,7 @@ module VagrantPlugins
             options = {
                 :display_name => display_name,
                 :group        => group,
-                :zone_id      => zone_id,
+                :zone_id      => @zone.id,
                 :flavor_id    => service_offering_id,
                 :image_id     => template_id
             }
