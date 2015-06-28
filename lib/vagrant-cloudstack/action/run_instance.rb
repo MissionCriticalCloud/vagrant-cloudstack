@@ -127,9 +127,9 @@ module VagrantPlugins
           env[:ui].info(" -- Service offering: #{service_offering_name} (#{service_offering_id})")
           env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})") unless disk_offering_id.nil?
           env[:ui].info(" -- Template: #{template_name} (#{template_id})")
-          env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
+          env[:ui].info(" -- Project UUID: #{project_id}") unless project_id.nil?
           env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
-          env[:ui].info(" -- Network: #{network_name} (#{network_id})") if !network_id.nil? or !network_name.nil?
+          env[:ui].info(" -- Network: #{network_name} (#{network_id})") unless network_id.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(" -- User Data: Yes") if user_data
           security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
@@ -145,13 +145,13 @@ module VagrantPlugins
                 :image_id     => template_id
             }
 
-            options['network_ids'] = [network_id] if !network_id.nil?
-            options['security_group_ids'] = security_group_ids if !security_group_ids.nil?
-            options['project_id'] = project_id if project_id != nil
-            options['key_name']   = keypair if keypair != nil
-            options['name']       = hostname if hostname != nil
-            options['ip_address'] = private_ip_address if private_ip_address != nil
-            options['disk_offering_id'] = disk_offering_id if disk_offering_id != nil
+            options['network_ids'] = [network_id] unless network_id.nil?
+            options['security_group_ids'] = security_group_ids unless security_group_ids.nil?
+            options['project_id'] = project_id unless project_id.nil?
+            options['key_name']   = keypair unless keypair.nil?
+            options['name']       = hostname unless hostname.nil?
+            options['ip_address'] = private_ip_address unless private_ip_address.nil?
+            options['disk_offering_id'] = disk_offering_id unless disk_offering_id.nil?
 
             if user_data != nil
               options['user_data'] = Base64.urlsafe_encode64(user_data)
