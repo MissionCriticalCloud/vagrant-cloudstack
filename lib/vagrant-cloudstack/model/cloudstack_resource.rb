@@ -13,7 +13,7 @@ module VagrantPlugins
         end
 
         def to_s
-          "#{kind} - #{id || 'unknown id'}:#{name || 'unknown name'}"
+          "#{kind} - #{id || '<unknown id>'}:#{name || '<unknown name>'}"
         end
       end
     end

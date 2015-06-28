@@ -8,12 +8,12 @@ module VagrantPlugins
         end
 
         def sync_resource(resource, api_parameters = {})
-          @ui.detail("Syncronizing resource: #{resource}")
           if resource.id.nil? and resource.name
             resource.id = name_to_id(resource.name, resource.kind, api_parameters)
           elsif resource.id
             resource.name = id_to_name(resource.id, resource.kind, api_parameters)
           end
+          @ui.detail("Syncronized resource: #{resource}")
         end
 
         private
