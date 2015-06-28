@@ -26,12 +26,18 @@ describe CloudstackResourceService do
   describe '#sync_resource' do
     it 'retrives the missing name' do
       resource = CloudstackResource.new('resource id', nil, 'kind')
-      expect(service.sync_resource(resource)).to be_eql 'resource name'
+      service.sync_resource(resource)
+
+      expect(resource.name).to be_eql 'resource name'
+      expect(resource.id).to be_eql 'resource id'
     end
 
     it 'retrives the missing id' do
       resource = CloudstackResource.new(nil, 'resource name', 'kind')
-      expect(service.sync_resource(resource)).to be_eql 'resource id'
+      service.sync_resource(resource)
+
+      expect(resource.id).to be_eql 'resource id'
+      expect(resource.name).to be_eql 'resource name'
     end
   end
 end

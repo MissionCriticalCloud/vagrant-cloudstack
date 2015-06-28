@@ -1,5 +1,6 @@
 require 'log4r'
 require 'vagrant/util/retryable'
+require 'vagrant-cloudstack/exceptions/exceptions'
 require 'vagrant-cloudstack/util/timer'
 require 'vagrant-cloudstack/model/cloudstack_resource'
 require 'vagrant-cloudstack/service/cloudstack_resource_service'
@@ -12,6 +13,7 @@ module VagrantPlugins
         include Vagrant::Util::Retryable
         include VagrantPlugins::Cloudstack::Model
         include VagrantPlugins::Cloudstack::Service
+        include VagrantPlugins::Cloudstack::Exceptions
 
         def initialize(app, env)
           @app              = app
@@ -298,22 +300,13 @@ module VagrantPlugins
         def enable_static_nat(env, rule)
           env[:ui].info(I18n.t('vagrant_cloudstack.enabling_static_nat'))
 
-          ip_address_id = rule[:ipaddressid]
-          ip_address    = rule[:ipaddress]
-
-          if ip_address_id.nil? and ip_address.nil?
-            @logger.info('IP address is not specified. Skip enabling static nat.')
-            env[:ui].info(I18n.t('IP address is not specified. Skip enabling static nat.'))
+          begin
+            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+          rescue IpNotFoundException
             return
           end
 
-          if ip_address_id.nil? and ip_address
-            ip_address_id = ip_to_id(env, ip_address)
-          elsif ip_address_id
-            ip_address = id_to_ip(env, ip_address_id)
-          end
-
-          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
 
           options = {
               :command          => 'enableStaticNat',
@@ -336,36 +329,27 @@ module VagrantPlugins
           # Save ipaddress id to the data dir so it can be disabled when the instance is destroyed
           static_nat_file = env[:machine].data_dir.join('static_nat')
           static_nat_file.open('a+') do |f|
-            f.write("#{ip_address_id}\n")
+            f.write("#{ip_address.id}\n")
           end
         end
 
         def create_port_forwarding_rule(env, rule)
           env[:ui].info(I18n.t('vagrant_cloudstack.creating_port_forwarding_rule'))
 
-          ip_address_id = rule[:ipaddressid]
-          ip_address    = rule[:ipaddress]
-
-          if ip_address_id.nil? and ip_address.nil?
-            @logger.info('IP address is not specified. Skip creating port forwarding rule.')
-            env[:ui].info(I18n.t('IP address is not specified. Skip creating port forwarding rule.'))
+          begin
+            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+          rescue IpNotFoundException
             return
           end
 
-          if ip_address_id.nil? and ip_address
-            ip_address_id = ip_to_id(env, ip_address)
-          elsif ip_address_id
-            ip_address = id_to_ip(env, ip_address_id)
-          end
-
-          env[:ui].info(" -- IP address    : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- IP address    : #{ip_address.name} (#{ip_address.id})")
           env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
           env[:ui].info(" -- Public port   : #{rule[:publicport]}")
           env[:ui].info(" -- Private port  : #{rule[:privateport]}")
           env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
 
           options = {
-              :ipaddressid      => ip_address_id,
+              :ipaddressid      => ip_address.id,
               :publicport       => rule[:publicport],
               :privateport      => rule[:privateport],
               :protocol         => rule[:protocol],
@@ -405,22 +389,13 @@ module VagrantPlugins
         def create_firewall_rule(env, rule)
           env[:ui].info(I18n.t('vagrant_cloudstack.creating_firewall_rule'))
 
-          ip_address_id = rule[:ipaddressid]
-          ip_address    = rule[:ipaddress]
-
-          if ip_address_id.nil? and ip_address.nil?
-            @logger.info('IP address is not specified. Skip creating firewall rule.')
-            env[:ui].info(I18n.t('IP address is not specified. Skip creating firewall rule.'))
+          begin
+            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+          rescue IpNotFoundException
             return
           end
 
-          if ip_address_id.nil? and ip_address
-            ip_address_id = ip_to_id(env, ip_address)
-          elsif ip_address_id
-            ip_address = id_to_ip(env, ip_address_id)
-          end
-
-          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
           env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
           env[:ui].info(" -- CIDR list  : #{rule[:cidrlist]}")
           env[:ui].info(" -- Start port : #{rule[:startport]}")
@@ -430,7 +405,7 @@ module VagrantPlugins
 
           options = {
               :command          => 'createFirewallRule',
-              :ipaddressid      => ip_address_id,
+              :ipaddressid      => ip_address.id,
               :protocol         => rule[:protocol],
               :cidrlist         => rule[:cidrlist],
               :startport        => rule[:startport],
@@ -477,6 +452,21 @@ module VagrantPlugins
         end
 
         private
+
+        def sync_ip_address(ip_address_id, ip_address_value)
+          ip_address = CloudstackResource.new(ip_address_id, ip_address_value, 'public_ip_address')
+
+          if ip_address.is_undefined?
+            message = 'IP address is not specified. Skip creating port forwarding rule.'
+            @logger.info(message)
+            env[:ui].info(I18n.t(message))
+            raise IpNotFoundException
+          end
+
+          @resource_service.sync_resource(ip_address)
+
+          ip_address
+        end
 
         def translate_from_to(env, resource_type, options)
           if resource_type == 'public_ip_address'
