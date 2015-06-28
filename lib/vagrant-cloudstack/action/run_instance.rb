@@ -28,11 +28,10 @@ module VagrantPlugins
           # Get the configs
           domain_config = env[:machine].provider_config.get_domain_config(domain)
 
-          @zone = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
+          @zone    = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
+          @network = CloudstackResource.new(domain_config.network_id, domain_config.network_name, 'network')
 
           hostname              = domain_config.name
-          network_id            = domain_config.network_id
-          network_name          = domain_config.network_name
           network_type          = domain_config.network_type
           project_id            = domain_config.project_id
           service_offering_id   = domain_config.service_offering_id
@@ -60,14 +59,7 @@ module VagrantPlugins
           ssh_user              = domain_config.ssh_user
           private_ip_address    = domain_config.private_ip_address
 
-          # If for some reason the user have specified both network_name and network_id, take the id since that is
-          # more specific than the name. But always try to fetch the name of the network to present to the user.
-          if network_id.nil? and network_name
-            network_id = name_to_id(env, network_name, 'network')
-          elsif network_id
-            network_name = id_to_name(env, network_id, 'network')
-          end
-
+          @resource_service.sync_resource(@network)
           @resource_service.sync_resource(@zone, { 'available' => true })
 
           if service_offering_id.nil? and service_offering_name
@@ -130,7 +122,7 @@ module VagrantPlugins
           env[:ui].info(" -- Template: #{template_name} (#{template_id})")
           env[:ui].info(" -- Project UUID: #{project_id}") unless project_id.nil?
           env[:ui].info(" -- Zone: #{@zone.name} (#{@zone.id})")
-          env[:ui].info(" -- Network: #{network_name} (#{network_id})") unless network_id.nil?
+          env[:ui].info(" -- Network: #{@network.name} (#{@network.id})") unless @network.id.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(' -- User Data: Yes') if user_data
           security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
@@ -146,7 +138,7 @@ module VagrantPlugins
                 :image_id     => template_id
             }
 
-            options['network_ids'] = [network_id] unless network_id.nil?
+            options['network_ids'] = [@network.id] unless @network.id.nil?
             options['security_group_ids'] = security_group_ids unless security_group_ids.nil?
             options['project_id'] = project_id unless project_id.nil?
             options['key_name']   = keypair unless keypair.nil?
@@ -169,7 +161,7 @@ module VagrantPlugins
             # XXX FIXME vpc?
             if e.message =~ /subnet ID/
               raise Errors::FogError,
-                    :message => "Subnet ID not found: #{network_id}"
+                    :message => "Subnet ID not found: #{@network.id}"
             end
 
             raise
