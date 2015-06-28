@@ -9,6 +9,10 @@ group :development do
   gem 'vagrant', git: 'git://github.com/mitchellh/vagrant.git'
   gem 'coveralls', require: false
   gem 'simplecov', require: false
+  gem 'rspec-core'
+  gem 'rspec-expectations'
+  gem 'rspec-its'
+  gem 'rspec-mocks'
 end
 
 group :plugins do
