@@ -28,14 +28,13 @@ module VagrantPlugins
           # Get the configs
           domain_config = env[:machine].provider_config.get_domain_config(domain)
 
-          @zone    = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
-          @network = CloudstackResource.new(domain_config.network_id, domain_config.network_name, 'network')
+          @zone             = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
+          @network          = CloudstackResource.new(domain_config.network_id, domain_config.network_name, 'network')
+          @service_offering = CloudstackResource.new(domain_config.service_offering_id, domain_config.service_offering_name, 'service_offering')
 
           hostname              = domain_config.name
           network_type          = domain_config.network_type
           project_id            = domain_config.project_id
-          service_offering_id   = domain_config.service_offering_id
-          service_offering_name = domain_config.service_offering_name
           disk_offering_id      = domain_config.disk_offering_id
           disk_offering_name    = domain_config.disk_offering_name
           template_id           = domain_config.template_id
@@ -59,14 +58,9 @@ module VagrantPlugins
           ssh_user              = domain_config.ssh_user
           private_ip_address    = domain_config.private_ip_address
 
-          @resource_service.sync_resource(@network)
           @resource_service.sync_resource(@zone, { 'available' => true })
-
-          if service_offering_id.nil? and service_offering_name
-            service_offering_id = name_to_id(env, service_offering_name, 'service_offering')
-          elsif service_offering_id
-            service_offering_name = id_to_name(env, service_offering_id, 'service_offering')
-          end
+          @resource_service.sync_resource(@network)
+          @resource_service.sync_resource(@service_offering)
 
           if disk_offering_id.nil? and disk_offering_name
             disk_offering_id = name_to_id(env, disk_offering_name, 'disk_offering')
@@ -117,7 +111,7 @@ module VagrantPlugins
           env[:ui].info(I18n.t('vagrant_cloudstack.launching_instance'))
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
-          env[:ui].info(" -- Service offering: #{service_offering_name} (#{service_offering_id})")
+          env[:ui].info(" -- Service offering: #{@service_offering.name} (#{@service_offering.id})")
           env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})") unless disk_offering_id.nil?
           env[:ui].info(" -- Template: #{template_name} (#{template_id})")
           env[:ui].info(" -- Project UUID: #{project_id}") unless project_id.nil?
@@ -134,7 +128,7 @@ module VagrantPlugins
                 :display_name => display_name,
                 :group        => group,
                 :zone_id      => @zone.id,
-                :flavor_id    => service_offering_id,
+                :flavor_id    => @service_offering.id,
                 :image_id     => template_id
             }
 
