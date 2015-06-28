@@ -125,7 +125,7 @@ module VagrantPlugins
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
           env[:ui].info(" -- Service offering: #{service_offering_name} (#{service_offering_id})")
-          env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})")
+          env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})") unless disk_offering_id.nil?
           env[:ui].info(" -- Template: #{template_name} (#{template_id})")
           env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
           env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
