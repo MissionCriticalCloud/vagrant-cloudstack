@@ -355,6 +355,23 @@ Once you have the dependencies, verify the unit tests pass with `rake`:
 $ bundle exec rake
 ```
 
+If the unit-tests pass, verify the plugin is functionaly good by running the functional tests with bats.
+Before running the tests you need to export a set of variables that are used in the tests.
+```
+export CLOUDSTACK_HOST="..."
+export CLOUDSTACK_API_KEY="..."
+export CLOUDSTACK_SECRET_KEY="..."
+export PUBLIC_SOURCE_NAT_IP="..."
+export PUBLIC_SSH_PORT="..."
+export ZONE_NAME="..."
+export NETWORK_NAME="..."
+export SERVICE_OFFERING_NAME="..."
+export TEMPLATE_NAME="..."
+
+cd functional-tests
+./run_tests.sh
+```
+
 If those pass, you're ready to start developing the plugin. You can test
 the plugin without installing it into your Vagrant environment by just
 creating a `Vagrantfile` in the top level of this directory (it is gitignored)
@@ -367,3 +384,4 @@ Use bundler to execute Vagrant:
 ```
 $ bundle exec vagrant up --provider=cloudstack
 ```
+
