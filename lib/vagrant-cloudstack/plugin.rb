@@ -33,6 +33,11 @@ module VagrantPlugins
         Provider
       end
 
+      provider_capability(:cloudstack, :winrm_info) do
+        require_relative 'capabilities/winrm'
+        VagrantPlugins::Cloudstack::Cap::WinRM
+      end
+
       # This initializes the internationalization strings.
       def self.setup_i18n
         I18n.load_path << File.expand_path("locales/en.yml", Cloudstack.source_root)
