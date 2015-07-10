@@ -204,6 +204,20 @@ module VagrantPlugins
 
           @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
 
+          # If password_enabled and job_id was returned, set password
+          if ( server.password_enabled && server.respond_to?("job_id"))
+            server_job_result = env[:cloudstack_compute].jobs.get(server.job_id).job_result
+            password = server_job_result["virtualmachine"]["password"]
+            env[:ui].info("Password of virtualmachine: #{password}")
+            # Set the password on the current communicator
+            case env[:machine].config.vm.communicator
+            when :winrm
+              env[:machine].config.winrm.password = password
+            when :ssh
+              env[:machine].config.ssh.password   = password
+            end
+          end
+
           if !static_nat.empty?
             static_nat.each do |rule|
               enable_static_nat(env, rule)
