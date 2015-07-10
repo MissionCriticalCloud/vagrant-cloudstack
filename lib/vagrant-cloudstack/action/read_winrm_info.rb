@@ -53,21 +53,38 @@ module VagrantPlugins
             end
           end
 
-          # From https://github.com/MSOpenTech/vagrant-azure/blob/2ca5fb5df6a7353ba0c47f56a3032b0905cad8b5/lib/vagrant-azure/action/read_winrm_info.rb
-          machine.config.winrm.host = pf_ip_address || server.nics[0]['ipaddress']
-          machine.config.winrm.port = pf_public_port
 
           winrm_info = {
                        :host => pf_ip_address || server.nics[0]['ipaddress'],
                        :port => pf_public_port
                      }
 
+          winrm_info = winrm_info.merge({
+            :username => domain_config.vm_user
+          }) unless domain_config.vm_user.nil?
+          machine.config.winrm.username = domain_config.vm_user unless domain_config.vm_user.nil?
+          # The WinRM communicator doesnt support passing
+          # the username via winrm_info ... yet ;-)
 
-#          ssh_info = ssh_info.merge({
-#            :private_key_path => domain_config.ssh_key,
-#            :password         => nil
-#          }) unless domain_config.ssh_key.nil?
-#          ssh_info = ssh_info.merge({ :username => domain_config.ssh_user }) unless domain_config.ssh_user.nil?
+          # Read password from file into domain_config
+          if domain_config.vm_password.nil?
+            vmcredentials_file = machine.data_dir.join("vmcredentials")
+            if vmcredentials_file.file?
+              vmcredentials_password = nil
+              File.open(vmcredentials_file, "r").each_line do |line|
+                vmcredentials_password = line.strip
+              end
+              domain_config.vm_password = vmcredentials_password
+            end
+          end
+
+          winrm_info = winrm_info.merge({
+            :password => domain_config.vm_password
+          }) unless domain_config.vm_password.nil?
+          # The WinRM communicator doesnt support passing
+          # the password via winrm_info ... yet ;-)
+          machine.config.winrm.password = domain_config.vm_password unless domain_config.vm_password.nil?
+
           winrm_info
         end
       end

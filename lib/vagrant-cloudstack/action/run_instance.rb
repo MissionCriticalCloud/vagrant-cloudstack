@@ -53,6 +53,8 @@ module VagrantPlugins
           user_data             = domain_config.user_data
           ssh_key               = domain_config.ssh_key
           ssh_user              = domain_config.ssh_user
+          vm_user               = domain_config.vm_user
+          vm_password           = domain_config.vm_password
           private_ip_address    = domain_config.private_ip_address
 
           # If for some reason the user have specified both network_name and network_id, take the id since that is
@@ -204,17 +206,17 @@ module VagrantPlugins
 
           @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
 
-          # If password_enabled and job_id was returned, set password
           if ( server.password_enabled && server.respond_to?("job_id"))
             server_job_result = env[:cloudstack_compute].jobs.get(server.job_id).job_result
             password = server_job_result["virtualmachine"]["password"]
             env[:ui].info("Password of virtualmachine: #{password}")
             # Set the password on the current communicator
-            case env[:machine].config.vm.communicator
-            when :winrm
-              env[:machine].config.winrm.password = password
-            when :ssh
-              env[:machine].config.ssh.password   = password
+            domain_config.vm_password = password
+
+            # Save password to file
+            vmcredentials_file = env[:machine].data_dir.join('vmcredentials')
+            vmcredentials_file.open('a+') do |f|
+              f.write("#{password}")
             end
           end
 
@@ -250,8 +252,10 @@ module VagrantPlugins
 
           if !env[:interrupted]
             env[:metrics]["instance_ssh_time"] = Util::Timer.time do
-              # Wait for SSH to be ready.
-              env[:ui].info(I18n.t("vagrant_cloudstack.waiting_for_ssh"))
+              # Wait for communicator to be ready.
+              communicator = env[:machine].config.vm.communicator
+              communicator = "SSH" if communicator.nil?
+              env[:ui].info(I18n.t("vagrant_cloudstack.waiting_for_communicator", :communicator => communicator.to_s.upcase))
               while true
                 # If we're interrupted then just back out
                 break if env[:interrupted]
