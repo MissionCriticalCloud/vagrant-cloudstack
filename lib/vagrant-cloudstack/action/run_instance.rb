@@ -145,7 +145,7 @@ module VagrantPlugins
                 :image_id     => template_id
             }
 
-            options['network_ids'] = [network_id] if !network_id.nil?
+            options['network_ids'] = network_id if !network_id.nil?
             options['security_group_ids'] = security_group_ids if !security_group_ids.nil?
             options['project_id'] = project_id if project_id != nil
             options['key_name']   = keypair if keypair != nil
