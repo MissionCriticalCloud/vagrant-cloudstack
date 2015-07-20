@@ -37,7 +37,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("pf_public_port")         { should be_nil  }
     its("pf_private_port")        { should be_nil  }
     its("pf_open_firewall")       { should == true }
-    its("pf_trusted_networks")    { should == []   }
+    its("pf_trusted_networks")    { should be_nil  }
     its("port_forwarding_rules")  { should == []   }
     its("firewall_rules")         { should == []   }
     its("security_group_ids")     { should == []   }
