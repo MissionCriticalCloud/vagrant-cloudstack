@@ -71,7 +71,7 @@ module VagrantPlugins
             vmcredentials_file = machine.data_dir.join("vmcredentials")
             if vmcredentials_file.file?
               vmcredentials_password = nil
-              File.open(vmcredentials_file, "r").each_line do |line|
+              File.read(vmcredentials_file).each_line do |line|
                 vmcredentials_password = line.strip
               end
               domain_config.vm_password = vmcredentials_password
