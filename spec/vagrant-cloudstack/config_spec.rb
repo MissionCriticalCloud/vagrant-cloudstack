@@ -37,6 +37,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("pf_public_port")         { should be_nil  }
     its("pf_private_port")        { should be_nil  }
     its("pf_open_firewall")       { should == true }
+    its("pf_trusted_networks")    { should == []   }
     its("port_forwarding_rules")  { should == []   }
     its("firewall_rules")         { should == []   }
     its("security_group_ids")     { should == []   }
@@ -143,6 +144,7 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_pf_public_port)         { "foo" }
     let(:config_pf_private_port)        { "foo" }
     let(:config_pf_open_firewall)       { false }
+    let(:config_pf_trusted_networks)    { "foo" }
     let(:config_port_forwarding_rules)  { [{:foo => "bar"}, {:bar => "foo"}] }
     let(:config_firewall_rules)         { [{:foo => "bar"}, {:bar => "foo"}] }
     let(:config_security_group_ids)     { ["foo", "bar"] }
@@ -179,6 +181,7 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.pf_public_port         = config_pf_public_port
       instance.pf_private_port        = config_pf_private_port
       instance.pf_open_firewall       = config_pf_open_firewall
+      instance.pf_trusted_networks    = config_pf_trusted_networks
       instance.port_forwarding_rules  = config_port_forwarding_rules
       instance.firewall_rules         = config_firewall_rules
       instance.security_group_ids     = config_security_group_ids
@@ -231,6 +234,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_ip_address")          { should == config_pf_ip_address }
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
+      its("pf_trusted_networks")    { should == config_pf_trusted_networks}
       its("pf_open_firewall")       { should == config_pf_open_firewall }
       its("port_forwarding_rules")  { should == config_port_forwarding_rules }
       its("firewall_rules")         { should == config_firewall_rules }
@@ -284,6 +288,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_public_port")         { should == config_pf_public_port }
       its("pf_private_port")        { should == config_pf_private_port }
       its("pf_open_firewall")       { should == config_pf_open_firewall }
+      its("pf_trusted_networks")    { should == config_pf_trusted_networks}
       its("port_forwarding_rules")  { should == config_port_forwarding_rules }
       its("firewall_rules")         { should == config_firewall_rules }
       its("security_group_ids")     { should == config_security_group_ids }
