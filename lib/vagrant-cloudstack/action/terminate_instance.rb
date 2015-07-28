@@ -19,7 +19,7 @@ module VagrantPlugins
           env[:ui].info(I18n.t("vagrant_cloudstack.deleting_firewall_rule"))
           firewall_file = env[:machine].data_dir.join("firewall")
           if firewall_file.file?
-            File.open(firewall_file, "r").each_line do |line|
+            File.read(firewall_file).each_line do |line|
               rule_id = line.strip
               begin
                 options = {
@@ -47,7 +47,7 @@ module VagrantPlugins
           env[:ui].info(I18n.t("vagrant_cloudstack.disabling_static_nat"))
           static_nat_file = env[:machine].data_dir.join("static_nat")
           if static_nat_file.file?
-            File.open(static_nat_file, "r").each_line do |line|
+            File.read(static_nat_file).each_line do |line|
               ip_address_id = line.strip
               begin
                 options = {
@@ -75,7 +75,7 @@ module VagrantPlugins
           env[:ui].info(I18n.t("vagrant_cloudstack.deleting_port_forwarding_rule"))
           port_forwarding_file = env[:machine].data_dir.join("port_forwarding")
           if port_forwarding_file.file?
-            File.open(port_forwarding_file, "r").each_line do |line|
+            File.read(port_forwarding_file).each_line do |line|
               rule_id = line.strip
               begin
                 resp = env[:cloudstack_compute].delete_port_forwarding_rule({:id => rule_id})
@@ -126,7 +126,7 @@ module VagrantPlugins
 
           security_groups_file = env[:machine].data_dir.join("security_groups")
           if security_groups_file.file?
-            File.open(security_groups_file, "r").each_line do |line|
+            File.read(security_groups_file).each_line do |line|
               security_group_id = line.strip
               begin
                 security_group = env[:cloudstack_compute].security_groups.get(security_group_id)
