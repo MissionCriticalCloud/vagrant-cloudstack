@@ -17,7 +17,7 @@ module VagrantPlugins
             env[:ui].info(I18n.t("vagrant_cloudstack.already_status", :status => env[:machine].state.id))
           else
             env[:ui].info(I18n.t("vagrant_cloudstack.stopping"))
-            server.stop(!!env[:force_halt])
+            server.stop({'force' => !!env[:force_halt]})
           end
 
           @app.call(env)

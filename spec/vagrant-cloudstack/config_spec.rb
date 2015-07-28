@@ -47,6 +47,8 @@ describe VagrantPlugins::Cloudstack::Config do
     its("user_data")              { should be_nil  }
     its("ssh_key")                { should be_nil  }
     its("ssh_user")               { should be_nil  }
+    its("vm_user")                { should be_nil  }
+    its("vm_password")            { should be_nil  }
     its("private_ip_address")     { should be_nil  }
     its("expunge_on_destroy")     { should == false  }
   end
@@ -150,6 +152,8 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_security_groups)        { [{:foo => "bar"}, {:bar => "foo"}] }
     let(:config_ssh_key)                { "./foo.pem" }
     let(:config_ssh_user)               { "foo" }
+    let(:config_vm_user)                { "foo" }
+    let(:config_vm_password)            { "foo" }
     let(:config_private_ip_address)     { "foo" }
     let(:config_expunge_on_destroy)     { "foo" }
 
@@ -184,6 +188,8 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.security_groups        = config_security_groups
       instance.ssh_key                = config_ssh_key
       instance.ssh_user               = config_ssh_user
+      instance.vm_user                = config_vm_user
+      instance.vm_password            = config_vm_password
       instance.private_ip_address     = config_private_ip_address
       instance.expunge_on_destroy     = config_expunge_on_destroy
     end
@@ -235,6 +241,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("security_groups")        { should == config_security_groups }
       its("ssh_key")                { should == config_ssh_key }
       its("ssh_user")               { should == config_ssh_user }
+      its("vm_user")                { should == config_vm_user }
+      its("vm_password")            { should == config_vm_password }
       its("private_ip_address")     { should == config_private_ip_address }
       its("expunge_on_destroy")     { should == config_expunge_on_destroy }
     end
@@ -285,6 +293,8 @@ describe VagrantPlugins::Cloudstack::Config do
       its("security_groups")        { should == config_security_groups }
       its("ssh_key")                { should == config_ssh_key }
       its("ssh_user")               { should == config_ssh_user }
+      its("vm_user")                { should == config_vm_user }
+      its("vm_password")            { should == config_vm_password }
       its("private_ip_address")     { should == config_private_ip_address }
       its("expunge_on_destroy")     { should == config_expunge_on_destroy }
     end

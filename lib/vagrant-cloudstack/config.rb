@@ -202,6 +202,16 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :ssh_user
 
+      # The username to be used when loging in to the vm
+      #
+      # @return [String]
+      attr_accessor :vm_user
+
+      # The username to be used when loging in to the vm
+      #
+      # @return [String]
+      attr_accessor :vm_password
+
       # Private ip for the instance
       #
       # @return [String]
@@ -249,6 +259,8 @@ module VagrantPlugins
         @user_data                 = UNSET_VALUE
         @ssh_key                   = UNSET_VALUE
         @ssh_user                  = UNSET_VALUE
+        @vm_user                   = UNSET_VALUE
+        @vm_password               = UNSET_VALUE
         @private_ip_address        = UNSET_VALUE
         @expunge_on_destroy        = UNSET_VALUE
 
@@ -426,8 +438,14 @@ module VagrantPlugins
         # ssh key is nil by default
         @ssh_key                = nil if @ssh_key == UNSET_VALUE
 
-        # ssh key is nil by default
+        # ssh user is nil by default
         @ssh_user               = nil if @ssh_user == UNSET_VALUE
+
+        # vm user is nil by default
+        @vm_user               = nil if @vm_user == UNSET_VALUE
+
+        # vm password is nil by default
+        @vm_password               = nil if @vm_password == UNSET_VALUE
 
         # private ip is nil by default
         @private_ip_address     = nil if @private_ip_address == UNSET_VALUE

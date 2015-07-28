@@ -25,6 +25,14 @@ module VagrantPlugins
         env[:machine_ssh_info]
       end
 
+      def winrm_info
+        # Run a custom action called "read_winrm_info" which does what it
+        # says and puts the resulting WinRM info into the `:machine_winrm_info`
+        # key in the environment.
+        env = @machine.action("read_winrm_info")
+        env[:machine_winrm_info]
+      end
+
       def state
         # Run a custom action we define called "read_state" which does
         # what it says. It puts the state in the `:machine_state_id`

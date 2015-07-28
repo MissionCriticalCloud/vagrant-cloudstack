@@ -11,6 +11,10 @@ module VagrantPlugins
         end
 
         def call(env)
+          # Delete the vmcredentials file
+          vmcredentials_file = env[:machine].data_dir.join("vmcredentials")
+          vmcredentials_file.delete if vmcredentials_file.file?
+
           # Delete the Firewall rule
           env[:ui].info(I18n.t("vagrant_cloudstack.deleting_firewall_rule"))
           firewall_file = env[:machine].data_dir.join("firewall")
