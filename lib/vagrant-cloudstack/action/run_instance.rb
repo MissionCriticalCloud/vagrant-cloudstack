@@ -1,6 +1,9 @@
-require "log4r"
-require "vagrant/util/retryable"
-require "vagrant-cloudstack/util/timer"
+require 'log4r'
+require 'vagrant/util/retryable'
+require 'vagrant-cloudstack/exceptions/exceptions'
+require 'vagrant-cloudstack/util/timer'
+require 'vagrant-cloudstack/model/cloudstack_resource'
+require 'vagrant-cloudstack/service/cloudstack_resource_service'
 
 module VagrantPlugins
   module Cloudstack
@@ -8,10 +11,14 @@ module VagrantPlugins
       # This runs the configured instance.
       class RunInstance
         include Vagrant::Util::Retryable
+        include VagrantPlugins::Cloudstack::Model
+        include VagrantPlugins::Cloudstack::Service
+        include VagrantPlugins::Cloudstack::Exceptions
 
         def initialize(app, env)
-          @app    = app
-          @logger = Log4r::Logger.new("vagrant_cloudstack::action::run_instance")
+          @app              = app
+          @logger           = Log4r::Logger.new('vagrant_cloudstack::action::run_instance')
+          @resource_service = CloudstackResourceService.new(env[:cloudstack_compute], env[:ui])
         end
 
         def call(env)
@@ -19,23 +26,19 @@ module VagrantPlugins
           env[:metrics]         ||= {}
 
           # Get the domain we're going to booting up in
-          domain                = env[:machine].provider_config.domain_id
-
+          domain        = env[:machine].provider_config.domain_id
           # Get the configs
-          domain_config         = env[:machine].provider_config.get_domain_config(domain)
+          domain_config = env[:machine].provider_config.get_domain_config(domain)
+
+          @zone             = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
+          @network          = CloudstackResource.new(domain_config.network_id, domain_config.network_name, 'network')
+          @service_offering = CloudstackResource.new(domain_config.service_offering_id, domain_config.service_offering_name, 'service_offering')
+          @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
+          @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name, 'template')
+
           hostname              = domain_config.name
-          zone_id               = domain_config.zone_id
-          zone_name             = domain_config.zone_name
-          network_id            = domain_config.network_id
-          network_name          = domain_config.network_name
           network_type          = domain_config.network_type
           project_id            = domain_config.project_id
-          service_offering_id   = domain_config.service_offering_id
-          service_offering_name = domain_config.service_offering_name
-          disk_offering_id      = domain_config.disk_offering_id
-          disk_offering_name    = domain_config.disk_offering_name
-          template_id           = domain_config.template_id
-          template_name         = domain_config.template_name
           keypair               = domain_config.keypair
           static_nat            = domain_config.static_nat
           pf_ip_address_id      = domain_config.pf_ip_address_id
@@ -57,46 +60,18 @@ module VagrantPlugins
           vm_password           = domain_config.vm_password
           private_ip_address    = domain_config.private_ip_address
 
-          # If for some reason the user have specified both network_name and network_id, take the id since that is
-          # more specific than the name. But always try to fetch the name of the network to present to the user.
-          if network_id.nil? and network_name
-            network_id = name_to_id(env, network_name, "network")
-          elsif network_id
-            network_name = id_to_name(env, network_id, "network")
-          end
-
-          if zone_id.nil? and zone_name
-            zone_id = name_to_id(env, zone_name, "zone", {'available' => true})
-          elsif zone_id
-            zone_name = id_to_name(env, zone_id, "zone", {'available' => true})
-          end
-
-          if service_offering_id.nil? and service_offering_name
-            service_offering_id = name_to_id(env, service_offering_name, "service_offering")
-          elsif service_offering_id
-            service_offering_name = id_to_name(env, service_offering_id, "service_offering")
-          end
-
-          if disk_offering_id.nil? and disk_offering_name
-            disk_offering_id = name_to_id(env, disk_offering_name, "disk_offering")
-          elsif disk_offering_id
-            disk_offering_name = id_to_name(env, disk_offering_id, "disk_offering")
-          end
-
-          if template_id.nil? and template_name
-            template_id = name_to_id(env, template_name, "template", {'zoneid'         => zone_id,
-                                                                      'templatefilter' => 'executable'})
-          elsif template_id
-            template_name = id_to_name(env, template_id, "template", {'zoneid'         => zone_id,
-                                                                      'templatefilter' => 'executable'})
-          end
+          @resource_service.sync_resource(@zone, { 'available' => true })
+          @resource_service.sync_resource(@network)
+          @resource_service.sync_resource(@service_offering)
+          @resource_service.sync_resource(@disk_offering)
+          @resource_service.sync_resource(@template, {'zoneid' => @zone.id, 'templatefilter' => 'executable' })
 
           # Can't use Security Group IDs and Names at the same time
           # Let's use IDs by default...
           if security_group_ids.empty? and !security_group_names.empty?
-            security_group_ids = security_group_names.map { |name| name_to_id(env, name, "security_group") }
+            security_group_ids = security_group_names.map { |name| name_to_id(env, name, 'security_group') }
           elsif !security_group_ids.empty?
-            security_group_names = security_group_ids.map { |id| id_to_name(env, id, "security_group") }
+            security_group_names = security_group_ids.map { |id| id_to_name(env, id, 'security_group') }
           end
 
           # Still no security group ids huh?
@@ -111,29 +86,29 @@ module VagrantPlugins
 
           # If there is no keypair then warn the user
           if !keypair
-            env[:ui].warn(I18n.t("vagrant_cloudstack.launch_no_keypair"))
+            env[:ui].warn(I18n.t('vagrant_cloudstack.launch_no_keypair'))
           end
 
           if display_name.nil?
             local_user = ENV['USER'].dup
-            local_user.gsub!(/[^-a-z0-9_]/i, "")
+            local_user.gsub!(/[^-a-z0-9_]/i, '')
             prefix = env[:root_path].basename.to_s
-            prefix.gsub!(/[^-a-z0-9_]/i, "")
-            display_name = local_user + "_" + prefix + "_#{Time.now.to_i}"
+            prefix.gsub!(/[^-a-z0-9_]/i, '')
+            display_name = local_user + '_' + prefix + "_#{Time.now.to_i}"
           end
 
           # Launch!
-          env[:ui].info(I18n.t("vagrant_cloudstack.launching_instance"))
+          env[:ui].info(I18n.t('vagrant_cloudstack.launching_instance'))
           env[:ui].info(" -- Display Name: #{display_name}")
           env[:ui].info(" -- Group: #{group}") if group
-          env[:ui].info(" -- Service offering: #{service_offering_name} (#{service_offering_id})")
-          env[:ui].info(" -- Disk offering: #{disk_offering_name} (#{disk_offering_id})")
-          env[:ui].info(" -- Template: #{template_name} (#{template_id})")
-          env[:ui].info(" -- Project UUID: #{project_id}") if project_id != nil
-          env[:ui].info(" -- Zone: #{zone_name} (#{zone_id})")
-          env[:ui].info(" -- Network: #{network_name} (#{network_id})") if !network_id.nil? or !network_name.nil?
+          env[:ui].info(" -- Service offering: #{@service_offering.name} (#{@service_offering.id})")
+          env[:ui].info(" -- Disk offering: #{@disk_offering.name} (#{@disk_offering.id})") unless @disk_offering.id.nil?
+          env[:ui].info(" -- Template: #{@template.name} (#{@template.id})")
+          env[:ui].info(" -- Project UUID: #{project_id}") unless project_id.nil?
+          env[:ui].info(" -- Zone: #{@zone.name} (#{@zone.id})")
+          env[:ui].info(" -- Network: #{@network.name} (#{@network.id})") unless @network.id.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
-          env[:ui].info(" -- User Data: Yes") if user_data
+          env[:ui].info(' -- User Data: Yes') if user_data
           security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
               env[:ui].info(" -- Security Group: #{security_group_name} (#{security_group_id})")
           end
@@ -142,18 +117,18 @@ module VagrantPlugins
             options = {
                 :display_name => display_name,
                 :group        => group,
-                :zone_id      => zone_id,
-                :flavor_id    => service_offering_id,
-                :image_id     => template_id
+                :zone_id      => @zone.id,
+                :flavor_id    => @service_offering.id,
+                :image_id     => @template.id
             }
 
-            options['network_ids'] = network_id if !network_id.nil?
-            options['security_group_ids'] = security_group_ids if !security_group_ids.nil?
-            options['project_id'] = project_id if project_id != nil
-            options['key_name']   = keypair if keypair != nil
-            options['name']       = hostname if hostname != nil
-            options['ip_address'] = private_ip_address if private_ip_address != nil
-            options['disk_offering_id'] = disk_offering_id if disk_offering_id != nil
+            options['network_ids'] = @network.id unless @network.id.nil?
+            options['security_group_ids'] = security_group_ids unless security_group_ids.nil?
+            options['project_id'] = project_id unless project_id.nil?
+            options['key_name']   = keypair unless keypair.nil?
+            options['name']       = hostname unless hostname.nil?
+            options['ip_address'] = private_ip_address unless private_ip_address.nil?
+            options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
 
             if user_data != nil
               options['user_data'] = Base64.urlsafe_encode64(user_data)
@@ -170,7 +145,7 @@ module VagrantPlugins
             # XXX FIXME vpc?
             if e.message =~ /subnet ID/
               raise Errors::FogError,
-                    :message => "Subnet ID not found: #{network_id}"
+                    :message => "Subnet ID not found: #{@network.id}"
             end
 
             raise
@@ -182,10 +157,10 @@ module VagrantPlugins
           env[:machine].id                     = server.id
 
           # Wait for the instance to be ready first
-          env[:metrics]["instance_ready_time"] = Util::Timer.time do
+          env[:metrics]['instance_ready_time'] = Util::Timer.time do
             tries = domain_config.instance_ready_timeout / 2
 
-            env[:ui].info(I18n.t("vagrant_cloudstack.waiting_for_ready"))
+            env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_ready'))
             begin
               retryable(:on => Fog::Errors::TimeoutError, :tries => tries) do
                 # If we're interrupted don't worry about waiting
@@ -204,7 +179,7 @@ module VagrantPlugins
             end
           end
 
-          @logger.info("Time to instance ready: #{env[:metrics]["instance_ready_time"]}")
+          @logger.info("Time to instance ready: #{env[:metrics]['instance_ready_time']}")
 
           if server.password_enabled and server.respond_to?("job_id")
             server_job_result = env[:cloudstack_compute].jobs.get(server.job_id).job_result
@@ -230,7 +205,7 @@ module VagrantPlugins
             port_forwarding_rule = {
               :ipaddressid  => pf_ip_address_id,
               :ipaddress    => pf_ip_address,
-              :protocol     => "tcp",
+              :protocol     => 'tcp',
               :publicport   => pf_public_port,
               :privateport  => pf_private_port,
               :openfirewall => pf_open_firewall
@@ -251,11 +226,11 @@ module VagrantPlugins
           end
 
           if !env[:interrupted]
-            env[:metrics]["instance_ssh_time"] = Util::Timer.time do
+            env[:metrics]['instance_ssh_time'] = Util::Timer.time do
               # Wait for communicator to be ready.
               communicator = env[:machine].config.vm.communicator
-              communicator = "SSH" if communicator.nil?
-              env[:ui].info(I18n.t("vagrant_cloudstack.waiting_for_communicator", :communicator => communicator.to_s.upcase))
+              communicator = 'SSH' if communicator.nil?
+              env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_communicator', :communicator => communicator.to_s.upcase))
               while true
                 # If we're interrupted then just back out
                 break if env[:interrupted]
@@ -264,10 +239,10 @@ module VagrantPlugins
               end
             end
 
-            @logger.info("Time for SSH ready: #{env[:metrics]["instance_ssh_time"]}")
+            @logger.info("Time for SSH ready: #{env[:metrics]['instance_ssh_time']}")
 
             # Ready and booted!
-            env[:ui].info(I18n.t("vagrant_cloudstack.ready"))
+            env[:ui].info(I18n.t('vagrant_cloudstack.ready'))
           end
 
           # Terminate the instance if we were interrupted
@@ -279,11 +254,11 @@ module VagrantPlugins
         def create_security_group(env, security_group)
           begin
             sgid = env[:cloudstack_compute].create_security_group(:name        => security_group[:name],
-                                                                  :description => security_group[:description])["createsecuritygroupresponse"]["securitygroup"]["id"]
+                                                                  :description => security_group[:description])['createsecuritygroupresponse']['securitygroup']['id']
             env[:ui].info(" -- Security Group #{security_group[:name]} created with ID: #{sgid}")
           rescue Exception => e
             if e.message =~ /already exis/
-              sgid = name_to_id(env, security_group[:name], "security_group")
+              sgid = name_to_id(env, security_group[:name], 'security_group')
               env[:ui].info(" -- Security Group #{security_group[:name]} found with ID: #{sgid}")
             end
           end
@@ -314,7 +289,7 @@ module VagrantPlugins
         end
 
         def recover(env)
-          return if env["vagrant.error"].is_a?(Vagrant::Errors::VagrantError)
+          return if env['vagrant.error'].is_a?(Vagrant::Errors::VagrantError)
 
           if env[:machine].provider.state.id != :not_created
             # Undo the import
@@ -323,37 +298,28 @@ module VagrantPlugins
         end
 
         def enable_static_nat(env, rule)
-          env[:ui].info(I18n.t("vagrant_cloudstack.enabling_static_nat"))
+          env[:ui].info(I18n.t('vagrant_cloudstack.enabling_static_nat'))
 
-          ip_address_id = rule[:ipaddressid]
-          ip_address    = rule[:ipaddress]
-
-          if ip_address_id.nil? and ip_address.nil?
-            @logger.info("IP address is not specified. Skip enabling static nat.")
-            env[:ui].info(I18n.t("IP address is not specified. Skip enabling static nat."))
+          begin
+            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+          rescue IpNotFoundException
             return
           end
 
-          if ip_address_id.nil? and ip_address
-            ip_address_id = ip_to_id(env, ip_address)
-          elsif ip_address_id
-            ip_address = id_to_ip(env, ip_address_id)
-          end
-
-          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
 
           options = {
-              :command          => "enableStaticNat",
+              :command          => 'enableStaticNat',
               :ipaddressid      => ip_address_id,
               :virtualmachineid => env[:machine].id
           }
 
           begin
             resp = env[:cloudstack_compute].request(options)
-            is_success = resp["enablestaticnatresponse"]["success"]
+            is_success = resp['enablestaticnatresponse']['success']
 
-            if is_success != "true"
-              env[:ui].warn(" -- Failed to enable static nat: #{resp["enablestaticnatresponse"]["errortext"]}")
+            if is_success != 'true'
+              env[:ui].warn(" -- Failed to enable static nat: #{resp['enablestaticnatresponse']['errortext']}")
               return
             end
           rescue Fog::Compute::Cloudstack::Error => e
@@ -363,36 +329,27 @@ module VagrantPlugins
           # Save ipaddress id to the data dir so it can be disabled when the instance is destroyed
           static_nat_file = env[:machine].data_dir.join('static_nat')
           static_nat_file.open('a+') do |f|
-            f.write("#{ip_address_id}\n")
+            f.write("#{ip_address.id}\n")
           end
         end
 
         def create_port_forwarding_rule(env, rule)
-          env[:ui].info(I18n.t("vagrant_cloudstack.creating_port_forwarding_rule"))
+          env[:ui].info(I18n.t('vagrant_cloudstack.creating_port_forwarding_rule'))
 
-          ip_address_id = rule[:ipaddressid]
-          ip_address    = rule[:ipaddress]
-
-          if ip_address_id.nil? and ip_address.nil?
-            @logger.info("IP address is not specified. Skip creating port forwarding rule.")
-            env[:ui].info(I18n.t("IP address is not specified. Skip creating port forwarding rule."))
+          begin
+            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+          rescue IpNotFoundException
             return
           end
 
-          if ip_address_id.nil? and ip_address
-            ip_address_id = ip_to_id(env, ip_address)
-          elsif ip_address_id
-            ip_address = id_to_ip(env, ip_address_id)
-          end
-
-          env[:ui].info(" -- IP address    : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- IP address    : #{ip_address.name} (#{ip_address.id})")
           env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
           env[:ui].info(" -- Public port   : #{rule[:publicport]}")
           env[:ui].info(" -- Private port  : #{rule[:privateport]}")
           env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
 
           options = {
-              :ipaddressid      => ip_address_id,
+              :ipaddressid      => ip_address.id,
               :publicport       => rule[:publicport],
               :privateport      => rule[:privateport],
               :protocol         => rule[:protocol],
@@ -402,17 +359,17 @@ module VagrantPlugins
 
           begin
             resp = env[:cloudstack_compute].create_port_forwarding_rule(options)
-            job_id = resp["createportforwardingruleresponse"]["jobid"]
+            job_id = resp['createportforwardingruleresponse']['jobid']
 
             if job_id.nil?
-              env[:ui].warn(" -- Failed to create port forwarding rule: #{resp["createportforwardingruleresponse"]["errortext"]}")
+              env[:ui].warn(" -- Failed to create port forwarding rule: #{resp['createportforwardingruleresponse']['errortext']}")
               return
             end
 
             while true
               response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-              if response["queryasyncjobresultresponse"]["jobstatus"] != 0
-                port_forwarding_rule = response["queryasyncjobresultresponse"]["jobresult"]["portforwardingrule"]
+              if response['queryasyncjobresultresponse']['jobstatus'] != 0
+                port_forwarding_rule = response['queryasyncjobresultresponse']['jobresult']['portforwardingrule']
                 break
               else
                 sleep 2
@@ -425,29 +382,20 @@ module VagrantPlugins
           # Save port forwarding rule id to the data dir so it can be released when the instance is destroyed
           port_forwarding_file = env[:machine].data_dir.join('port_forwarding')
           port_forwarding_file.open('a+') do |f|
-            f.write("#{port_forwarding_rule["id"]}\n")
+            f.write("#{port_forwarding_rule['id']}\n")
           end
         end
 
         def create_firewall_rule(env, rule)
-          env[:ui].info(I18n.t("vagrant_cloudstack.creating_firewall_rule"))
+          env[:ui].info(I18n.t('vagrant_cloudstack.creating_firewall_rule'))
 
-          ip_address_id = rule[:ipaddressid]
-          ip_address    = rule[:ipaddress]
-
-          if ip_address_id.nil? and ip_address.nil?
-            @logger.info("IP address is not specified. Skip creating firewall rule.")
-            env[:ui].info(I18n.t("IP address is not specified. Skip creating firewall rule."))
+          begin
+            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+          rescue IpNotFoundException
             return
           end
 
-          if ip_address_id.nil? and ip_address
-            ip_address_id = ip_to_id(env, ip_address)
-          elsif ip_address_id
-            ip_address = id_to_ip(env, ip_address_id)
-          end
-
-          env[:ui].info(" -- IP address : #{ip_address} (#{ip_address_id})")
+          env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
           env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
           env[:ui].info(" -- CIDR list  : #{rule[:cidrlist]}")
           env[:ui].info(" -- Start port : #{rule[:startport]}")
@@ -456,8 +404,8 @@ module VagrantPlugins
           env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
 
           options = {
-              :command          => "createFirewallRule",
-              :ipaddressid      => ip_address_id,
+              :command          => 'createFirewallRule',
+              :ipaddressid      => ip_address.id,
               :protocol         => rule[:protocol],
               :cidrlist         => rule[:cidrlist],
               :startport        => rule[:startport],
@@ -468,17 +416,17 @@ module VagrantPlugins
 
           begin
             resp = env[:cloudstack_compute].request(options)
-            job_id = resp["createfirewallruleresponse"]["jobid"]
+            job_id = resp['createfirewallruleresponse']['jobid']
 
             if job_id.nil?
-              env[:ui].warn(" -- Failed to create firewall rule: #{resp["createfirewallruleresponse"]["errortext"]}")
+              env[:ui].warn(" -- Failed to create firewall rule: #{resp['createfirewallruleresponse']['errortext']}")
               return
             end
 
             while true
               response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-              if response["queryasyncjobresultresponse"]["jobstatus"] != 0
-                firewall_rule = response["queryasyncjobresultresponse"]["jobresult"]["firewallrule"]
+              if response['queryasyncjobresultresponse']['jobstatus'] != 0
+                firewall_rule = response['queryasyncjobresultresponse']['jobresult']['firewallrule']
                 break
               else
                 sleep 2
@@ -491,7 +439,7 @@ module VagrantPlugins
           # Save firewall rule id to the data dir so it can be released when the instance is destroyed
           firewall_file = env[:machine].data_dir.join('firewall')
           firewall_file.open('a+') do |f|
-            f.write("#{firewall_rule["id"]}\n")
+            f.write("#{firewall_rule['id']}\n")
           end
         end
 
@@ -505,9 +453,24 @@ module VagrantPlugins
 
         private
 
+        def sync_ip_address(ip_address_id, ip_address_value)
+          ip_address = CloudstackResource.new(ip_address_id, ip_address_value, 'public_ip_address')
+
+          if ip_address.is_undefined?
+            message = 'IP address is not specified. Skip creating port forwarding rule.'
+            @logger.info(message)
+            env[:ui].info(I18n.t(message))
+            raise IpNotFoundException
+          end
+
+          @resource_service.sync_resource(ip_address)
+
+          ip_address
+        end
+
         def translate_from_to(env, resource_type, options)
-          if resource_type == "public_ip_address"
-            pluralised_type = "public_ip_addresses"
+          if resource_type == 'public_ip_address'
+            pluralised_type = 'public_ip_addresses'
           else
             pluralised_type = "#{resource_type}s"
           end
