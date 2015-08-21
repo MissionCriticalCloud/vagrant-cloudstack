@@ -182,17 +182,7 @@ module VagrantPlugins
           @logger.info("Time to instance ready: #{env[:metrics]['instance_ready_time']}")
 
           if server.password_enabled and server.respond_to?("job_id")
-            server_job_result = env[:cloudstack_compute].jobs.get(server.job_id).job_result
-            password = server_job_result["virtualmachine"]["password"]
-            env[:ui].info("Password of virtualmachine: #{password}")
-            # Set the password on the current communicator
-            domain_config.vm_password = password
-
-            # Save password to file
-            vmcredentials_file = env[:machine].data_dir.join('vmcredentials')
-            vmcredentials_file.open('a+') do |f|
-              f.write("#{password}")
-            end
+            store_password(env, domain_config, server.job_id)
           end
 
           if !static_nat.empty?
@@ -249,6 +239,34 @@ module VagrantPlugins
           terminate(env) if env[:interrupted]
 
           @app.call(env)
+        end
+
+        def store_password(env, domain_config, job_id)
+          server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+          if server_job_result.nil?
+            env[:ui].warn(' -- Failed to retrieve job_result for retrieving the password')
+            return
+          end
+
+          while true
+            server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+            if server_job_result['queryasyncjobresultresponse']['jobstatus'] != 0
+              password = server_job_result['queryasyncjobresultresponse']['jobresult']['virtualmachine']['password']
+              break
+            else
+              sleep 2
+            end
+          end
+
+          env[:ui].info("Password of virtualmachine: #{password}")
+          # Set the password on the current communicator
+          domain_config.vm_password = password
+
+          # Save password to file
+          vmcredentials_file = env[:machine].data_dir.join('vmcredentials')
+          vmcredentials_file.open('a+') do |f|
+            f.write("#{password}")
+          end
         end
 
         def create_security_group(env, security_group)
