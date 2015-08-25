@@ -36,30 +36,31 @@ module VagrantPlugins
           @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name, 'template')
 
-          hostname              = domain_config.name
-          network_type          = domain_config.network_type
-          project_id            = domain_config.project_id
-          keypair               = domain_config.keypair
-          static_nat            = domain_config.static_nat
-          pf_ip_address_id      = domain_config.pf_ip_address_id
-          pf_ip_address         = domain_config.pf_ip_address
-          pf_public_port        = domain_config.pf_public_port
-          pf_private_port       = domain_config.pf_private_port
-          pf_open_firewall      = domain_config.pf_open_firewall
-          pf_trusted_networks   = domain_config.pf_trusted_networks
-          port_forwarding_rules = domain_config.port_forwarding_rules
-          firewall_rules        = domain_config.firewall_rules
-          display_name          = domain_config.display_name
-          group                 = domain_config.group
-          security_group_ids    = domain_config.security_group_ids
-          security_group_names  = domain_config.security_group_names
-          security_groups       = domain_config.security_groups
-          user_data             = domain_config.user_data
-          ssh_key               = domain_config.ssh_key
-          ssh_user              = domain_config.ssh_user
-          vm_user               = domain_config.vm_user
-          vm_password           = domain_config.vm_password
-          private_ip_address    = domain_config.private_ip_address
+          hostname                    = domain_config.name
+          network_type                = domain_config.network_type
+          project_id                  = domain_config.project_id
+          keypair                     = domain_config.keypair
+          static_nat                  = domain_config.static_nat
+          pf_ip_address_id            = domain_config.pf_ip_address_id
+          pf_ip_address               = domain_config.pf_ip_address
+          pf_public_port              = domain_config.pf_public_port
+          pf_public_port_randomrange  = domain_config.pf_public_port_randomrange
+          pf_private_port             = domain_config.pf_private_port
+          pf_open_firewall            = domain_config.pf_open_firewall
+          pf_trusted_networks         = domain_config.pf_trusted_networks
+          port_forwarding_rules       = domain_config.port_forwarding_rules
+          firewall_rules              = domain_config.firewall_rules
+          display_name                = domain_config.display_name
+          group                       = domain_config.group
+          security_group_ids          = domain_config.security_group_ids
+          security_group_names        = domain_config.security_group_names
+          security_groups             = domain_config.security_groups
+          user_data                   = domain_config.user_data
+          ssh_key                     = domain_config.ssh_key
+          ssh_user                    = domain_config.ssh_user
+          vm_user                     = domain_config.vm_user
+          vm_password                 = domain_config.vm_password
+          private_ip_address          = domain_config.private_ip_address
 
           @resource_service.sync_resource(@zone, { 'available' => true })
           @resource_service.sync_resource(@network)
@@ -192,7 +193,16 @@ module VagrantPlugins
             end
           end
 
-          if (pf_ip_address_id or pf_ip_address) and pf_public_port and pf_private_port
+          if (pf_ip_address_id or pf_ip_address) and (pf_public_port or pf_public_port_randomrange)
+            if pf_private_port.nil?
+              communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
+              comm_obj = env[:machine].config.send(communicator)
+
+              pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
+              pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
+              pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') and comm_obj.default.respond_to?('port'))
+            end
+
             port_forwarding_rule = {
               :ipaddressid  => pf_ip_address_id,
               :ipaddress    => pf_ip_address,
@@ -201,7 +211,29 @@ module VagrantPlugins
               :privateport  => pf_private_port,
               :openfirewall => (pf_open_firewall and pf_trusted_networks) ? false : pf_open_firewall
             }
-            create_port_forwarding_rule(env, port_forwarding_rule)
+
+            retryable(:on => DuplicatePFRule, :tries => 10) do
+              begin
+                port_forwarding_rule[:publicport] = rand(pf_public_port_randomrange) if pf_public_port.nil?
+
+                create_port_forwarding_rule(env, port_forwarding_rule)
+                
+                if pf_public_port.nil?
+                  pf_public_port = domain_config.pf_public_port = port_forwarding_rule[:publicport]
+
+                  pf_public_port_file = env[:machine].data_dir.join('pf_public_port')
+                  pf_public_port_file.open('a+') do |f|
+                    f.write("#{pf_public_port}")
+                  end
+                end
+              rescue Errors::FogError => e
+                if pf_public_port.nil? and  not (e.message =~ /The range specified,.*conflicts with rule.*which has/).nil?
+                  raise DuplicatePFRule, :message => e.message
+                else
+                  raise Errors::FogError, :message => e.message
+                end
+              end
+            end
 
             if pf_open_firewall and pf_trusted_networks
               # Allow access to public port from trusted networks only
@@ -233,8 +265,7 @@ module VagrantPlugins
           if !env[:interrupted]
             env[:metrics]['instance_ssh_time'] = Util::Timer.time do
               # Wait for communicator to be ready.
-              communicator = env[:machine].config.vm.communicator
-              communicator = 'SSH' if communicator.nil?
+              communicator = env[:machine].communicate.instance_variable_get("@logger").instance_variable_get("@name")
               env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_communicator', :communicator => communicator.to_s.upcase))
               while true
                 # If we're interrupted then just back out

@@ -95,6 +95,10 @@ module VagrantPlugins
             port_forwarding_file.delete
           end
 
+          # Delete the Port forwording public port file
+          pf_public_port_file = env[:machine].data_dir.join('pf_public_port')
+          pf_public_port_file.delete if vmcredentials_file.file?
+
           # Destroy the server and remove the tracking ID
           unless env[:machine].id.nil?
               server = env[:cloudstack_compute].servers.get(env[:machine].id)

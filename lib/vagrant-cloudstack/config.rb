@@ -136,6 +136,11 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :pf_public_port
 
+      # public port to use for port forwarding rule
+      #
+      # @return [Range]
+      attr_accessor :pf_public_port_randomrange
+
       # private port to use for port forwarding rule
       #
       # @return [String]
@@ -252,6 +257,7 @@ module VagrantPlugins
         @pf_ip_address_id          = UNSET_VALUE
         @pf_ip_address             = UNSET_VALUE
         @pf_public_port            = UNSET_VALUE
+        @pf_public_port_randomrange= UNSET_VALUE
         @pf_private_port           = UNSET_VALUE
         @pf_open_firewall          = UNSET_VALUE
         @pf_trusted_networks       = UNSET_VALUE
@@ -410,6 +416,9 @@ module VagrantPlugins
 
         # Public port must be nil, since we can't default that
         @pf_public_port         = nil if @pf_public_port == UNSET_VALUE
+
+        # Public port random-range, default to rfc6335 'Dynamic Ports'; "(never assigned)"
+        @pf_public_port_randomrange = 49152...65535 if @pf_public_port_randomrange == UNSET_VALUE
 
         # Private port must be nil, since we can't default that
         @pf_private_port        = nil if @pf_private_port == UNSET_VALUE

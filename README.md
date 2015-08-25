@@ -154,7 +154,8 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `pf_ip_address_id` - IP address ID for port forwarding rule
 * `pf_ip_address` - IP address for port forwarding rule
 * `pf_public_port` - Public port for port forwarding rule
-* `pf_private_port` - Private port for port forwarding rule
+* `pf_public_port_randomrange` - If public port is omited, a port from this range wll be used (default 49152...65535)
+* `pf_private_port` - Private port for port forwarding rule (defaults to respective Communicator protocol)
 * `pf_open_firewall` - Flag to enable/disable automatic open firewall rule
 * `pf_trusted_networks` - CIDRList to network(s) to open firewall for (default 0.0.0.0/0)
 * `port_forwarding_rules` - Port forwarding rules for the virtual machine
