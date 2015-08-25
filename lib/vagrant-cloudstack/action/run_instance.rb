@@ -46,6 +46,7 @@ module VagrantPlugins
           pf_public_port        = domain_config.pf_public_port
           pf_private_port       = domain_config.pf_private_port
           pf_open_firewall      = domain_config.pf_open_firewall
+          pf_trusted_networks   = domain_config.pf_trusted_networks
           port_forwarding_rules = domain_config.port_forwarding_rules
           firewall_rules        = domain_config.firewall_rules
           display_name          = domain_config.display_name
@@ -198,9 +199,23 @@ module VagrantPlugins
               :protocol     => 'tcp',
               :publicport   => pf_public_port,
               :privateport  => pf_private_port,
-              :openfirewall => pf_open_firewall
+              :openfirewall => (pf_open_firewall and pf_trusted_networks) ? false : pf_open_firewall
             }
             create_port_forwarding_rule(env, port_forwarding_rule)
+
+            if pf_open_firewall and pf_trusted_networks
+              # Allow access to public port from trusted networks only
+              fw_rule_trusted_networks = {
+                  :ipaddressid  => pf_ip_address_id,
+                  :ipaddress    => pf_ip_address,
+                  :protocol     => "tcp",
+                  :startport    => pf_public_port,
+                  :endport      => pf_public_port,
+                  :cidrlist     => pf_trusted_networks
+              }
+              firewall_rules = [] unless firewall_rules
+              firewall_rules << fw_rule_trusted_networks
+            end
           end
 
           if !port_forwarding_rules.empty?

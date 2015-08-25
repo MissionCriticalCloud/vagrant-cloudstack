@@ -146,6 +146,11 @@ module VagrantPlugins
       # @return [Boolean]
       attr_accessor :pf_open_firewall
 
+      # CIDR List string of trusted networks
+      #
+      # @return [String]
+      attr_accessor :pf_trusted_networks
+
       # comma separated list of port forwarding rules
       # (hash with rule parameters)
       #
@@ -249,6 +254,7 @@ module VagrantPlugins
         @pf_public_port            = UNSET_VALUE
         @pf_private_port           = UNSET_VALUE
         @pf_open_firewall          = UNSET_VALUE
+        @pf_trusted_networks       = UNSET_VALUE
         @port_forwarding_rules     = UNSET_VALUE
         @firewall_rules            = UNSET_VALUE
         @security_group_ids        = UNSET_VALUE
@@ -410,6 +416,9 @@ module VagrantPlugins
 
         # Open firewall is true by default (for backwards compatibility)
         @pf_open_firewall       = true if @pf_open_firewall == UNSET_VALUE
+
+        # Trusted networks must be nil, since we can't default that
+        @pf_trusted_networks    = nil if @pf_trusted_networks == UNSET_VALUE
 
         # Port forwarding rules  must be empty array
         @port_forwarding_rules  = [] if @port_forwarding_rules == UNSET_VALUE
