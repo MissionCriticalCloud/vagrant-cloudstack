@@ -3,6 +3,8 @@ module VagrantPlugins
     module Exceptions
       class IpNotFoundException < Exception
       end
+      class DuplicatePFRule < Exception
+      end
     end
   end
 end

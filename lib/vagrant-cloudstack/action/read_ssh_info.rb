@@ -37,6 +37,16 @@ module VagrantPlugins
           pf_ip_address    = domain_config.pf_ip_address
           pf_public_port   = domain_config.pf_public_port
 
+          if pf_public_port.nil?
+            pf_public_port_file = machine.data_dir.join('pf_public_port')
+            if pf_public_port_file.file?
+              File.read(pf_public_port_file).each_line do |line|
+                pf_public_port = line.strip
+              end
+              domain_config.pf_public_port = pf_public_port
+            end
+          end
+
           if not pf_ip_address and pf_ip_address_id and pf_public_port
             begin
               response = cloudstack.list_public_ip_addresses({:id => pf_ip_address_id})
@@ -57,7 +67,6 @@ module VagrantPlugins
                        :host => pf_ip_address || server.nics[0]['ipaddress'],
                        :port => pf_public_port
                      }
-
           ssh_info = ssh_info.merge({
             :private_key_path => domain_config.ssh_key,
             :password         => nil
