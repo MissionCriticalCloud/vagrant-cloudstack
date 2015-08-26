@@ -5,7 +5,6 @@ require 'vagrant-cloudstack/util/timer'
 require 'vagrant-cloudstack/model/cloudstack_resource'
 require 'vagrant-cloudstack/service/cloudstack_resource_service'
 
-
 module VagrantPlugins
   module Cloudstack
     module Action
