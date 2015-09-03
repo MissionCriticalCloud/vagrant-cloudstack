@@ -15,7 +15,7 @@ provider to Vagrant.
 
 * SSH into the instances.
 * Provision the instances with any built-in Vagrant provisioner.
-* Minimal synced folder support via `rsync`.
+* Minimal synced folder support via `rsync`/`winrm`.
 
 ## Usage
 
@@ -162,8 +162,10 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `firewall_rules` - Firewall rules
 * `display_name` - Display name for the instance
 * `group` - Group for the instance
-* `ssh_key` - Path to a private key to be used with ssh
-* `ssh_user` - User name to be used with ssh
+* `ssh_key` - Path to a private key to be used with ssh _(defaults to Vagrant's `config.ssh.private_key_path`)_
+* `ssh_user` - User name to be used with ssh _(defaults to Vagrant's `config.ssh.username`)_
+* `vm_user` - User name to be used with winrm _(defaults to Vagrant's `config.winrm.username`)_
+* `vm_password` - Password to be used with winrm. _(If the CloudStack template is "Password Enabled", leaving this unset will trigger the plugin to retrieve and use it.)_
 * `private_ip_address` - private (static)ip address to be used by the virtual machine
 * `expunge_on_destroy` - Flag to enable/disable expunge vm on destroy
 
@@ -268,11 +270,11 @@ Vagrant.configure("2") do |config|
       {
         :name         => "Awesome_security_group",
         :description  => "Created from the Vagrantfile",
-        	:rules => [
-				{:type => "ingress", :protocol => "TCP", :startport => 22, :endport => 22, :cidrlist => "0.0.0.0/0"},
-				{:type => "ingress", :protocol => "TCP", :startport => 80, :endport => 80, :cidrlist => "0.0.0.0/0"},
-				{:type => "egress",  :protocol => "TCP", :startport => 81, :endport => 82, :cidrlist => "1.2.3.4/24"},
-		]
+          :rules => [
+        {:type => "ingress", :protocol => "TCP", :startport => 22, :endport => 22, :cidrlist => "0.0.0.0/0"},
+        {:type => "ingress", :protocol => "TCP", :startport => 80, :endport => 80, :cidrlist => "0.0.0.0/0"},
+        {:type => "egress",  :protocol => "TCP", :startport => 81, :endport => 82, :cidrlist => "1.2.3.4/24"},
+    ]
       }
     ]
   end
@@ -309,17 +311,27 @@ Vagrant.configure("2") do |config|
       { :ipaddress => "X.X.X.X", :cidrlist  => "1.2.3.4/24", :protocol => "tcp", :startport => 80, :endport => 80 },
     ]
 
-    cloudstack.pf_trusted_networks = "1.2.3.4/24,11.22.33.44/32"
   end
 end
 ```
 
+For only allowing Vagrant to access the box for further provisioning (SSH/WinRM), and opening the Firewall for some subnets, the following config is sufficient:
+```ruby
+Vagrant.configure("2") do |config|
+  # ... other stuff
+
+  config.vm.provider :cloudstack do |cloudstack|
+  cloudstack.pf_open_firewall      = "true"
+    cloudstack.pf_ip_address         = X.X.X.X
+    cloudstack.pf_trusted_networks   = "1.2.3.4/24,11.22.33.44/32"
+  end
+end
+```
+Where X.X.X.X is the ip of the respective CloudStack network, this will automatically map the port of the used Communicator (SSH/Winrm) via a random public port, open the Firewall and set Vagrant to use it.
+
 ## Synced Folders
 
-There is minimal support for synced folders. Upon `vagrant up`,
-`vagrant reload`, and `vagrant provision`, the Cloudstack provider will use
-`rsync` (if available) to uni-directionally sync the folder to
-the remote machine over SSH.
+There is minimal support for synced folders. Upon `vagrant up`, `vagrant reload`, and `vagrant provision`, the Cloudstack provider will use `rsync` (if available) to uni-directionally sync the folder to the remote machine over SSH, and use Vagrant plugin `vagrant-winrm-syncedfolders` (if available) to uni-directionally sync the folder to the remote machine over WinRM.
 
 This is good enough for all built-in Vagrant provisioners (shell,
 chef, and puppet) to work!
@@ -388,4 +400,3 @@ Use bundler to execute Vagrant:
 ```
 $ bundle exec vagrant up --provider=cloudstack
 ```
-
