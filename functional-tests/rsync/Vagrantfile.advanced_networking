@@ -7,7 +7,7 @@ VAGRANTFILE_API_VERSION = '2'
 Vagrant.require_version '>= 1.5.0'
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = 'vagrant-cloudstack-dummy'
+  config.vm.box = ENV['LINUX_TEMPLATE_NAME']
 
   config.vm.provider :cloudstack do |cloudstack, override|
     cloudstack.display_name = ENV['TEST_NAME']
@@ -26,12 +26,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     cloudstack.zone_name             = ENV['ZONE_NAME']
     cloudstack.network_name          = ENV['NETWORK_NAME']
     cloudstack.service_offering_name = ENV['SERVICE_OFFERING_NAME']
-    cloudstack.template_name         = ENV['TEMPLATE_NAME']
 
     cloudstack.network_type          = 'Advanced'
     cloudstack.pf_ip_address         = public_source_nat_ip
     cloudstack.pf_public_port        = public_ssh_port
-    cloudstack.pf_private_port       = '22'
+    cloudstack.pf_private_port       = ENV['PRIVATE_SSH_PORT']
     cloudstack.pf_open_firewall      = open_firewall
 
     unless open_firewall

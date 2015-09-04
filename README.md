@@ -146,7 +146,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `service_offering_id`- Service offering uuid to use for the instance
 * `service_offering_name`- Service offering name to use for the instance
 * `template_id` - Template uuid to use for the instance
-* `template_name` - Template name to use for the instance
+* `template_name` - Template name to use for the instance, defaults to Vagrants config.vm.box
 * `zone_id` - Zone uuid to launch the instance into
 * `zone_name` - Zone uuid to launch the instance into
 * `keypair` - SSH keypair name

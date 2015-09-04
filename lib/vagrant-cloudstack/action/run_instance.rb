@@ -34,7 +34,7 @@ module VagrantPlugins
           @network          = CloudstackResource.new(domain_config.network_id, domain_config.network_name, 'network')
           @service_offering = CloudstackResource.new(domain_config.service_offering_id, domain_config.service_offering_name, 'service_offering')
           @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
-          @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name, 'template')
+          @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
 
           hostname                    = domain_config.name
           network_type                = domain_config.network_type

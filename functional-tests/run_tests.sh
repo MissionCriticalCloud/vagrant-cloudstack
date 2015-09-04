@@ -40,11 +40,6 @@ if [ -z "$SERVICE_OFFERING_NAME" ]; then
   exit 1
 fi
 
-if [ -z "$TEMPLATE_NAME" ]; then
-  echo "Template name not set. Quitting"
-  exit 1
-fi
-
 test_dirs=$(find . -type d -mindepth 1 -maxdepth 1 | grep -v ".vagrant")
 
 for test_dir in $test_dirs; do
