@@ -1,3 +1,11 @@
+# 1.2.0 (Sep 4, 2015)
+* Add support for disk offering (PR#89)
+* Fix bug open file handles on Windows (PR#98)
+* Add support for Windows guests (PR#96)
+* Automate port forwarding for the Communicator (PR#104)
+* Allow setting to open Firewall to specific network (PR#99)
+* Make config.vm.box an optional setting in Vagrantfile (PR#105)
+
 # 1.1.0 (May 26, 2015)
 * Allow setting VM private IP in config (PR #73)
 * Fix several coding style issues (PR #76, #77, #78)
