@@ -36,21 +36,12 @@ box file for Vagrant.
 ## Quick Start
 
 After installing the plugin (instructions above), the quickest way to get
-started is to actually use a dummy Cloudstack box and specify all the details
-manually within a `config.vm.provider` block. So first, add the dummy
-box using any name you want:
-
-```
-$ vagrant box add dummy https://github.com/schubergphilis/vagrant-cloudstack/raw/master/dummy.box
-...
-```
-
-And then make a Vagrantfile that looks like the following, filling in
+started is to actually make a Vagrantfile that looks like the following, filling in
 your information where necessary.
 
 ```
 Vagrant.configure("2") do |config|
-  config.vm.box = "dummy"
+  config.vm.box = "${cloudstack.template_name}"
 
   config.vm.provider :cloudstack do |cloudstack, override|
     cloudstack.host = "cloudstack.local"
@@ -60,7 +51,6 @@ Vagrant.configure("2") do |config|
     cloudstack.api_key = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.secret_key = "AAAAAAAAAAAAAAAAAAA"
 
-    cloudstack.template_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.service_offering_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.disk_offering_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.network_id = "AAAAAAAAAAAAAAAAAAA"
@@ -75,7 +65,7 @@ Or with names instead of ids:
 
 ```
 Vagrant.configure("2") do |config|
-  config.vm.box = "dummy"
+  config.vm.box = "${cloudstack.template_name}"
 
   config.vm.provider :cloudstack do |cloudstack, override|
     cloudstack.host = "cloudstack.local"
@@ -85,7 +75,6 @@ Vagrant.configure("2") do |config|
     cloudstack.api_key = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.secret_key = "AAAAAAAAAAAAAAAAAAA"
 
-    cloudstack.template_name = "GENERIC-Awesome-Linux"
     cloudstack.service_offering_name = "THE-BESTEST"
     cloudstack.disk_offering_name = "THE-LARGEST-OFFER-AVAILABLE"
     cloudstack.network_name = "WOW-SUCH-FAST-OFFERING"
