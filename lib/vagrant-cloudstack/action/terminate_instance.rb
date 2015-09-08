@@ -104,9 +104,13 @@ module VagrantPlugins
             port_forwarding_file.delete
           end
 
-          # Delete the Port forwording public port file
+          # Delete the Communicator Port forwording public port file
           pf_public_port_file = env[:machine].data_dir.join('pf_public_port')
           pf_public_port_file.delete if vmcredentials_file.file?
+
+          # Delete the RDP Port forwording public port file
+          pf_public_rdp_port_file = env[:machine].data_dir.join('pf_public_rdp_port')
+          pf_public_rdp_port_file.delete if vmcredentials_file.file?
 
           # Destroy the server and remove the tracking ID
           unless env[:machine].id.nil?

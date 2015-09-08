@@ -35,6 +35,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("pf_ip_address_id")       { should be_nil  }
     its("pf_ip_address")          { should be_nil  }
     its("pf_public_port")         { should be_nil  }
+    its("pf_public_rdp_port")     { should be_nil  }
     its("pf_public_port_randomrange") { should == (49152...65535) }
     its("pf_private_port")        { should be_nil  }
     its("pf_open_firewall")       { should == true }
@@ -144,6 +145,7 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_pf_ip_address)          { "foo" }
     let(:config_pf_public_port_randomrange)    { 1...9 }
     let(:config_pf_public_port)         { "foo" }
+    let(:config_pf_public_rdp_port)     { "foo" }
     let(:config_pf_private_port)        { "foo" }
     let(:config_pf_open_firewall)       { false }
     let(:config_pf_trusted_networks)    { "foo" }
@@ -182,6 +184,7 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.pf_public_port_randomrange = config_pf_public_port_randomrange
       instance.pf_ip_address          = config_pf_ip_address
       instance.pf_public_port         = config_pf_public_port
+      instance.pf_public_rdp_port     = config_pf_public_rdp_port
       instance.pf_private_port        = config_pf_private_port
       instance.pf_open_firewall       = config_pf_open_firewall
       instance.pf_trusted_networks    = config_pf_trusted_networks
@@ -236,6 +239,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_ip_address_id")       { should == config_pf_ip_address_id }
       its("pf_ip_address")          { should == config_pf_ip_address }
       its("pf_public_port")         { should == config_pf_public_port }
+      its("pf_public_rdp_port")     { should == config_pf_public_rdp_port }
       its("pf_public_port_randomrange") { should == config_pf_public_port_randomrange}
       its("pf_private_port")        { should == config_pf_private_port }
       its("pf_trusted_networks")    { should == config_pf_trusted_networks}
@@ -290,6 +294,7 @@ describe VagrantPlugins::Cloudstack::Config do
       its("pf_ip_address_id")       { should == config_pf_ip_address_id }
       its("pf_ip_address")          { should == config_pf_ip_address }
       its("pf_public_port")         { should == config_pf_public_port }
+      its("pf_public_rdp_port")     { should == config_pf_public_rdp_port }
       its("pf_public_port_randomrange") { should == config_pf_public_port_randomrange}
       its("pf_private_port")        { should == config_pf_private_port }
       its("pf_open_firewall")       { should == config_pf_open_firewall }
