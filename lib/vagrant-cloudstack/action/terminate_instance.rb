@@ -37,7 +37,11 @@ module VagrantPlugins
                   end
                 end
               rescue Fog::Compute::Cloudstack::Error => e
-                raise Errors::FogError, :message => e.message
+                if e.message =~ /Unable to execute API command deletefirewallrule.*entity does not exist/
+                  env[:ui].warn(" -- Failed to delete firewall rule: #{e.message}")
+                else
+                  raise Errors::FogError, :message => e.message
+                end
               end
             end
             firewall_file.delete
@@ -89,7 +93,12 @@ module VagrantPlugins
                   end
                 end
               rescue Fog::Compute::Cloudstack::Error => e
-                raise Errors::FogError, :message => e.message
+                if e.message =~ /Unable to execute API command deleteportforwardingrule.*entity does not exist/
+                  env[:ui].warn(" -- Failed to delete portforwarding rule: #{e.message}")
+                else
+                  raise Errors::FogError, :message => e.message
+                end
+
               end
             end
             port_forwarding_file.delete
