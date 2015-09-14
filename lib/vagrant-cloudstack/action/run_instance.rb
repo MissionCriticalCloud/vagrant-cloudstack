@@ -497,13 +497,19 @@ module VagrantPlugins
               end
             end
           rescue Fog::Compute::Cloudstack::Error => e
-            raise Errors::FogError, :message => e.message
+            if e.message =~ /The range specified,.*conflicts with rule/
+              env[:ui].warn(" -- Failed to create firewall rule: #{e.message}")
+            else
+              raise Errors::FogError, :message => e.message
+            end
           end
 
-          # Save firewall rule id to the data dir so it can be released when the instance is destroyed
-          firewall_file = env[:machine].data_dir.join('firewall')
-          firewall_file.open('a+') do |f|
-            f.write("#{firewall_rule['id']}\n")
+          unless firewall_rule.nil?
+            # Save firewall rule id to the data dir so it can be released when the instance is destroyed
+            firewall_file = env[:machine].data_dir.join('firewall')
+            firewall_file.open('a+') do |f|
+              f.write("#{firewall_rule['id']}\n")
+            end
           end
         end
 
