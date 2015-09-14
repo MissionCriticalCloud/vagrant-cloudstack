@@ -194,10 +194,10 @@ module VagrantPlugins
             end
           end
 
-#         if pf_private_rdp_port.nil?
+
           pf_private_rdp_port = 3389
           pf_private_rdp_port = env[:machine].config.vm.rdp.port if ( env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port) )
-#         end
+
           if pf_private_port.nil?
             communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
             comm_obj = env[:machine].config.send(communicator)
