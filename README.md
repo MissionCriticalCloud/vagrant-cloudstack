@@ -146,8 +146,8 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `pf_public_rdp_port` - Public RDP port for port forwarding rule
 * `pf_public_port_randomrange` - If public port is omited, a port from this range wll be used (default 49152...65535)
 * `pf_private_port` - Private port for port forwarding rule (defaults to respective Communicator protocol)
-* `pf_open_firewall` - Flag to enable/disable automatic open firewall rule
-* `pf_trusted_networks` - CIDRList to network(s) to open firewall for (default 0.0.0.0/0)
+* `pf_open_firewall` - Flag to enable/disable automatic open firewall rule (by CloudStack)
+* `pf_trusted_networks` - Array to network(s) to automatically generate firewall rules for
 * `port_forwarding_rules` - Port forwarding rules for the virtual machine
 * `firewall_rules` - Firewall rules
 * `display_name` - Display name for the instance
@@ -311,9 +311,9 @@ Vagrant.configure("2") do |config|
   # ... other stuff
 
   config.vm.provider :cloudstack do |cloudstack|
-  cloudstack.pf_open_firewall      = "true"
+    cloudstack.pf_open_firewall      = "true"
     cloudstack.pf_ip_address         = X.X.X.X
-    cloudstack.pf_trusted_networks   = "1.2.3.4/24,11.22.33.44/32"
+    cloudstack.pf_trusted_networks   = [ "1.2.3.4/24" , "11.22.33.44/32" ]
   end
 end
 ```

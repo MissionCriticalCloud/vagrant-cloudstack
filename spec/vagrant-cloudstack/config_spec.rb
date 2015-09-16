@@ -148,7 +148,7 @@ describe VagrantPlugins::Cloudstack::Config do
     let(:config_pf_public_rdp_port)     { "foo" }
     let(:config_pf_private_port)        { "foo" }
     let(:config_pf_open_firewall)       { false }
-    let(:config_pf_trusted_networks)    { "foo" }
+    let(:config_pf_trusted_networks)    { ["foo", "bar"] }
     let(:config_port_forwarding_rules)  { [{:foo => "bar"}, {:bar => "foo"}] }
     let(:config_firewall_rules)         { [{:foo => "bar"}, {:bar => "foo"}] }
     let(:config_security_group_ids)     { ["foo", "bar"] }
