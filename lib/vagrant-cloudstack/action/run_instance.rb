@@ -234,7 +234,9 @@ module VagrantPlugins
             end
           end
 
-          if (pf_ip_address_id || pf_ip_address) && (pf_public_rdp_port || pf_public_port_randomrange)
+          if env[:machine].config.vm.guest == :windows && 
+                        (pf_ip_address_id || pf_ip_address) &&
+                      (pf_public_rdp_port || pf_public_port_randomrange)
             port_forwarding_rule = {
               :ipaddressid  => pf_ip_address_id,
               :ipaddress    => pf_ip_address,
