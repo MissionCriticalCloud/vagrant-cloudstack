@@ -38,6 +38,11 @@ module VagrantPlugins
         VagrantPlugins::Cloudstack::Cap::WinRM
       end
 
+      provider_capability(:cloudstack, :rdp_info) do
+        require_relative 'capabilities/rdp'
+        VagrantPlugins::Cloudstack::Cap::Rdp
+      end
+
       # This initializes the internationalization strings.
       def self.setup_i18n
         I18n.load_path << File.expand_path("locales/en.yml", Cloudstack.source_root)

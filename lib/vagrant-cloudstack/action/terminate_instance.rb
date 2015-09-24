@@ -11,10 +11,6 @@ module VagrantPlugins
         end
 
         def call(env)
-          # Delete the vmcredentials file
-          vmcredentials_file = env[:machine].data_dir.join("vmcredentials")
-          vmcredentials_file.delete if vmcredentials_file.file?
-
           # Delete the Firewall rule
           env[:ui].info(I18n.t("vagrant_cloudstack.deleting_firewall_rule"))
           firewall_file = env[:machine].data_dir.join("firewall")
@@ -104,9 +100,12 @@ module VagrantPlugins
             port_forwarding_file.delete
           end
 
-          # Delete the Port forwording public port file
-          pf_public_port_file = env[:machine].data_dir.join('pf_public_port')
-          pf_public_port_file.delete if vmcredentials_file.file?
+          # Delete the Communicator Port forwording public port file
+          # Delete the RDP Port forwording public port file
+          ['pf_public_port', 'pf_public_rdp_port'].each do |pf_filename|
+            pf_file = env[:machine].data_dir.join(pf_filename)
+            pf_file.delete if pf_file.file?
+          end
 
           # Destroy the server and remove the tracking ID
           unless env[:machine].id.nil?
@@ -136,6 +135,10 @@ module VagrantPlugins
                 env[:ui].info(I18n.t("vagrant_cloudstack.no_instance_found"))
                 return
           end
+
+          # Delete the vmcredentials file
+          vmcredentials_file = env[:machine].data_dir.join("vmcredentials")
+          vmcredentials_file.delete if vmcredentials_file.file?
 
           security_groups_file = env[:machine].data_dir.join("security_groups")
           if security_groups_file.file?

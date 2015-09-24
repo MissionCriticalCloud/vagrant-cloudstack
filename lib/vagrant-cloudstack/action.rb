@@ -63,6 +63,17 @@ module VagrantPlugins
       # This action is called to read the WinRM info of the machine. The
       # resulting state is expected to be put into the `:machine_winrm_info`
       # key.
+      def self.action_read_rdp_info
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use ConnectCloudstack
+          b.use ReadRdpInfo
+        end
+      end
+
+      # This action is called to read the WinRM info of the machine. The
+      # resulting state is expected to be put into the `:machine_winrm_info`
+      # key.
       def self.action_read_winrm_info
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
@@ -185,6 +196,7 @@ module VagrantPlugins
       autoload :MessageWillNotDestroy, action_root.join("message_will_not_destroy")
       autoload :ReadSSHInfo, action_root.join("read_ssh_info")
       autoload :ReadWinrmInfo, action_root.join("read_winrm_info")
+      autoload :ReadRdpInfo, action_root.join("read_rdp_info")
       autoload :ReadState, action_root.join("read_state")
       autoload :RunInstance, action_root.join("run_instance")
       autoload :StartInstance, action_root.join("start_instance")

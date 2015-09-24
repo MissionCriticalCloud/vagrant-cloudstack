@@ -44,6 +44,7 @@ module VagrantPlugins
           pf_ip_address_id            = domain_config.pf_ip_address_id
           pf_ip_address               = domain_config.pf_ip_address
           pf_public_port              = domain_config.pf_public_port
+          pf_public_rdp_port          = domain_config.pf_public_rdp_port
           pf_public_port_randomrange  = domain_config.pf_public_port_randomrange
           pf_private_port             = domain_config.pf_private_port
           pf_open_firewall            = domain_config.pf_open_firewall
@@ -193,49 +194,32 @@ module VagrantPlugins
             end
           end
 
-          if (pf_ip_address_id or pf_ip_address) and (pf_public_port or pf_public_port_randomrange)
-            if pf_private_port.nil?
-              communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
-              comm_obj = env[:machine].config.send(communicator)
 
-              pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
-              pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
-              pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') and comm_obj.default.respond_to?('port'))
-            end
+          pf_private_rdp_port = 3389
+          pf_private_rdp_port = env[:machine].config.vm.rdp.port if ( env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port) )
 
+          if pf_private_port.nil?
+            communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
+            comm_obj = env[:machine].config.send(communicator)
+
+            pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
+            pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
+            pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
+          end
+
+          if (pf_ip_address_id || pf_ip_address) && (pf_public_port || pf_public_port_randomrange)
             port_forwarding_rule = {
               :ipaddressid  => pf_ip_address_id,
               :ipaddress    => pf_ip_address,
               :protocol     => 'tcp',
               :publicport   => pf_public_port,
               :privateport  => pf_private_port,
-              :openfirewall => (pf_open_firewall and pf_trusted_networks) ? false : pf_open_firewall
+              :openfirewall => (pf_open_firewall && pf_trusted_networks) ? false : pf_open_firewall
             }
 
-            retryable(:on => DuplicatePFRule, :tries => 10) do
-              begin
-                port_forwarding_rule[:publicport] = rand(pf_public_port_randomrange) if pf_public_port.nil?
+            pf_public_port = domain_config.pf_public_port = create_randomport_forwarding_rule( env, port_forwarding_rule, pf_public_port_randomrange, 'pf_public_port')
 
-                create_port_forwarding_rule(env, port_forwarding_rule)
-                
-                if pf_public_port.nil?
-                  pf_public_port = domain_config.pf_public_port = port_forwarding_rule[:publicport]
-
-                  pf_public_port_file = env[:machine].data_dir.join('pf_public_port')
-                  pf_public_port_file.open('a+') do |f|
-                    f.write("#{pf_public_port}")
-                  end
-                end
-              rescue Errors::FogError => e
-                if pf_public_port.nil? and  not (e.message =~ /The range specified,.*conflicts with rule.*which has/).nil?
-                  raise DuplicatePFRule, :message => e.message
-                else
-                  raise Errors::FogError, :message => e.message
-                end
-              end
-            end
-
-            if pf_open_firewall and pf_trusted_networks
+            if pf_open_firewall && pf_trusted_networks
               # Allow access to public port from trusted networks only
               fw_rule_trusted_networks = {
                   :ipaddressid  => pf_ip_address_id,
@@ -243,6 +227,35 @@ module VagrantPlugins
                   :protocol     => "tcp",
                   :startport    => pf_public_port,
                   :endport      => pf_public_port,
+                  :cidrlist     => pf_trusted_networks
+              }
+              firewall_rules = [] unless firewall_rules
+              firewall_rules << fw_rule_trusted_networks
+            end
+          end
+
+          if env[:machine].config.vm.guest == :windows && 
+                        (pf_ip_address_id || pf_ip_address) &&
+                      (pf_public_rdp_port || pf_public_port_randomrange)
+            port_forwarding_rule = {
+              :ipaddressid  => pf_ip_address_id,
+              :ipaddress    => pf_ip_address,
+              :protocol     => 'tcp',
+              :publicport   => pf_public_rdp_port,
+              :privateport  => pf_private_rdp_port,
+              :openfirewall => (pf_open_firewall && pf_trusted_networks) ? false : pf_open_firewall
+            }
+
+            pf_public_rdp_port = domain_config.pf_public_rdp_port = create_randomport_forwarding_rule( env, port_forwarding_rule, pf_public_port_randomrange, 'pf_public_rdp_port')
+
+            if pf_open_firewall && pf_trusted_networks
+              # Allow access to public port from trusted networks only
+              fw_rule_trusted_networks = {
+                  :ipaddressid  => pf_ip_address_id,
+                  :ipaddress    => pf_ip_address,
+                  :protocol     => "tcp",
+                  :startport    => pf_public_rdp_port,
+                  :endport      => pf_public_rdp_port,
                   :cidrlist     => pf_trusted_networks
               }
               firewall_rules = [] unless firewall_rules
@@ -285,6 +298,33 @@ module VagrantPlugins
           terminate(env) if env[:interrupted]
 
           @app.call(env)
+        end
+
+        def create_randomport_forwarding_rule(env, rule, randomrange, filename)
+          # Only if pf_public_port is nil, will generate and try
+          # Otherwise, functionaly the same as just create_port_forwarding_rule
+          pf_public_port = rule[:publicport]
+          retryable(:on => DuplicatePFRule, :tries => 10) do
+            begin
+              rule[:publicport] = rand(randomrange) if pf_public_port.nil?
+
+              create_port_forwarding_rule(env, rule)
+              
+              if pf_public_port.nil?
+                pf_port_file = env[:machine].data_dir.join(filename)
+                pf_port_file.open('a+') do |f|
+                  f.write("#{rule[:publicport]}")
+                end
+              end
+            rescue Errors::FogError => e
+              if pf_public_port.nil? && !(e.message =~ /The range specified,.*conflicts with rule.*which has/).nil?
+                raise DuplicatePFRule, :message => e.message
+              else
+                raise Errors::FogError, :message => e.message
+              end
+            end
+          end
+          return rule[:publicport] if pf_public_port.nil?
         end
 
         def store_password(env, domain_config, job_id)
