@@ -227,7 +227,7 @@ module VagrantPlugins
                   :protocol     => "tcp",
                   :startport    => pf_public_port,
                   :endport      => pf_public_port,
-                  :cidrlist     => pf_trusted_networks
+                  :cidrlist     => pf_trusted_networks.join(',')
               }
               firewall_rules = [] unless firewall_rules
               firewall_rules << fw_rule_trusted_networks
