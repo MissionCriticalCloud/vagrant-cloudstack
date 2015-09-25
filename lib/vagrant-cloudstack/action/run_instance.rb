@@ -194,7 +194,6 @@ module VagrantPlugins
             end
           end
 
-
           pf_private_rdp_port = 3389
           pf_private_rdp_port = env[:machine].config.vm.rdp.port if ( env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port) )
 
@@ -217,7 +216,12 @@ module VagrantPlugins
               :openfirewall => (pf_open_firewall && pf_trusted_networks) ? false : pf_open_firewall
             }
 
-            pf_public_port = domain_config.pf_public_port = create_randomport_forwarding_rule( env, port_forwarding_rule, pf_public_port_randomrange, 'pf_public_port')
+            pf_public_port = domain_config.pf_public_port = create_randomport_forwarding_rule(
+              env,
+              port_forwarding_rule,
+              pf_public_port_randomrange[:start]...pf_public_port_randomrange[:end],
+              'pf_public_port'
+            )
 
             if pf_open_firewall && pf_trusted_networks
               # Allow access to public port from trusted networks only
@@ -246,7 +250,12 @@ module VagrantPlugins
               :openfirewall => (pf_open_firewall && pf_trusted_networks) ? false : pf_open_firewall
             }
 
-            pf_public_rdp_port = domain_config.pf_public_rdp_port = create_randomport_forwarding_rule( env, port_forwarding_rule, pf_public_port_randomrange, 'pf_public_rdp_port')
+            pf_public_rdp_port = domain_config.pf_public_rdp_port = create_randomport_forwarding_rule(
+              env,
+              port_forwarding_rule,
+              pf_public_port_randomrange[:start]...pf_public_port_randomrange[:end],
+              'pf_public_rdp_port'
+            )
 
             if pf_open_firewall && pf_trusted_networks
               # Allow access to public port from trusted networks only
@@ -256,7 +265,7 @@ module VagrantPlugins
                   :protocol     => "tcp",
                   :startport    => pf_public_rdp_port,
                   :endport      => pf_public_rdp_port,
-                  :cidrlist     => pf_trusted_networks
+                  :cidrlist     => pf_trusted_networks.join(',')
               }
               firewall_rules = [] unless firewall_rules
               firewall_rules << fw_rule_trusted_networks
