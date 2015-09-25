@@ -147,7 +147,9 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `pf_public_port_randomrange` - If public port is omited, a port from this range wll be used (default `{:start=>49152, :end=>65535}`)
 * `pf_private_port` - Private port for port forwarding rule (defaults to respective Communicator protocol)
 * `pf_open_firewall` - Flag to enable/disable automatic open firewall rule (by CloudStack)
-* `pf_trusted_networks` - Array to network(s) to automatically generate firewall rules for
+* `pf_trusted_networks` - Array to network(s) to 
+  - automatically (by plugin) generate firewall rules for, ignored if `pf_open_firewall` set `true`
+  - use as default for firewall rules where source CIDR is missing
 * `port_forwarding_rules` - Port forwarding rules for the virtual machine
 * `firewall_rules` - Firewall rules
 * `display_name` - Display name for the instance
