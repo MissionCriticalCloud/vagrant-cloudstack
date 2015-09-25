@@ -283,7 +283,7 @@ module VagrantPlugins
 
               create_port_forwarding_rule(env, port_forwarding_rule)
 
-              if port_forwarding_rule[:generate_firewall] && pf_trusted_networks
+              if port_forwarding_rule[:generate_firewall] && pf_trusted_networks && !port_forwarding_rule[:openfirewall]
                 # Allow access to public port from trusted networks only
                 fw_rule_trusted_networks = {
                     :ipaddressid  => port_forwarding_rule[:ipaddressid],
