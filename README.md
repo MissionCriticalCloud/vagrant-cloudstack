@@ -147,7 +147,9 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `pf_public_port_randomrange` - If public port is omited, a port from this range wll be used (default `{:start=>49152, :end=>65535}`)
 * `pf_private_port` - Private port for port forwarding rule (defaults to respective Communicator protocol)
 * `pf_open_firewall` - Flag to enable/disable automatic open firewall rule (by CloudStack)
-* `pf_trusted_networks` - Array to network(s) to automatically generate firewall rules for
+* `pf_trusted_networks` - Array to network(s) to 
+  - automatically (by plugin) generate firewall rules for, ignored if `pf_open_firewall` set `true`
+  - use as default for firewall rules where source CIDR is missing
 * `port_forwarding_rules` - Port forwarding rules for the virtual machine
 * `firewall_rules` - Firewall rules
 * `display_name` - Display name for the instance
@@ -292,18 +294,28 @@ Vagrant.configure("2") do |config|
 
     cloudstack.port_forwarding_rules = [
       { :ipaddress => "X.X.X.X", :protocol => "tcp", :publicport => 22, :privateport  => 22, :openfirewall => false },
-      { :ipaddress => "X.X.X.X", :protocol => "tcp", :publicport => 80, :privateport  => 80, :openfirewall => false },
+      { :ipaddress => "X.X.X.X", :protocol => "tcp", :publicport => 80, :privateport  => 80, :openfirewall => false }
     ]
 
     cloudstack.firewall_rules = [
       { :ipaddress => "A.A.A.A", :cidrlist  => "1.2.3.4/24", :protocol => "icmp", :icmptype => 8, :icmpcode => 0 },
       { :ipaddress => "X.X.X.X", :cidrlist  => "1.2.3.4/24", :protocol => "tcp", :startport => 22, :endport => 22 },
-      { :ipaddress => "X.X.X.X", :cidrlist  => "1.2.3.4/24", :protocol => "tcp", :startport => 80, :endport => 80 },
+      { :ipaddress => "X.X.X.X", :cidrlist  => "1.2.3.4/24", :protocol => "tcp", :startport => 80, :endport => 80 }
     ]
 
   end
 end
 ```
+Most values in the firewall and portforwarding rules are not mandatory, except either startport/endport or privateport/publicport
+* `:ipaddress` - defaults to `pf_ip_address`
+* `:protocol` - defaults to `'tcp'`
+* `:publicport` - defaults to `:privateport`
+* `:privateport` - defaults to `:publicport`
+* `:openfirewall` - defaults to `pf_open_firewall`
+* `:cidrlist` - defaults to `pf_trusted_networks`
+* `:startport` - defaults to `:endport`
+* `:endport` - not required by CloudStack
+
 
 For only allowing Vagrant to access the box for further provisioning (SSH/WinRM), and opening the Firewall for some subnets, the following config is sufficient:
 ```ruby
@@ -311,13 +323,30 @@ Vagrant.configure("2") do |config|
   # ... other stuff
 
   config.vm.provider :cloudstack do |cloudstack|
-    cloudstack.pf_open_firewall      = "true"
+    cloudstack.pf_open_firewall      = "false"
     cloudstack.pf_ip_address         = X.X.X.X
     cloudstack.pf_trusted_networks   = [ "1.2.3.4/24" , "11.22.33.44/32" ]
   end
 end
 ```
 Where X.X.X.X is the ip of the respective CloudStack network, this will automatically map the port of the used Communicator (SSH/Winrm) via a random public port, open the Firewall and set Vagrant to use it.
+
+The plugin can also automatically generate firewall rules off of the portforwarding  rules:
+```ruby
+Vagrant.configure("2") do |config|
+  # ... other stuff
+
+  config.vm.provider :cloudstack do |cloudstack|
+
+    cloudstack.pf_trusted_networks   = [ "1.2.3.4/24" , "11.22.33.44/32" ]
+    cloudstack.port_forwarding_rules = [
+      { :privateport  => 22, :generate_firewall => true },
+      { :privateport  => 80, :generate_firewall => true }
+    ]
+
+  end
+end
+```
 
 ## Synced Folders
 

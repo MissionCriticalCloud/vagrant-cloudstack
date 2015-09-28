@@ -213,7 +213,7 @@ module VagrantPlugins
               :protocol     => 'tcp',
               :publicport   => pf_public_port,
               :privateport  => pf_private_port,
-              :openfirewall => (pf_open_firewall && pf_trusted_networks) ? false : pf_open_firewall
+              :openfirewall => pf_open_firewall
             }
 
             pf_public_port = domain_config.pf_public_port = create_randomport_forwarding_rule(
@@ -223,12 +223,12 @@ module VagrantPlugins
               'pf_public_port'
             )
 
-            if pf_open_firewall && pf_trusted_networks
+            if pf_trusted_networks && !pf_open_firewall
               # Allow access to public port from trusted networks only
               fw_rule_trusted_networks = {
                   :ipaddressid  => pf_ip_address_id,
                   :ipaddress    => pf_ip_address,
-                  :protocol     => "tcp",
+                  :protocol     => 'tcp',
                   :startport    => pf_public_port,
                   :endport      => pf_public_port,
                   :cidrlist     => pf_trusted_networks.join(',')
@@ -247,7 +247,7 @@ module VagrantPlugins
               :protocol     => 'tcp',
               :publicport   => pf_public_rdp_port,
               :privateport  => pf_private_rdp_port,
-              :openfirewall => (pf_open_firewall && pf_trusted_networks) ? false : pf_open_firewall
+              :openfirewall => pf_open_firewall
             }
 
             pf_public_rdp_port = domain_config.pf_public_rdp_port = create_randomport_forwarding_rule(
@@ -257,12 +257,12 @@ module VagrantPlugins
               'pf_public_rdp_port'
             )
 
-            if pf_open_firewall && pf_trusted_networks
+            if pf_trusted_networks  && !pf_open_firewall
               # Allow access to public port from trusted networks only
               fw_rule_trusted_networks = {
                   :ipaddressid  => pf_ip_address_id,
                   :ipaddress    => pf_ip_address,
-                  :protocol     => "tcp",
+                  :protocol     => 'tcp',
                   :startport    => pf_public_rdp_port,
                   :endport      => pf_public_rdp_port,
                   :cidrlist     => pf_trusted_networks.join(',')
@@ -274,12 +274,40 @@ module VagrantPlugins
 
           if !port_forwarding_rules.empty?
             port_forwarding_rules.each do |port_forwarding_rule|
+              port_forwarding_rule[:ipaddressid]  = pf_ip_address_id                    if port_forwarding_rule[:ipaddressid].nil?
+              port_forwarding_rule[:ipaddress]    = pf_ip_address                       if port_forwarding_rule[:ipaddress].nil?
+              port_forwarding_rule[:protocol]     = 'tcp'                               if port_forwarding_rule[:protocol].nil?
+              port_forwarding_rule[:openfirewall] = pf_open_firewall                    if port_forwarding_rule[:openfirewall].nil?
+              port_forwarding_rule[:publicport]   = port_forwarding_rule[:privateport]  if port_forwarding_rule[:publicport].nil?
+              port_forwarding_rule[:privateport]  = port_forwarding_rule[:publicport]   if port_forwarding_rule[:privateport].nil?
+
               create_port_forwarding_rule(env, port_forwarding_rule)
+
+              if port_forwarding_rule[:generate_firewall] && pf_trusted_networks && !port_forwarding_rule[:openfirewall]
+                # Allow access to public port from trusted networks only
+                fw_rule_trusted_networks = {
+                    :ipaddressid  => port_forwarding_rule[:ipaddressid],
+                    :ipaddress    => port_forwarding_rule[:ipaddress],
+                    :protocol     => port_forwarding_rule[:protocol],
+                    :startport    => port_forwarding_rule[:publicport],
+                    :endport      => port_forwarding_rule[:publicport],
+                    :cidrlist     => pf_trusted_networks.join(',')
+                }
+                firewall_rules = [] unless firewall_rules
+                firewall_rules << fw_rule_trusted_networks
+              end
+
             end
           end
 
           if !firewall_rules.empty?
             firewall_rules.each do |firewall_rule|
+              firewall_rule[:ipaddressid] = pf_ip_address_id              if firewall_rule[:ipaddressid].nil?
+              firewall_rule[:ipaddress]   = pf_ip_address                 if firewall_rule[:ipaddress].nil?
+              firewall_rule[:cidrlist]    = pf_trusted_networks.join(',') if firewall_rule[:cidrlist].nil?
+              firewall_rule[:protocol]    = 'tcp'                         if firewall_rule[:protocol].nil?
+              firewall_rule[:startport]   = firewall_rule[:endport]       if firewall_rule[:startport].nil?
+
               create_firewall_rule(env, firewall_rule)
             end
           end
