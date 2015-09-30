@@ -140,6 +140,24 @@ module VagrantPlugins
           vmcredentials_file = env[:machine].data_dir.join("vmcredentials")
           vmcredentials_file.delete if vmcredentials_file.file?
 
+          # Remove keyname from cloudstack
+          sshkeyname_file = env[:machine].data_dir.join('sshkeyname')
+          if sshkeyname_file.file?
+            env[:ui].info(I18n.t('vagrant_cloudstack.ssh_key_pair_removing'))
+            sshkeyname = ''
+            File.read(sshkeyname_file).each_line do |line|
+              sshkeyname = line.strip
+            end
+
+            begin
+              response = env[:cloudstack_compute].delete_ssh_key_pair(name: sshkeyname)
+              env[:ui].warn(I18n.t('vagrant_cloudstack.ssh_key_pair_no_success_removing', name: sshkeyname )) unless response['deletesshkeypairresponse']['success'] == 'true'
+            rescue Fog::Compute::Cloudstack::Error => e
+              env[:ui].warn(I18n.t('vagrant_cloudstack.errors.fog_error', :message => e.message))
+            end
+            sshkeyname_file.delete
+          end
+
           security_groups_file = env[:machine].data_dir.join("security_groups")
           if security_groups_file.file?
             File.read(security_groups_file).each_line do |line|
