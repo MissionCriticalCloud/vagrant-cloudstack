@@ -138,7 +138,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `template_name` - Template name to use for the instance, defaults to Vagrants config.vm.box
 * `zone_id` - Zone uuid to launch the instance into
 * `zone_name` - Zone uuid to launch the instance into
-* `keypair` - SSH keypair name
+* `keypair` - SSH keypair name, if neither'keypair' nor 'ssh_key' have been specified, a temporary keypair will be created
 * `static_nat` - static nat for the virtual machine
 * `pf_ip_address_id` - IP address ID for port forwarding rule
 * `pf_ip_address` - IP address for port forwarding rule

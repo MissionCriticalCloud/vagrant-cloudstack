@@ -87,17 +87,20 @@ module VagrantPlugins
             end
           end
 
-          # If there is no keypair then warn the user
-          if !keypair
-            env[:ui].warn(I18n.t('vagrant_cloudstack.launch_no_keypair'))
-          end
-
           if display_name.nil?
             local_user = ENV['USER'].dup
             local_user.gsub!(/[^-a-z0-9_]/i, '')
             prefix = env[:root_path].basename.to_s
             prefix.gsub!(/[^-a-z0-9_]/i, '')
             display_name = local_user + '_' + prefix + "_#{Time.now.to_i}"
+          end
+
+          # If there is no keypair or keyfile then warn the user
+          if keypair.nil? && ssh_key.nil?
+            env[:ui].warn(I18n.t('vagrant_cloudstack.launch_no_keypair_no_sshkey'))
+            store_ssh_keypair(env, domain_config, "vagacs_#{display_name}_#{sprintf("%04d", rand(9999))}",
+                              nil, domain, project_id)
+            keypair = domain_config.keypair
           end
 
           # Launch!
@@ -364,6 +367,26 @@ module VagrantPlugins
           return rule[:publicport] if pf_public_port.nil?
         end
 
+        def store_ssh_keypair(env, domain_config, keyname, account = nil, domainid = nil, projectid = nil)
+          response = env[:cloudstack_compute].create_ssh_key_pair(keyname, account, domainid, projectid)
+          sshkeypair = response['createsshkeypairresponse']['keypair']
+
+          # Save private key to file
+          sshkeyfile_file = env[:machine].data_dir.join('sshkeyfile')
+          sshkeyfile_file.open('w') do |f|
+            f.write("#{sshkeypair['privatekey']}")
+          end
+          domain_config.ssh_key = sshkeyfile_file.to_s
+
+          # Save keyname to file for terminate_instance
+          sshkeyname_file = env[:machine].data_dir.join('sshkeyname')
+          sshkeyname_file.open('w') do |f|
+            f.write("#{sshkeypair['name']}")
+          end
+
+          domain_config.keypair =  sshkeypair['name']
+        end
+
         def store_password(env, domain_config, job_id)
           server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
           if server_job_result.nil?
@@ -387,7 +410,7 @@ module VagrantPlugins
 
           # Save password to file
           vmcredentials_file = env[:machine].data_dir.join('vmcredentials')
-          vmcredentials_file.open('a+') do |f|
+          vmcredentials_file.open('w') do |f|
             f.write("#{password}")
           end
         end

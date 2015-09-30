@@ -63,6 +63,13 @@ module VagrantPlugins
             end
           end
 
+          if domain_config.keypair.nil? && domain_config.ssh_key.nil?
+            sshkeyfile_file = machine.data_dir.join('sshkeyfile')
+            if sshkeyfile_file.file?
+              domain_config.ssh_key = sshkeyfile_file.to_s
+            end
+          end
+
           ssh_info = {
                        :host => pf_ip_address || server.nics[0]['ipaddress'],
                        :port => pf_public_port
