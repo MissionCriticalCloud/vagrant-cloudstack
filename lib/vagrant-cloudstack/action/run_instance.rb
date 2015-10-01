@@ -37,7 +37,6 @@ module VagrantPlugins
           @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
 
           hostname                    = domain_config.name
-          network_type                = domain_config.network_type
           project_id                  = domain_config.project_id
           keypair                     = domain_config.keypair
           static_nat                  = domain_config.static_nat
