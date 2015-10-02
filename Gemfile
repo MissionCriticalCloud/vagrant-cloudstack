@@ -10,9 +10,11 @@ group :development do
   gem 'coveralls', require: false
   gem 'simplecov', require: false
   gem 'rspec-core'
+  gem 'rspec-collection_matchers'
   gem 'rspec-expectations'
   gem 'rspec-its'
   gem 'rspec-mocks'
+  gem 'pry-byebug'
 end
 
 group :plugins do

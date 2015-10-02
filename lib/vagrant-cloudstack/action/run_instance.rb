@@ -3,6 +3,7 @@ require 'vagrant/util/retryable'
 require 'vagrant-cloudstack/exceptions/exceptions'
 require 'vagrant-cloudstack/util/timer'
 require 'vagrant-cloudstack/model/cloudstack_resource'
+require 'vagrant-cloudstack/model/cloudstack_networking_config'
 require 'vagrant-cloudstack/service/cloudstack_resource_service'
 
 module VagrantPlugins
@@ -36,31 +37,20 @@ module VagrantPlugins
           @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
 
+          @networkingConfig = CloudstackNetworkingConfig.new(domain_config)
+
           hostname                    = domain_config.name
           project_id                  = domain_config.project_id
           keypair                     = domain_config.keypair
-          static_nat                  = domain_config.static_nat
-          pf_ip_address_id            = domain_config.pf_ip_address_id
-          pf_ip_address               = domain_config.pf_ip_address
-          pf_public_port              = domain_config.pf_public_port
-          pf_public_rdp_port          = domain_config.pf_public_rdp_port
-          pf_public_port_randomrange  = domain_config.pf_public_port_randomrange
-          pf_private_port             = domain_config.pf_private_port
-          pf_open_firewall            = domain_config.pf_open_firewall
-          pf_trusted_networks         = domain_config.pf_trusted_networks
-          port_forwarding_rules       = domain_config.port_forwarding_rules
-          firewall_rules              = domain_config.firewall_rules
           display_name                = domain_config.display_name
           group                       = domain_config.group
           security_group_ids          = domain_config.security_group_ids
           security_group_names        = domain_config.security_group_names
-          security_groups             = domain_config.security_groups
           user_data                   = domain_config.user_data
           ssh_key                     = domain_config.ssh_key
           ssh_user                    = domain_config.ssh_user
           vm_user                     = domain_config.vm_user
           vm_password                 = domain_config.vm_password
-          private_ip_address          = domain_config.private_ip_address
 
           @resource_service.sync_resource(@zone, { 'available' => true })
           @resource_service.sync_resource(@network)
@@ -78,8 +68,8 @@ module VagrantPlugins
 
           # Still no security group ids huh?
           # Let's try to create some security groups from specifcation, if provided.
-          if !security_groups.empty? and security_group_ids.empty?
-            security_groups.each do |security_group|
+          if security_group_ids.empty?
+            @networkingConfig.security_groups.each do |security_group|
               sgname, sgid = create_security_group(env, security_group)
               security_group_names.push(sgname)
               security_group_ids.push(sgid)
@@ -132,7 +122,7 @@ module VagrantPlugins
             options['project_id'] = project_id unless project_id.nil?
             options['key_name']   = keypair unless keypair.nil?
             options['name']       = hostname unless hostname.nil?
-            options['ip_address'] = private_ip_address unless private_ip_address.nil?
+            options['ip_address'] = @networkingConfig.private_ip_address unless @networkingConfig.private_ip_address.nil?
             options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
 
             if user_data != nil
@@ -190,129 +180,40 @@ module VagrantPlugins
             store_password(env, domain_config, server.job_id)
           end
 
-          if !static_nat.empty?
-            static_nat.each do |rule|
-              enable_static_nat(env, rule)
-            end
+
+          @networkingConfig.static_nat.each do |rule|
+            enable_static_nat(env, rule)
           end
 
           pf_private_rdp_port = 3389
-          pf_private_rdp_port = env[:machine].config.vm.rdp.port if ( env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port) )
+          pf_private_rdp_port = env[:machine].config.vm.rdp.port if (env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port))
 
-          if pf_private_port.nil?
+          @networkingConfig.pf_private_rdp_port = pf_private_rdp_port
+
+          if @networkingConfig.pf_private_port.nil?
             communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
             comm_obj = env[:machine].config.send(communicator)
 
-            pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
-            pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
-            pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
+            @networkingConfig.pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
+            @networkingConfig.pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
+            @networkingConfig.pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
           end
 
-          if (pf_ip_address_id || pf_ip_address) && (pf_public_port || pf_public_port_randomrange)
-            port_forwarding_rule = {
-              :ipaddressid  => pf_ip_address_id,
-              :ipaddress    => pf_ip_address,
-              :protocol     => 'tcp',
-              :publicport   => pf_public_port,
-              :privateport  => pf_private_port,
-              :openfirewall => pf_open_firewall
-            }
-
-            pf_public_port = domain_config.pf_public_port = create_randomport_forwarding_rule(
+          vm_guest = env[:machine].config.vm.guest || :linux
+          if @networkingConfig.needs_public_port?
+            random_public_port = create_randomport_forwarding_rule(
               env,
-              port_forwarding_rule,
-              pf_public_port_randomrange[:start]...pf_public_port_randomrange[:end],
-              'pf_public_port'
+              @networkingConfig.port_forwarding_rule(vm_guest),
+              @networkingConfig.portforwarding_port_range,
+              vm_guest == :linux ? 'pf_public_port' : 'pf_public_rdp_port'
             )
-
-            if pf_trusted_networks && !pf_open_firewall
-              # Allow access to public port from trusted networks only
-              fw_rule_trusted_networks = {
-                  :ipaddressid  => pf_ip_address_id,
-                  :ipaddress    => pf_ip_address,
-                  :protocol     => 'tcp',
-                  :startport    => pf_public_port,
-                  :endport      => pf_public_port,
-                  :cidrlist     => pf_trusted_networks.join(',')
-              }
-              firewall_rules = [] unless firewall_rules
-              firewall_rules << fw_rule_trusted_networks
-            end
+            @networkingConfig.udpate_public_port(vm_guest, random_public_port)
+            domain_config.pf_public_port     = @networkingConfig.pf_public_port
+            domain_config.pf_public_rdp_port = @networkingConfig.pf_public_rdp_port
           end
 
-          if env[:machine].config.vm.guest == :windows && 
-                        (pf_ip_address_id || pf_ip_address) &&
-                      (pf_public_rdp_port || pf_public_port_randomrange)
-            port_forwarding_rule = {
-              :ipaddressid  => pf_ip_address_id,
-              :ipaddress    => pf_ip_address,
-              :protocol     => 'tcp',
-              :publicport   => pf_public_rdp_port,
-              :privateport  => pf_private_rdp_port,
-              :openfirewall => pf_open_firewall
-            }
-
-            pf_public_rdp_port = domain_config.pf_public_rdp_port = create_randomport_forwarding_rule(
-              env,
-              port_forwarding_rule,
-              pf_public_port_randomrange[:start]...pf_public_port_randomrange[:end],
-              'pf_public_rdp_port'
-            )
-
-            if pf_trusted_networks  && !pf_open_firewall
-              # Allow access to public port from trusted networks only
-              fw_rule_trusted_networks = {
-                  :ipaddressid  => pf_ip_address_id,
-                  :ipaddress    => pf_ip_address,
-                  :protocol     => 'tcp',
-                  :startport    => pf_public_rdp_port,
-                  :endport      => pf_public_rdp_port,
-                  :cidrlist     => pf_trusted_networks.join(',')
-              }
-              firewall_rules = [] unless firewall_rules
-              firewall_rules << fw_rule_trusted_networks
-            end
-          end
-
-          if !port_forwarding_rules.empty?
-            port_forwarding_rules.each do |port_forwarding_rule|
-              port_forwarding_rule[:ipaddressid]  = pf_ip_address_id                    if port_forwarding_rule[:ipaddressid].nil?
-              port_forwarding_rule[:ipaddress]    = pf_ip_address                       if port_forwarding_rule[:ipaddress].nil?
-              port_forwarding_rule[:protocol]     = 'tcp'                               if port_forwarding_rule[:protocol].nil?
-              port_forwarding_rule[:openfirewall] = pf_open_firewall                    if port_forwarding_rule[:openfirewall].nil?
-              port_forwarding_rule[:publicport]   = port_forwarding_rule[:privateport]  if port_forwarding_rule[:publicport].nil?
-              port_forwarding_rule[:privateport]  = port_forwarding_rule[:publicport]   if port_forwarding_rule[:privateport].nil?
-
-              create_port_forwarding_rule(env, port_forwarding_rule)
-
-              if port_forwarding_rule[:generate_firewall] && pf_trusted_networks && !port_forwarding_rule[:openfirewall]
-                # Allow access to public port from trusted networks only
-                fw_rule_trusted_networks = {
-                    :ipaddressid  => port_forwarding_rule[:ipaddressid],
-                    :ipaddress    => port_forwarding_rule[:ipaddress],
-                    :protocol     => port_forwarding_rule[:protocol],
-                    :startport    => port_forwarding_rule[:publicport],
-                    :endport      => port_forwarding_rule[:publicport],
-                    :cidrlist     => pf_trusted_networks.join(',')
-                }
-                firewall_rules = [] unless firewall_rules
-                firewall_rules << fw_rule_trusted_networks
-              end
-
-            end
-          end
-
-          if !firewall_rules.empty?
-            firewall_rules.each do |firewall_rule|
-              firewall_rule[:ipaddressid] = pf_ip_address_id              if firewall_rule[:ipaddressid].nil?
-              firewall_rule[:ipaddress]   = pf_ip_address                 if firewall_rule[:ipaddress].nil?
-              firewall_rule[:cidrlist]    = pf_trusted_networks.join(',') if firewall_rule[:cidrlist].nil?
-              firewall_rule[:protocol]    = 'tcp'                         if firewall_rule[:protocol].nil?
-              firewall_rule[:startport]   = firewall_rule[:endport]       if firewall_rule[:startport].nil?
-
-              create_firewall_rule(env, firewall_rule)
-            end
-          end
+          @networkingConfig.port_forwarding_rules(vm_guest).each { |rule| create_port_forwarding_rule(env, rule) }
+          @networkingConfig.firewall_rules.each { |rule| create_firewall_rule(env, rule) }
 
           if !env[:interrupted]
             env[:metrics]['instance_ssh_time'] = Util::Timer.time do
@@ -348,7 +249,7 @@ module VagrantPlugins
               rule[:publicport] = rand(randomrange) if pf_public_port.nil?
 
               create_port_forwarding_rule(env, rule)
-              
+
               if pf_public_port.nil?
                 pf_port_file = env[:machine].data_dir.join(filename)
                 pf_port_file.open('a+') do |f|
