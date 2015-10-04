@@ -217,7 +217,7 @@ describe CloudstackNetworkingConfig do
       expect(actual).to include(rule1)
     end
 
-    it 'adds rules from portforwardings' do
+    it 'adds rules from port forwardings' do
       rule1 = {
         :ipaddressid => 'some ip address id',
         :ipaddress   => 'some ip address',
@@ -240,6 +240,19 @@ describe CloudstackNetworkingConfig do
 
       expect(actual).to have_exactly(1).items
       expect(actual).to include(rule1)
+    end
+
+    it 'does not add rule from port forwardings when there are no trusted networks' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new(
+        {
+          'pf_ip_address_id'    => 'some ip address id',
+          'pf_ip_address'       => 'some ip address',
+          'pf_public_port'      => 1,
+          'pf_open_firewall'    => false
+        }
+      ))
+
+      expect(config.firewall_rules).to have_exactly(0).items
     end
   end
 
@@ -329,6 +342,21 @@ describe CloudstackNetworkingConfig do
       expect(actual).to have_exactly(1).items
       expect(actual).to include(rule1)
     end
+
+    it 'does not list the default port forwarding rule if it has been created' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new(
+        {
+          'pf_ip_address_id' => 'some ip address id',
+          'pf_ip_address'    => 'some ip address',
+          'pf_public_port'   => 2222,
+          'pf_private_port'  => 22,
+          'pf_open_firewall' => true
+        }
+      ))
+      config.default_port_forwarding_rule_created = true
+
+      expect(config.port_forwarding_rules(:linux)).to have_exactly(0).items
+    end
   end
 
   describe '#udpate_public_port' do
@@ -346,6 +374,34 @@ describe CloudstackNetworkingConfig do
       config.udpate_public_port(:windows, 1)
 
       expect(config.pf_public_rdp_port).to eq(1)
+    end
+  end
+
+  describe '#needs_public_port?' do
+    it 'returns true if no public port is defined' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new({}))
+
+      expect(config.needs_public_port?).to eq(true)
+    end
+
+    it 'returns false if SSH public port is defined' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new(
+        {
+          'pf_public_port' => 1
+        }
+      ))
+
+      expect(config.needs_public_port?).to eq(false)
+    end
+
+    it 'returns false if RDP public port is defined' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new(
+        {
+          'pf_public_rdp_port' => 1
+        }
+      ))
+
+      expect(config.needs_public_port?).to eq(false)
     end
   end
 end

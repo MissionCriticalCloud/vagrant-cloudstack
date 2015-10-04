@@ -1,9 +1,11 @@
 module VagrantPlugins
   module Cloudstack
     module Exceptions
-      class IpNotFoundException < Exception
+      class NoIpProvidedException < Exception
       end
       class DuplicatePFRule < Exception
+      end
+      class ApiCommandFailed < Exception
       end
     end
   end

@@ -14,7 +14,8 @@ module VagrantPlugins
                     :security_groups,
                     :private_ip_address
         attr_accessor :pf_private_rdp_port,
-                      :pf_public_rdp_port
+                      :pf_public_rdp_port,
+                      :default_port_forwarding_rule_created
 
         def initialize(config)
           @static_nat                 = config.static_nat
@@ -30,6 +31,8 @@ module VagrantPlugins
           @firewall_rules             = config.firewall_rules        || []
           @security_groups            = config.security_groups       || []
           @private_ip_address         = config.private_ip_address
+
+          @default_port_forwarding_rule_created = false
         end
 
         def needs_public_port?
@@ -37,7 +40,11 @@ module VagrantPlugins
         end
 
         def has_portforwarding?
-          has_pf_ip_address? && has_pf_public_port?
+          has_pf_ip_address? && (has_pf_public_port? || has_pf_public_port_range?)
+        end
+
+        def has_pf_public_port_range?
+          !portforwarding_port_range.nil?
         end
 
         def port_forwarding_rule(vm_guest)
@@ -68,7 +75,7 @@ module VagrantPlugins
                 :protocol     => 'tcp',
                 :startport    => @pf_public_port,
                 :endport      => @pf_public_port,
-                :cidrlist     => @pf_trusted_networks.join(',')
+                :cidrlist     => trusted_networks_cidrlist
             }
 
             extended_firewall_rules + firewall_rules_from_port_forwarding
@@ -78,7 +85,7 @@ module VagrantPlugins
 
         def port_forwarding_rules(vm_guest)
           rules = enhance_port_forwarding_rules
-          rules << port_forwarding_rule(vm_guest) if rules.empty?
+          rules << port_forwarding_rule(vm_guest) if rules.empty? && !@default_port_forwarding_rule_created
           rules
         end
 
@@ -100,18 +107,18 @@ module VagrantPlugins
         end
 
         def has_pf_public_port?
-          !(@pf_public_port || @pf_public_port_randomrange).nil?
+          !@pf_public_port.nil?
         end
 
         def has_pf_public_rdp_port?
-          !(@pf_public_rdp_port || @pf_public_port_randomrange).nil?
+          !@pf_public_rdp_port.nil?
         end
 
         def enhance_firewall_rules
           @firewall_rules.each do |rule|
             rule[:ipaddressid] ||= @pf_ip_address_id
             rule[:ipaddress]   ||= @pf_ip_address
-            rule[:cidrlist]    ||= @pf_trusted_networks.join(',')
+            rule[:cidrlist]    ||= trusted_networks_cidrlist
             rule[:protocol]    ||= 'tcp'
             rule[:endport]     ||= rule[:startport]
           end
@@ -127,9 +134,9 @@ module VagrantPlugins
                 :protocol     => rule[:protocol],
                 :startport    => rule[:publicport],
                 :endport      => rule[:publicport],
-                :cidrlist     => @pf_trusted_networks.join(',')
+                :cidrlist     => trusted_networks_cidrlist
               }
-            end
+            end if @pf_trusted_networks
           end
           rules
         end
@@ -152,7 +159,7 @@ module VagrantPlugins
             :protocol     => 'tcp',
             :startport    => @pf_public_port,
             :endport      => @pf_public_port,
-            :cidrlist     => @pf_trusted_networks.join(',')
+            :cidrlist     => trusted_networks_cidrlist
           }
         end
 
@@ -175,6 +182,14 @@ module VagrantPlugins
             @pf_public_port
           else
             raise "Unexpected vm guest #{vm_guest}"
+          end
+        end
+
+        def trusted_networks_cidrlist
+          if @pf_trusted_networks.respond_to?(:join)
+            @pf_trusted_networks.join(',')
+          else
+            @pf_trusted_networks
           end
         end
       end

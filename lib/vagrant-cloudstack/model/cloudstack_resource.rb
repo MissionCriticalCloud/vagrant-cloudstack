@@ -6,7 +6,7 @@ module VagrantPlugins
         attr_reader   :kind
 
         def initialize(id, name, kind)
-          raise 'Resource must have a kind' if kind.nil? || kind.empty?
+          raise ArgumentError, 'Resource must have a kind' if kind.nil? || kind.empty?
           @id             = id
           @name           = name
           @kind           = kind
@@ -26,6 +26,19 @@ module VagrantPlugins
 
         def to_s
           "#{kind} - #{id || '<unknown id>'}:#{name || '<unknown name>'}"
+        end
+
+        def unsynched(another_resource)
+          self == another_resource ||
+          (self.kind == another_resource.kind && \
+          (self.id   == another_resource.id   && another_resource.name.nil?) || \
+          (self.name == another_resource.name && another_resource.id.nil?))
+        end
+
+        def ==(another_resource)
+          self.id   == another_resource.id   && \
+          self.name == another_resource.name && \
+          self.kind == another_resource.kind
         end
       end
     end

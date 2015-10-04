@@ -15,6 +15,7 @@ group :development do
   gem 'rspec-its'
   gem 'rspec-mocks'
   gem 'pry-byebug'
+  gem 'mash'
 end
 
 group :plugins do

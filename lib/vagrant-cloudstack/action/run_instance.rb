@@ -5,6 +5,7 @@ require 'vagrant-cloudstack/util/timer'
 require 'vagrant-cloudstack/model/cloudstack_resource'
 require 'vagrant-cloudstack/model/cloudstack_networking_config'
 require 'vagrant-cloudstack/service/cloudstack_resource_service'
+require 'vagrant-cloudstack/service/cloudstack_networking_service'
 
 module VagrantPlugins
   module Cloudstack
@@ -17,14 +18,15 @@ module VagrantPlugins
         include VagrantPlugins::Cloudstack::Exceptions
 
         def initialize(app, env)
-          @app              = app
-          @logger           = Log4r::Logger.new('vagrant_cloudstack::action::run_instance')
-          @resource_service = CloudstackResourceService.new(env[:cloudstack_compute], env[:ui])
+          @app                  = app
+          @logger               = Log4r::Logger.new('vagrant_cloudstack::action::run_instance')
+          @resource_service     = CloudstackResourceService.new(env[:cloudstack_compute], env[:ui])
+          @networkingService    = CloudstackNetworkingService.new(env[:cloudstack_compute], env[:ui], env[:machine])
+          @synched_ip_addresses = []
         end
 
         def call(env)
-          # Initialize metrics if they haven't been
-          env[:metrics]         ||= {}
+          env[:metrics] ||= {}
 
           # Get the domain we're going to booting up in
           domain        = env[:machine].provider_config.domain_id
@@ -37,7 +39,7 @@ module VagrantPlugins
           @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
 
-          @networkingConfig = CloudstackNetworkingConfig.new(domain_config)
+          networkingConfig = CloudstackNetworkingConfig.new(domain_config)
 
           hostname                    = domain_config.name
           project_id                  = domain_config.project_id
@@ -69,7 +71,7 @@ module VagrantPlugins
           # Still no security group ids huh?
           # Let's try to create some security groups from specifcation, if provided.
           if security_group_ids.empty?
-            @networkingConfig.security_groups.each do |security_group|
+            networkingConfig.security_groups.each do |security_group|
               sgname, sgid = create_security_group(env, security_group)
               security_group_names.push(sgname)
               security_group_ids.push(sgid)
@@ -104,6 +106,7 @@ module VagrantPlugins
           env[:ui].info(" -- Network: #{@network.name} (#{@network.id})") unless @network.id.nil?
           env[:ui].info(" -- Keypair: #{keypair}") if keypair
           env[:ui].info(' -- User Data: Yes') if user_data
+
           security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
               env[:ui].info(" -- Security Group: #{security_group_name} (#{security_group_id})")
           end
@@ -122,15 +125,12 @@ module VagrantPlugins
             options['project_id'] = project_id unless project_id.nil?
             options['key_name']   = keypair unless keypair.nil?
             options['name']       = hostname unless hostname.nil?
-            options['ip_address'] = @networkingConfig.private_ip_address unless @networkingConfig.private_ip_address.nil?
+            options['ip_address'] = networkingConfig.private_ip_address unless networkingConfig.private_ip_address.nil?
             options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
 
             if user_data != nil
               options['user_data'] = Base64.urlsafe_encode64(user_data)
-              if options['user_data'].length > 2048
-                raise Errors::UserdataError,
-                      :userdataLength => options['user_data'].length
-              end
+              raise Errors::UserdataError, :userdataLength => options['user_data'].length if options['user_data'].length > 2048
             end
 
             server = env[:cloudstack_compute].servers.create(options)
@@ -139,17 +139,16 @@ module VagrantPlugins
             # check the error message here.
             # XXX FIXME vpc?
             if e.message =~ /subnet ID/
-              raise Errors::FogError,
-                    :message => "Subnet ID not found: #{@network.id}"
+              raise Errors::FogError, :message => "Subnet ID not found: #{@network.id}"
+            else
+              raise Errors::FogError, :message => e.message
             end
-
-            raise
           rescue Fog::Compute::Cloudstack::Error => e
             raise Errors::FogError, :message => e.message
           end
 
           # Immediately save the ID since it is created at this point.
-          env[:machine].id                     = server.id
+          env[:machine].id = server.id
 
           # Wait for the instance to be ready first
           env[:metrics]['instance_ready_time'] = Util::Timer.time do
@@ -169,8 +168,7 @@ module VagrantPlugins
               terminate(env)
 
               # Notify the user
-              raise Errors::InstanceReadyTimeout,
-                 :timeout => domain_config.instance_ready_timeout
+              raise Errors::InstanceReadyTimeout, :timeout => domain_config.instance_ready_timeout
             end
           end
 
@@ -180,40 +178,38 @@ module VagrantPlugins
             store_password(env, domain_config, server.job_id)
           end
 
-
-          @networkingConfig.static_nat.each do |rule|
-            enable_static_nat(env, rule)
-          end
+          enable_static_nat(env, networkingConfig)
 
           pf_private_rdp_port = 3389
           pf_private_rdp_port = env[:machine].config.vm.rdp.port if (env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port))
 
-          @networkingConfig.pf_private_rdp_port = pf_private_rdp_port
+          networkingConfig.pf_private_rdp_port = pf_private_rdp_port
 
-          if @networkingConfig.pf_private_port.nil?
+          if networkingConfig.pf_private_port.nil?
             communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
             comm_obj = env[:machine].config.send(communicator)
 
-            @networkingConfig.pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
-            @networkingConfig.pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
-            @networkingConfig.pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
+            networkingConfig.pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
+            networkingConfig.pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
+            networkingConfig.pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
           end
 
           vm_guest = env[:machine].config.vm.guest || :linux
-          if @networkingConfig.needs_public_port?
+          if networkingConfig.needs_public_port?
             random_public_port = create_randomport_forwarding_rule(
               env,
-              @networkingConfig.port_forwarding_rule(vm_guest),
-              @networkingConfig.portforwarding_port_range,
+              networkingConfig.port_forwarding_rule(vm_guest),
+              networkingConfig.portforwarding_port_range,
               vm_guest == :linux ? 'pf_public_port' : 'pf_public_rdp_port'
             )
-            @networkingConfig.udpate_public_port(vm_guest, random_public_port)
-            domain_config.pf_public_port     = @networkingConfig.pf_public_port
-            domain_config.pf_public_rdp_port = @networkingConfig.pf_public_rdp_port
+            networkingConfig.default_port_forwarding_rule_created = true
+            networkingConfig.udpate_public_port(vm_guest, random_public_port)
+            domain_config.pf_public_port     = networkingConfig.pf_public_port
+            domain_config.pf_public_rdp_port = networkingConfig.pf_public_rdp_port
           end
 
-          @networkingConfig.port_forwarding_rules(vm_guest).each { |rule| create_port_forwarding_rule(env, rule) }
-          @networkingConfig.firewall_rules.each { |rule| create_firewall_rule(env, rule) }
+          networkingConfig.port_forwarding_rules(vm_guest).each { |rule| create_port_forwarding_rule(env, rule) }
+          networkingConfig.firewall_rules.each { |rule| create_firewall_rule(env, rule) }
 
           if !env[:interrupted]
             env[:metrics]['instance_ssh_time'] = Util::Timer.time do
@@ -222,8 +218,7 @@ module VagrantPlugins
               env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_communicator', :communicator => communicator.to_s.upcase))
               while true
                 # If we're interrupted then just back out
-                break if env[:interrupted]
-                break if env[:machine].communicate.ready?
+                break if env[:interrupted] || env[:machine].communicate.ready?
                 sleep 2
               end
             end
@@ -238,6 +233,63 @@ module VagrantPlugins
           terminate(env) if env[:interrupted]
 
           @app.call(env)
+        end
+
+        def recover(env)
+          return if env['vagrant.error'].is_a?(Vagrant::Errors::VagrantError)
+
+          if env[:machine].provider.state.id != :not_created
+            # Undo the import
+            terminate(env)
+          end
+        end
+
+        def terminate(env)
+          destroy_env = env.dup
+          destroy_env.delete(:interrupted)
+          destroy_env[:config_validate]       = false
+          destroy_env[:force_confirm_destroy] = true
+          env[:action_runner].run(Action.action_destroy, destroy_env)
+        end
+
+        private
+
+        def sync_ip_address(ip_address_id, ip_address_value)
+          ip_address = CloudstackResource.new(ip_address_id, ip_address_value, 'public_ip_address')
+
+          if ip_address.is_undefined?
+            @logger.warn("Can't sync IP address resource without an id or name for it")
+            raise NoIpProvidedException
+          end
+
+          sync_ip_if_not_cached(ip_address)
+        end
+
+        def sync_ip_if_not_cached(ip_address)
+          result = @synched_ip_addresses.select { |ip| ip.unsynched(ip_address) }
+          if result.size < 1
+            @resource_service.sync_resource(ip_address)
+            @synched_ip_addresses << ip_address
+          else
+            ip_address = result[0]
+          end
+          ip_address
+        end
+
+        def enable_static_nat(env, networkingConfig)
+          env[:ui].info(I18n.t('vagrant_cloudstack.enabling_static_nat'))
+
+          networkingConfig.static_nat.each do |rule|
+            begin
+              ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+              env[:ui].info(" -- IP address : #{ip_address}")
+              @networkingService.enable_static_nat(ip_address)
+            rescue NoIpProvidedException
+              env[:ui].warn(" -- Skipping Static NAT because rule does not define an IP. Rule: #{rule}")
+            rescue ApiCommandFailed => e
+              env[:ui].warn(" -- Failed to enable Static NAT on IP: #{e}")
+            end
+          end
         end
 
         def create_randomport_forwarding_rule(env, rule, randomrange, filename)
@@ -267,26 +319,6 @@ module VagrantPlugins
           return rule[:publicport] if pf_public_port.nil?
         end
 
-        def store_ssh_keypair(env, domain_config, keyname, account = nil, domainid = nil, projectid = nil)
-          response = env[:cloudstack_compute].create_ssh_key_pair(keyname, account, domainid, projectid)
-          sshkeypair = response['createsshkeypairresponse']['keypair']
-
-          # Save private key to file
-          sshkeyfile_file = env[:machine].data_dir.join('sshkeyfile')
-          sshkeyfile_file.open('w') do |f|
-            f.write("#{sshkeypair['privatekey']}")
-          end
-          domain_config.ssh_key = sshkeyfile_file.to_s
-
-          # Save keyname to file for terminate_instance
-          sshkeyname_file = env[:machine].data_dir.join('sshkeyname')
-          sshkeyname_file.open('w') do |f|
-            f.write("#{sshkeypair['name']}")
-          end
-
-          domain_config.keypair =  sshkeypair['name']
-        end
-
         def store_password(env, domain_config, job_id)
           server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
           if server_job_result.nil?
@@ -313,6 +345,26 @@ module VagrantPlugins
           vmcredentials_file.open('w') do |f|
             f.write("#{password}")
           end
+        end
+
+        def store_ssh_keypair(env, domain_config, keyname, account = nil, domainid = nil, projectid = nil)
+          response = env[:cloudstack_compute].create_ssh_key_pair(keyname, account, domainid, projectid)
+          sshkeypair = response['createsshkeypairresponse']['keypair']
+
+          # Save private key to file
+          sshkeyfile_file = env[:machine].data_dir.join('sshkeyfile')
+          sshkeyfile_file.open('w') do |f|
+            f.write("#{sshkeypair['privatekey']}")
+          end
+          domain_config.ssh_key = sshkeyfile_file.to_s
+
+          # Save keyname to file for terminate_instance
+          sshkeyname_file = env[:machine].data_dir.join('sshkeyname')
+          sshkeyname_file.open('w') do |f|
+            f.write("#{sshkeypair['name']}")
+          end
+
+          domain_config.keypair =  sshkeypair['name']
         end
 
         def create_security_group(env, security_group)
@@ -352,101 +404,21 @@ module VagrantPlugins
           [security_group[:name], sgid]
         end
 
-        def recover(env)
-          return if env['vagrant.error'].is_a?(Vagrant::Errors::VagrantError)
-
-          if env[:machine].provider.state.id != :not_created
-            # Undo the import
-            terminate(env)
-          end
-        end
-
-        def enable_static_nat(env, rule)
-          env[:ui].info(I18n.t('vagrant_cloudstack.enabling_static_nat'))
-
-          begin
-            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
-          rescue IpNotFoundException
-            return
-          end
-
-          env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
-
-          options = {
-              :command          => 'enableStaticNat',
-              :ipaddressid      => ip_address_id,
-              :virtualmachineid => env[:machine].id
-          }
-
-          begin
-            resp = env[:cloudstack_compute].request(options)
-            is_success = resp['enablestaticnatresponse']['success']
-
-            if is_success != 'true'
-              env[:ui].warn(" -- Failed to enable static nat: #{resp['enablestaticnatresponse']['errortext']}")
-              return
-            end
-          rescue Fog::Compute::Cloudstack::Error => e
-            raise Errors::FogError, :message => e.message
-          end
-
-          # Save ipaddress id to the data dir so it can be disabled when the instance is destroyed
-          static_nat_file = env[:machine].data_dir.join('static_nat')
-          static_nat_file.open('a+') do |f|
-            f.write("#{ip_address.id}\n")
-          end
-        end
-
         def create_port_forwarding_rule(env, rule)
           env[:ui].info(I18n.t('vagrant_cloudstack.creating_port_forwarding_rule'))
 
           begin
             ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
-          rescue IpNotFoundException
-            return
-          end
-
-          env[:ui].info(" -- IP address    : #{ip_address.name} (#{ip_address.id})")
-          env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
-          env[:ui].info(" -- Public port   : #{rule[:publicport]}")
-          env[:ui].info(" -- Private port  : #{rule[:privateport]}")
-          env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
-
-          options = {
-              :ipaddressid      => ip_address.id,
-              :publicport       => rule[:publicport],
-              :privateport      => rule[:privateport],
-              :protocol         => rule[:protocol],
-              :openfirewall     => rule[:openfirewall],
-              :virtualmachineid => env[:machine].id
-          }
-
-          begin
-            resp = env[:cloudstack_compute].create_port_forwarding_rule(options)
-            job_id = resp['createportforwardingruleresponse']['jobid']
-
-            if job_id.nil?
-              env[:ui].warn(" -- Failed to create port forwarding rule: #{resp['createportforwardingruleresponse']['errortext']}")
-              return
-            end
-
-            while true
-              response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-              if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                port_forwarding_rule = response['queryasyncjobresultresponse']['jobresult']['portforwardingrule']
-                break
-              else
-                sleep 2
-              end
-            end
-          rescue Fog::Compute::Cloudstack::Error => e
-            raise Errors::FogError, :message => e.message
-          end
-
-          # Save port forwarding rule id to the data dir so it can be released when the instance is destroyed
-          port_forwarding_file = env[:machine].data_dir.join('port_forwarding')
-          port_forwarding_file.open('a+') do |f|
-            f.write("#{port_forwarding_rule['id']}\n")
+            env[:ui].info(" -- IP address    : #{ip_address}")
+            env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
+            env[:ui].info(" -- Public port   : #{rule[:publicport]}")
+            env[:ui].info(" -- Private port  : #{rule[:privateport]}")
+            env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
+            @networkingService.create_port_forwarding_rule(rule, ip_address)
+          rescue NoIpProvidedException
+            env[:ui].warn(" -- Skipping Port Forwarding because rule does not define an IP. Rule: #{rule}")
+          rescue ApiCommandFailed => e
+              env[:ui].warn(" -- Failed to create Port Forwarding rule: #{e}")
           end
         end
 
@@ -455,87 +427,19 @@ module VagrantPlugins
 
           begin
             ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
-          rescue IpNotFoundException
-            return
+            env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
+            env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
+            env[:ui].info(" -- CIDR list  : #{rule[:cidrlist]}")
+            env[:ui].info(" -- Start port : #{rule[:startport]}")
+            env[:ui].info(" -- End port   : #{rule[:endport]}")
+            env[:ui].info(" -- ICMP code  : #{rule[:icmpcode]}")
+            env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
+            @networkingService.create_firewall_rule(rule, ip_address)
+          rescue NoIpProvidedException
+            env[:ui].warn(" -- Skipping Firewall rule because rule does not define an IP. Rule: #{rule}")
+          rescue ApiCommandFailed => e
+            env[:ui].warn(" -- Failed to create Firewall rule: #{e}")
           end
-
-          env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
-          env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
-          env[:ui].info(" -- CIDR list  : #{rule[:cidrlist]}")
-          env[:ui].info(" -- Start port : #{rule[:startport]}")
-          env[:ui].info(" -- End port   : #{rule[:endport]}")
-          env[:ui].info(" -- ICMP code  : #{rule[:icmpcode]}")
-          env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
-
-          options = {
-              :command          => 'createFirewallRule',
-              :ipaddressid      => ip_address.id,
-              :protocol         => rule[:protocol],
-              :cidrlist         => rule[:cidrlist],
-              :startport        => rule[:startport],
-              :endeport         => rule[:endport],
-              :icmpcode         => rule[:icmpcode],
-              :icmptype         => rule[:icmptype]
-          }
-
-          begin
-            resp = env[:cloudstack_compute].request(options)
-            job_id = resp['createfirewallruleresponse']['jobid']
-
-            if job_id.nil?
-              env[:ui].warn(" -- Failed to create firewall rule: #{resp['createfirewallruleresponse']['errortext']}")
-              return
-            end
-
-            while true
-              response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-              if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                firewall_rule = response['queryasyncjobresultresponse']['jobresult']['firewallrule']
-                break
-              else
-                sleep 2
-              end
-            end
-          rescue Fog::Compute::Cloudstack::Error => e
-            if e.message =~ /The range specified,.*conflicts with rule/
-              env[:ui].warn(" -- Failed to create firewall rule: #{e.message}")
-            else
-              raise Errors::FogError, :message => e.message
-            end
-          end
-
-          unless firewall_rule.nil?
-            # Save firewall rule id to the data dir so it can be released when the instance is destroyed
-            firewall_file = env[:machine].data_dir.join('firewall')
-            firewall_file.open('a+') do |f|
-              f.write("#{firewall_rule['id']}\n")
-            end
-          end
-        end
-
-        def terminate(env)
-          destroy_env = env.dup
-          destroy_env.delete(:interrupted)
-          destroy_env[:config_validate]       = false
-          destroy_env[:force_confirm_destroy] = true
-          env[:action_runner].run(Action.action_destroy, destroy_env)
-        end
-
-        private
-
-        def sync_ip_address(ip_address_id, ip_address_value)
-          ip_address = CloudstackResource.new(ip_address_id, ip_address_value, 'public_ip_address')
-
-          if ip_address.is_undefined?
-            message = 'IP address is not specified. Skip creating port forwarding rule.'
-            @logger.info(message)
-            env[:ui].info(I18n.t(message))
-            raise IpNotFoundException
-          end
-
-          @resource_service.sync_resource(ip_address)
-
-          ip_address
         end
 
         def translate_from_to(env, resource_type, options)

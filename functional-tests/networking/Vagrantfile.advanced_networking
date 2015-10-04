@@ -1,0 +1,74 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = '2'
+
+Vagrant.require_version '>= 1.5.0'
+
+machines = {
+  'fixed-pub-port-box' => {
+    'public_port'         => ENV['PUBLIC_SSH_PORT'],
+    'private_port'        => ENV['PRIVATE_SSH_PORT'],
+    'pf_trusted_networks' => [ENV['SOURCE_CIDR']],
+    'template'            => ENV['LINUX_TEMPLATE_NAME'],
+    'communicator'        => 'ssh',
+    'rsync_disabled'      => true
+  },
+  'random-pub-port-box' => {
+    'pf_public_port_randomrange' => { start: 10000, end: 10010 },
+    'private_port'               => ENV['PRIVATE_SSH_PORT'],
+    'pf_trusted_networks'        => [ENV['SOURCE_CIDR']],
+    'template'                   => ENV['LINUX_TEMPLATE_NAME'],
+    'communicator'               => 'ssh',
+    'rsync_disabled'             => true
+  }
+}
+
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |global_config|
+  machines.each_pair do |name, options|
+    global_config.vm.define name do |config|
+      config.vm.box = options['template']
+
+      config.vm.communicator = options['communicator']
+      config.vm.synced_folder ".", "/vagrant", type: "rsync",
+        rsync__exclude: [".git/", "vendor"], disabled: options['rsync_disabled']
+      config.vm.provider :cloudstack do |cloudstack, override|
+
+        cloudstack.display_name = ENV['TEST_NAME']
+
+        cloudstack.host       = ENV['CLOUDSTACK_HOST']
+        cloudstack.path       = '/client/api'
+        cloudstack.port       = '443'
+        cloudstack.scheme     = 'https'
+        cloudstack.api_key    = ENV['CLOUDSTACK_API_KEY']
+        cloudstack.secret_key = ENV['CLOUDSTACK_SECRET_KEY']
+
+        public_source_nat_ip = ENV['PUBLIC_SOURCE_NAT_IP']
+
+        cloudstack.zone_name             = ENV['ZONE_NAME']
+        cloudstack.network_name          = ENV['NETWORK_NAME']
+        cloudstack.service_offering_name = ENV['SERVICE_OFFERING_NAME']
+
+        cloudstack.network_type          = 'Advanced'
+        cloudstack.pf_ip_address         = public_source_nat_ip
+
+        cloudstack.pf_public_port             = options['public_port']
+        cloudstack.pf_public_port_randomrange = options['pf_public_port_randomrange']
+        cloudstack.pf_private_port            = options['private_port']
+        cloudstack.pf_open_firewall           = false
+        cloudstack.pf_trusted_networks        = options['pf_trusted_networks']
+
+        unless ENV['SSH_KEY'].nil?
+            cloudstack.ssh_key               = ENV['SSH_KEY']
+            cloudstack.ssh_user              = ENV['SSH_USER']
+        end
+
+        unless ENV['WINDOWS_USER'].nil?
+            cloudstack.vm_user = ENV['WINDOWS_USER']
+        end
+      end
+    end
+  end
+end

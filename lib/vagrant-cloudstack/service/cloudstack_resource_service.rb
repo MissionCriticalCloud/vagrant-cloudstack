@@ -1,12 +1,9 @@
+require 'vagrant-cloudstack/service/base_service'
+
 module VagrantPlugins
   module Cloudstack
     module Service
-      class CloudstackResourceService
-        def initialize(cloudstack_compute, ui)
-          @cloudstack_compute = cloudstack_compute
-          @ui                 = ui
-        end
-
+      class CloudstackResourceService < BaseService
         def sync_resource(resource, api_parameters = {})
           if resource.id.nil? and resource.name
             resource.id = name_to_id(resource.name, resource.kind, api_parameters)
