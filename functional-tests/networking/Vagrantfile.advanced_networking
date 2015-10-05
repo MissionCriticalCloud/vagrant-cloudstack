@@ -17,6 +17,24 @@ machines = {
     'communicator'        => 'ssh',
     'rsync_disabled'      => true
   },
+  'no-priv-port-linux-box' => {
+    'network_name'               => ENV['NETWORK_NAME'],
+    'public_ip'                  => ENV['PUBLIC_SOURCE_NAT_IP'],
+    'pf_public_port_randomrange' => { start: 10000, end: 10010 },
+    'pf_trusted_networks'        => [ENV['SOURCE_CIDR']],
+    'template'                   => ENV['LINUX_TEMPLATE_NAME'],
+    'communicator'               => 'ssh',
+    'rsync_disabled'             => true
+  },
+  'no-priv-port-windows-box' => {
+    'network_name'               => ENV['NETWORK_NAME'],
+    'public_ip'                  => ENV['PUBLIC_SOURCE_NAT_IP'],
+    'pf_public_port_randomrange' => { start: 10000, end: 10010 },
+    'pf_trusted_networks'        => [ENV['SOURCE_CIDR']],
+    'template'                   => ENV['WINDOWS_TEMPLATE_NAME'],
+    'communicator'               => 'winrm',
+    'rsync_disabled'             => true
+  },
   'random-pub-port-box' => {
     'network_name'               => ENV['NETWORK_NAME'],
     'public_ip'                  => ENV['PUBLIC_SOURCE_NAT_IP'],

@@ -187,6 +187,7 @@ module VagrantPlugins
 
           networkingConfig.pf_private_rdp_port = pf_private_rdp_port
 
+          vm_guest = env[:machine].config.vm.guest || :linux
           if networkingConfig.pf_private_port.nil?
             communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
             comm_obj = env[:machine].config.send(communicator)
@@ -194,9 +195,9 @@ module VagrantPlugins
             networkingConfig.pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
             networkingConfig.pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
             networkingConfig.pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
+            # networkingConfig.pf_private_port ||= vm_guest == :linux ? '22' : '5985'
           end
 
-          vm_guest = env[:machine].config.vm.guest || :linux
           if networkingConfig.needs_public_port?
             random_public_port = create_randomport_forwarding_rule(
               env,

@@ -7,13 +7,13 @@ module VagrantPlugins
                     :pf_ip_address,
                     :pf_public_port,
                     :pf_public_rdp_port,
-                    :pf_private_port,
                     :pf_public_port_randomrange,
                     :pf_open_firewall,
                     :pf_trusted_networks,
                     :security_groups,
                     :private_ip_address
         attr_accessor :network,
+                      :pf_private_port,
                       :pf_private_rdp_port,
                       :pf_public_rdp_port,
                       :default_port_forwarding_rule_created
