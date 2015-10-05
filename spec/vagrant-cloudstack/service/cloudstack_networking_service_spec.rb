@@ -56,6 +56,7 @@ describe CloudstackNetworkingService do
         allow(cloudstack_compute).to receive(:create_port_forwarding_rule).and_return(create_pf_response)
         allow(cloudstack_compute).to receive(:query_async_job_result).with({ :jobid => pf_job_id }).and_return(async_pf_job_reponse)
         rule = {
+          :network      => Mash.new('id' => 'network id'),
           :publicport   => 1,
           :privateport  => 2,
           :protocol     => 'tcp',
@@ -105,6 +106,48 @@ describe CloudstackNetworkingService do
 
         expect(service).to receive(:save_firewall_rule_to_data_dir)
         service.create_firewall_rule(rule, ip)
+      end
+    end
+
+    describe '#create_network_acl' do
+      it 'creates a network ACL rule' do
+        acl_command = {
+          :aclid       => 'acl id',
+          :networkid   => 'network id',
+          :action      => 'Allow',
+          :protocol    => 'tcp',
+          :cidrlist    => 'a cidr list',
+          :startport   => 1,
+          :endport     => 2,
+          :icmpcode    => 'icmp code',
+          :icmptype    => 'icmp type',
+          :traffictype => 'Ingress'
+        }
+        acl_job_id = '3'
+        create_acl_response = { 'createnetworkaclresponse' => { 'jobid' => acl_job_id }}
+        async_acl_job_reponse = {
+          'queryasyncjobresultresponse' => {
+            'jobstatus' => 1,
+            'jobresult' => {
+              'networkacl' => {
+                'id' => 'acl_rule_id'
+              }
+            }
+          }
+        }
+        allow(cloudstack_compute).to receive(:create_network_acl).with(acl_command).and_return(create_acl_response)
+        allow(cloudstack_compute).to receive(:query_async_job_result).with({ :jobid => acl_job_id }).and_return(async_acl_job_reponse)
+        rule = {
+          :protocol    => 'tcp',
+          :cidrlist    => 'a cidr list',
+          :startport   => 1,
+          :endport     => 2,
+          :icmpcode    => 'icmp code',
+          :icmptype    => 'icmp type',
+        }
+
+        expect(service).to receive(:save_network_acl_to_data_dir)
+        service.create_network_acl(rule, Mash.new('id' => 'network id', 'acl_id' => 'acl id'))
       end
     end
   end

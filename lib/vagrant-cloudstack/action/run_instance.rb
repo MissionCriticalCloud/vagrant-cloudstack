@@ -13,15 +13,15 @@ module VagrantPlugins
       # This runs the configured instance.
       class RunInstance
         include Vagrant::Util::Retryable
-        include VagrantPlugins::Cloudstack::Model
-        include VagrantPlugins::Cloudstack::Service
-        include VagrantPlugins::Cloudstack::Exceptions
+        # include VagrantPlugins::Cloudstack::Model
+        # include VagrantPlugins::Cloudstack::Service
+        # include VagrantPlugins::Cloudstack::Exceptions
 
         def initialize(app, env)
           @app                  = app
           @logger               = Log4r::Logger.new('vagrant_cloudstack::action::run_instance')
-          @resource_service     = CloudstackResourceService.new(env[:cloudstack_compute], env[:ui])
-          @networkingService    = CloudstackNetworkingService.new(env[:cloudstack_compute], env[:ui], env[:machine])
+          @resource_service     = Service::CloudstackResourceService.new(env[:cloudstack_compute], env[:ui])
+          @networkingService    = Service::CloudstackNetworkingService.new(env[:cloudstack_compute], env[:ui], env[:machine])
           @synched_ip_addresses = []
         end
 
@@ -33,13 +33,13 @@ module VagrantPlugins
           # Get the configs
           domain_config = env[:machine].provider_config.get_domain_config(domain)
 
-          @zone             = CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
-          @network          = CloudstackResource.new(domain_config.network_id, domain_config.network_name, 'network')
-          @service_offering = CloudstackResource.new(domain_config.service_offering_id, domain_config.service_offering_name, 'service_offering')
-          @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
-          @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
+          @zone             = Model::CloudstackResource.new(domain_config.zone_id, domain_config.zone_name, 'zone')
+          @service_offering = Model::CloudstackResource.new(domain_config.service_offering_id, domain_config.service_offering_name, 'service_offering')
+          @disk_offering    = Model::CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
+          @template         = Model::CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
+          @network          = Model::CloudstackNetworkResource.new(domain_config.network_id, domain_config.network_name)
 
-          networkingConfig = CloudstackNetworkingConfig.new(domain_config)
+          networkingConfig = Model::CloudstackNetworkingConfig.new(domain_config)
 
           hostname                    = domain_config.name
           project_id                  = domain_config.project_id
@@ -59,6 +59,8 @@ module VagrantPlugins
           @resource_service.sync_resource(@service_offering)
           @resource_service.sync_resource(@disk_offering)
           @resource_service.sync_resource(@template, {'zoneid' => @zone.id, 'templatefilter' => 'executable' })
+
+          networkingConfig.network = @network
 
           # Can't use Security Group IDs and Names at the same time
           # Let's use IDs by default...
@@ -209,7 +211,7 @@ module VagrantPlugins
           end
 
           networkingConfig.port_forwarding_rules(vm_guest).each { |rule| create_port_forwarding_rule(env, rule) }
-          networkingConfig.firewall_rules.each { |rule| create_firewall_rule(env, rule) }
+          networkingConfig.firewall_rules.each { |rule| create_firewall_rule_or_network_acl(env, rule) }
 
           if !env[:interrupted]
             env[:metrics]['instance_ssh_time'] = Util::Timer.time do
@@ -255,7 +257,7 @@ module VagrantPlugins
         private
 
         def sync_ip_address(ip_address_id, ip_address_value)
-          ip_address = CloudstackResource.new(ip_address_id, ip_address_value, 'public_ip_address')
+          ip_address = Model::CloudstackResource.new(ip_address_id, ip_address_value, 'public_ip_address')
 
           if ip_address.is_undefined?
             @logger.warn("Can't sync IP address resource without an id or name for it")
@@ -284,9 +286,9 @@ module VagrantPlugins
               ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
               env[:ui].info(" -- IP address : #{ip_address}")
               @networkingService.enable_static_nat(ip_address)
-            rescue NoIpProvidedException
+            rescue Exceptions::NoIpProvidedException
               env[:ui].warn(" -- Skipping Static NAT because rule does not define an IP. Rule: #{rule}")
-            rescue ApiCommandFailed => e
+            rescue Exceptions::ApiCommandFailed => e
               env[:ui].warn(" -- Failed to enable Static NAT on IP: #{e}")
             end
           end
@@ -296,7 +298,7 @@ module VagrantPlugins
           # Only if pf_public_port is nil, will generate and try
           # Otherwise, functionaly the same as just create_port_forwarding_rule
           pf_public_port = rule[:publicport]
-          retryable(:on => DuplicatePFRule, :tries => 10) do
+          retryable(:on => Exceptions::DuplicatePFRule, :tries => 10) do
             begin
               rule[:publicport] = rand(randomrange) if pf_public_port.nil?
 
@@ -310,7 +312,7 @@ module VagrantPlugins
               end
             rescue Errors::FogError => e
               if pf_public_port.nil? && !(e.message =~ /The range specified,.*conflicts with rule.*which has/).nil?
-                raise DuplicatePFRule, :message => e.message
+                raise Exceptions::DuplicatePFRule, :message => e.message
               else
                 raise Errors::FogError, :message => e.message
               end
@@ -410,35 +412,44 @@ module VagrantPlugins
           begin
             ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
             env[:ui].info(" -- IP address    : #{ip_address}")
+            env[:ui].info(" -- Network       : #{rule[:network]}")
             env[:ui].info(" -- Protocol      : #{rule[:protocol]}")
             env[:ui].info(" -- Public port   : #{rule[:publicport]}")
             env[:ui].info(" -- Private port  : #{rule[:privateport]}")
             env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
             @networkingService.create_port_forwarding_rule(rule, ip_address)
-          rescue NoIpProvidedException
+          rescue Exceptions::NoIpProvidedException
             env[:ui].warn(" -- Skipping Port Forwarding because rule does not define an IP. Rule: #{rule}")
-          rescue ApiCommandFailed => e
+          rescue Exceptions::ApiCommandFailed => e
               env[:ui].warn(" -- Failed to create Port Forwarding rule: #{e}")
           end
         end
 
-        def create_firewall_rule(env, rule)
-          env[:ui].info(I18n.t('vagrant_cloudstack.creating_firewall_rule'))
+        def create_firewall_rule_or_network_acl(env, rule)
+          env[:ui].info("Creating firewall rule or network ACL")
 
           begin
-            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
-            env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
             env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
             env[:ui].info(" -- CIDR list  : #{rule[:cidrlist]}")
             env[:ui].info(" -- Start port : #{rule[:startport]}")
             env[:ui].info(" -- End port   : #{rule[:endport]}")
             env[:ui].info(" -- ICMP code  : #{rule[:icmpcode]}")
             env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
-            @networkingService.create_firewall_rule(rule, ip_address)
-          rescue NoIpProvidedException
+            if @network.is_vpc?
+              env[:ui].info(" -- Network    : #{@network}")
+              env[:ui].info(" -- Action     : Allow")
+              env[:ui].info(" -- Rule will be in Network ACL")
+              @networkingService.create_network_acl(rule, @network)
+            else
+              ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
+              env[:ui].info(" -- IP address : #{ip_address}")
+              env[:ui].info(" -- Rule will be in Firewall")
+              @networkingService.create_firewall_rule(rule, ip_address)
+            end
+          rescue Exceptions::NoIpProvidedException
             env[:ui].warn(" -- Skipping Firewall rule because rule does not define an IP. Rule: #{rule}")
-          rescue ApiCommandFailed => e
-            env[:ui].warn(" -- Failed to create Firewall rule: #{e}")
+          rescue Exceptions::ApiCommandFailed => e
+            env[:ui].warn(" -- Failed to create Firewall rule or Network ACL: #{e}")
           end
         end
 

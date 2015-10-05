@@ -87,6 +87,7 @@ describe CloudstackNetworkingConfig do
 
       expect(config.port_forwarding_rule(:linux)).to eq(
         {
+          :network      => nil,
           :ipaddressid  => 'some ip address id',
           :ipaddress    => 'some ip address',
           :protocol     => 'tcp',
@@ -110,6 +111,7 @@ describe CloudstackNetworkingConfig do
 
       expect(config.port_forwarding_rule(:windows)).to eq(
         {
+          :network      => nil,
           :ipaddressid  => 'some ip address id',
           :ipaddress    => 'some ip address',
           :protocol     => 'tcp',
@@ -194,6 +196,7 @@ describe CloudstackNetworkingConfig do
 
     it 'enhances rules with missing attributes' do
       rule1 = {
+        :network     => nil,
         :ipaddressid => 'some ip address id',
         :ipaddress   => 'some ip address',
         :cidrlist    => 'first trusted net,second trusted net',
@@ -318,8 +321,9 @@ describe CloudstackNetworkingConfig do
       expect(actual).to include(rule1, rule2)
     end
 
-    it 'introduces a default portforwarding rule' do
+    it 'introduces a default port forwarding rule' do
       rule1 = {
+        :network      => nil,
         :ipaddressid  => 'some ip address id',
         :ipaddress    => 'some ip address',
         :protocol     => 'tcp',

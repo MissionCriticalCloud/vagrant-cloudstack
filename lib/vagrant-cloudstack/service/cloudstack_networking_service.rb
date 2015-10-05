@@ -38,6 +38,7 @@ module VagrantPlugins
 
         def create_port_forwarding_rule(rule, ip_address)
           options = {
+              :networkid        => rule[:network].id,
               :ipaddressid      => ip_address.id,
               :publicport       => rule[:publicport],
               :privateport      => rule[:privateport],
@@ -65,6 +66,43 @@ module VagrantPlugins
             @ui.info('Port forwarding rule created')
             port_forwarding_rule = response['queryasyncjobresultresponse']['jobresult']['portforwardingrule']
             save_port_forwarding_to_data_dir(port_forwarding_rule['id'])
+          rescue Fog::Compute::Cloudstack::Error => e
+            raise Errors::FogError, :message => e.message
+          end
+        end
+
+        def create_network_acl(rule, network)
+          options = {
+              :aclid       => network.acl_id,
+              :networkid   => network.id,
+              :action      => 'Allow',
+              :protocol    => rule[:protocol],
+              :cidrlist    => rule[:cidrlist],
+              :startport   => rule[:startport],
+              :endport     => rule[:endport],
+              :icmpcode    => rule[:icmpcode],
+              :icmptype    => rule[:icmptype],
+              :traffictype => 'Ingress'
+          }
+          begin
+            resp = @cloudstack_compute.create_network_acl(options)
+            job_id = resp['createnetworkaclresponse']['jobid']
+
+            raise ApiCommandFailed, resp['createnetworkaclresponse']['errortext'] if job_id.nil?
+
+            # TODO: there should be a timeout or a max retry value
+            # TODO: the code should handle a failed job result (or will that always throw a FOG exception?)
+            while true
+              response = @cloudstack_compute.query_async_job_result({ :jobid => job_id })
+              if response['queryasyncjobresultresponse']['jobstatus'] != 0
+                break
+              else
+                sleep 2
+              end
+            end
+            @ui.info('Network ACL created')
+            network_acl = response['queryasyncjobresultresponse']['jobresult']['networkacl']
+            save_network_acl_to_data_dir(network_acl['id'])
           rescue Fog::Compute::Cloudstack::Error => e
             raise Errors::FogError, :message => e.message
           end
@@ -113,6 +151,10 @@ module VagrantPlugins
         end
 
         private
+
+        def save_network_acl_to_data_dir(rule_id)
+          save_element_to_data_dir('network_acl', rule_id)
+        end
 
         def save_firewall_rule_to_data_dir(rule_id)
           save_element_to_data_dir('firewall', rule_id)

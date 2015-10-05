@@ -13,7 +13,8 @@ module VagrantPlugins
                     :pf_trusted_networks,
                     :security_groups,
                     :private_ip_address
-        attr_accessor :pf_private_rdp_port,
+        attr_accessor :network,
+                      :pf_private_rdp_port,
                       :pf_public_rdp_port,
                       :default_port_forwarding_rule_created
 
@@ -49,6 +50,7 @@ module VagrantPlugins
 
         def port_forwarding_rule(vm_guest)
           {
+            :network      => @network,
             :ipaddressid  => @pf_ip_address_id,
             :ipaddress    => @pf_ip_address,
             :protocol     => 'tcp',
@@ -116,6 +118,7 @@ module VagrantPlugins
 
         def enhance_firewall_rules
           @firewall_rules.each do |rule|
+            rule[:network]     ||= @network
             rule[:ipaddressid] ||= @pf_ip_address_id
             rule[:ipaddress]   ||= @pf_ip_address
             rule[:cidrlist]    ||= trusted_networks_cidrlist
