@@ -43,6 +43,37 @@ module VagrantPlugins
             firewall_file.delete
           end
 
+          env[:ui].info('Deleting ACL rule ...')
+          network_acl_file = env[:machine].data_dir.join("network_acl")
+          if network_acl_file.file?
+            File.read(network_acl_file).each_line do |line|
+              rule_id = line.strip
+              begin
+                options = {
+                  :command => "deleteNetworkACL",
+                  :id      => rule_id
+                }
+                resp = env[:cloudstack_compute].request(options)
+                job_id = resp["deletenetworkaclresponse"]["jobid"]
+                while true
+                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+                  if response["queryasyncjobresultresponse"]["jobstatus"] != 0
+                    break
+                  else
+                    sleep 2
+                  end
+                end
+              rescue Fog::Compute::Cloudstack::Error => e
+                if e.message =~ /Unable to execute API command deletenetworkacl.*entity does not exist/
+                  env[:ui].warn(" -- Failed to delete network ACL: #{e.message}")
+                else
+                  raise Errors::FogError, :message => e.message
+                end
+              end
+            end
+            network_acl_file.delete
+          end
+
           # Disable Static NAT
           env[:ui].info(I18n.t("vagrant_cloudstack.disabling_static_nat"))
           static_nat_file = env[:machine].data_dir.join("static_nat")

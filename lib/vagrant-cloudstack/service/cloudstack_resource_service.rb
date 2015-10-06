@@ -1,22 +1,31 @@
+require 'vagrant-cloudstack/service/base_service'
+require 'vagrant-cloudstack/model/cloudstack_network_resource'
+
 module VagrantPlugins
   module Cloudstack
     module Service
-      class CloudstackResourceService
-        def initialize(cloudstack_compute, ui)
-          @cloudstack_compute = cloudstack_compute
-          @ui                 = ui
-        end
-
+      class CloudstackResourceService < BaseService
         def sync_resource(resource, api_parameters = {})
+          @resource_details = nil
           if resource.id.nil? and resource.name
             resource.id = name_to_id(resource.name, resource.kind, api_parameters)
           elsif resource.id
             resource.name = id_to_name(resource.id, resource.kind, api_parameters)
           end
-          @ui.detail("Syncronized resource: #{resource}")
+
+          unless resource.is_undefined?
+            read_acl_id(resource)
+            @ui.detail("Syncronized resource: #{resource}")
+          end
         end
 
         private
+
+        def read_acl_id(resource)
+          if resource.is_a? Model::CloudstackNetworkResource
+            resource.acl_id = @resource_details['aclid']
+          end
+        end
 
         def translate_from_to(resource_type, options)
           if resource_type == 'public_ip_address'
@@ -31,16 +40,17 @@ module VagrantPlugins
 
         def resourcefield_to_id(resource_type, resource_field, resource_field_value, options={})
           @ui.info("Fetching UUID for #{resource_type} with #{resource_field} '#{resource_field_value}'")
-          full_response = translate_from_to(resource_type, options)
-          result        = full_response.find {|type| type[resource_field] == resource_field_value }
-          result['id']
+          full_response     = translate_from_to(resource_type, options)
+          @resource_details = full_response.find {|type| type[resource_field] == resource_field_value }
+          @resource_details['id']
         end
 
         def id_to_resourcefield(resource_id, resource_type, resource_field, options={})
           @ui.info("Fetching #{resource_field} for #{resource_type} with UUID '#{resource_id}'")
           options = options.merge({'id' => resource_id})
           full_response = translate_from_to(resource_type, options)
-          full_response[0][resource_field]
+          @resource_details = full_response[0]
+          @resource_details[resource_field]
         end
 
         def name_to_id(resource_name, resource_type, options={})

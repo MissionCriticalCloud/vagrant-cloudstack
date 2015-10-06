@@ -29,11 +29,11 @@ describe CloudstackResource do
   context 'when kind is not defined' do
     describe '#new' do
       it 'raises an error when kind is nil' do
-        expect { CloudstackResource.new('id', 'name', nil) }.to raise_error('Resource must have a kind')
+        expect { CloudstackResource.new('id', 'name', nil) }.to raise_error(ArgumentError, 'Resource must have a kind')
       end
 
       it 'raises an error when kind is empty' do
-        expect { CloudstackResource.new('id', 'name', '') }.to raise_error('Resource must have a kind')
+        expect { CloudstackResource.new('id', 'name', '') }.to raise_error(ArgumentError, 'Resource must have a kind')
       end
     end
   end

@@ -56,7 +56,6 @@ Vagrant.configure("2") do |config|
     cloudstack.network_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.zone_id = "AAAAAAAAAAAAAAAAAAA"
     cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
-    cloudstack.network_type = "Advanced" # or "Basic"
   end
 end
 ```
@@ -82,7 +81,6 @@ Vagrant.configure("2") do |config|
     cloudstack.name = "doge-is-a-hostname-now"
     # Sadly there is currently no support for the project api in fog.
     cloudstack.project_id = "AAAAAAAAAAAAAAAAAAA"
-    cloudstack.network_type = "Advanced" # or "Basic"
   end
 end
 ```
@@ -130,7 +128,6 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `domain_id` - Domain id to launch the instance into
 * `network_id` - Network uuid that the instance should use
 * `network_name` - Network name that the instance should use
-* `network_type` - CloudStack Network Type(default: Advanced)
 * `project_id` - Project uuid that the instance should belong to
 * `service_offering_id`- Service offering uuid to use for the instance
 * `service_offering_name`- Service offering name to use for the instance
@@ -147,7 +144,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `pf_public_port_randomrange` - If public port is omited, a port from this range wll be used (default `{:start=>49152, :end=>65535}`)
 * `pf_private_port` - Private port for port forwarding rule (defaults to respective Communicator protocol)
 * `pf_open_firewall` - Flag to enable/disable automatic open firewall rule (by CloudStack)
-* `pf_trusted_networks` - Array to network(s) to 
+* `pf_trusted_networks` - Array to network(s) to
   - automatically (by plugin) generate firewall rules for, ignored if `pf_open_firewall` set `true`
   - use as default for firewall rules where source CIDR is missing
 * `port_forwarding_rules` - Port forwarding rules for the virtual machine
@@ -213,8 +210,7 @@ the Cloudstack machine.
 
 ### Basic Networking
 
-If you set the `network_type` to `basic`, you can use Security
-Groups and associate rules in your Vagrantfile.
+In a basic networking zone you can use Security Groups and associate rules in your Vagrantfile.
 
 If you already have Security Groups, you can associate them to your
 instance, with their IDs:
@@ -226,7 +222,6 @@ Vagrant.configure("2") do |config|
   config.vm.provider :cloudstack do |cloudstack|
     cloudstack.api_key = "foo"
     cloudstack.secret_key = "bar"
-    cloudstack.network_type = "basic"
     cloudstack.security_group_ids = ['aaaa-bbbb-cccc-dddd', '1111-2222-3333-4444']
   end
 end
@@ -241,7 +236,6 @@ Vagrant.configure("2") do |config|
   config.vm.provider :cloudstack do |cloudstack|
     cloudstack.api_key = "foo"
     cloudstack.secret_key = "bar"
-    cloudstack.network_type = "basic"
     cloudstack.security_group_names = ['
 min_fantastiska_security_group', 'another_security_grupp']
   end
@@ -257,7 +251,6 @@ Vagrant.configure("2") do |config|
   config.vm.provider :cloudstack do |cloudstack|
     cloudstack.api_key = "foo"
     cloudstack.secret_key = "bar"
-    cloudstack.network_type = "basic"
     cloudstack.security_groups = [
       {
         :name         => "Awesome_security_group",
