@@ -13,9 +13,6 @@ module VagrantPlugins
       # This runs the configured instance.
       class RunInstance
         include Vagrant::Util::Retryable
-        # include VagrantPlugins::Cloudstack::Model
-        # include VagrantPlugins::Cloudstack::Service
-        # include VagrantPlugins::Cloudstack::Exceptions
 
         def initialize(app, env)
           @app                  = app
