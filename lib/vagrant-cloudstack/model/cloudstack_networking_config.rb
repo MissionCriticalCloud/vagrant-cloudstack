@@ -48,6 +48,10 @@ module VagrantPlugins
           !portforwarding_port_range.nil?
         end
 
+        def has_pf_ip_address?
+          !(@pf_ip_address_id || @pf_ip_address).nil?
+        end
+
         def port_forwarding_rule(vm_guest)
           {
             :network      => @network,
@@ -103,10 +107,6 @@ module VagrantPlugins
         end
 
         private
-
-        def has_pf_ip_address?
-          !(@pf_ip_address_id || @pf_ip_address).nil?
-        end
 
         def has_pf_public_port?
           !@pf_public_port.nil?

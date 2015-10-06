@@ -73,6 +73,34 @@ describe CloudstackNetworkingConfig do
     end
   end
 
+  describe '#has_pf_ip_address?' do
+    it 'returns true if pf_ip_address_id is defined' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new(
+        {
+          'pf_ip_address_id' => 'some ip address id'
+        }
+      ))
+
+      expect(config.has_pf_ip_address?).to eq(true)
+    end
+
+    it 'returns true if pf_ip_address is defined' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new(
+        {
+          'pf_ip_address' => 'some ip address'
+        }
+      ))
+
+      expect(config.has_pf_ip_address?).to eq(true)
+    end
+
+    it 'returns false if neither pf_ip_address_id or pf_ip_address are defined' do
+      config = CloudstackNetworkingConfig.new(ConfigMock.new({}))
+
+      expect(config.has_pf_ip_address?).to eq(false)
+    end
+  end
+
   describe '#port_forwarding_rule' do
     it 'returns a SSH port forwarding rule for linux guests' do
       config = CloudstackNetworkingConfig.new(ConfigMock.new(

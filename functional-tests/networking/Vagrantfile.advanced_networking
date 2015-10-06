@@ -55,6 +55,17 @@ machines = {
     'communicator'               => 'ssh',
     'rsync_disabled'             => true
   }
+  # The no-pf-box is commented out becuse in the current test setup we do not
+  # have the ability to open up a network in such a way that we can reach a box
+  # without port forwarding rules. However, this can be usefull when creating a box
+  # from within the same netowkr or VPC.
+  #,
+  # 'no-pf-box' => {
+  #   'network_name'               => ENV['NETWORK_NAME'],
+  #   'template'                   => ENV['LINUX_TEMPLATE_NAME'],
+  #   'communicator'               => 'ssh',
+  #   'rsync_disabled'             => true
+  # }
 }
 
 

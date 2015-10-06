@@ -179,36 +179,7 @@ module VagrantPlugins
 
           enable_static_nat(env, networkingConfig)
 
-          pf_private_rdp_port = 3389
-          pf_private_rdp_port = env[:machine].config.vm.rdp.port if (env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port))
-
-          networkingConfig.pf_private_rdp_port = pf_private_rdp_port
-
-          vm_guest = env[:machine].config.vm.guest || :linux
-          if networkingConfig.pf_private_port.nil?
-            communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
-            comm_obj = env[:machine].config.send(communicator)
-
-            networkingConfig.pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
-            networkingConfig.pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
-            networkingConfig.pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
-            # networkingConfig.pf_private_port ||= vm_guest == :linux ? '22' : '5985'
-          end
-
-          if networkingConfig.needs_public_port?
-            random_public_port = create_randomport_forwarding_rule(
-              env,
-              networkingConfig.port_forwarding_rule(vm_guest),
-              networkingConfig.portforwarding_port_range,
-              vm_guest == :linux ? 'pf_public_port' : 'pf_public_rdp_port'
-            )
-            networkingConfig.default_port_forwarding_rule_created = true
-            networkingConfig.udpate_public_port(vm_guest, random_public_port)
-            domain_config.pf_public_port     = networkingConfig.pf_public_port
-            domain_config.pf_public_rdp_port = networkingConfig.pf_public_rdp_port
-          end
-
-          networkingConfig.port_forwarding_rules(vm_guest).each { |rule| create_port_forwarding_rule(env, rule) }
+          handle_port_forwardings(env, networkingConfig) if networkingConfig.has_pf_ip_address?
           networkingConfig.firewall_rules.each { |rule| create_firewall_rule_or_network_acl(env, rule) }
 
           if !env[:interrupted]
@@ -253,6 +224,38 @@ module VagrantPlugins
         end
 
         private
+
+        def handle_port_forwardings(env, networkingConfig)
+          pf_private_rdp_port = 3389
+          pf_private_rdp_port = env[:machine].config.vm.rdp.port if (env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port))
+
+          networkingConfig.pf_private_rdp_port = pf_private_rdp_port
+
+          vm_guest = env[:machine].config.vm.guest || :linux
+          if networkingConfig.pf_private_port.nil?
+            communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
+            comm_obj = env[:machine].config.send(communicator)
+
+            networkingConfig.pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
+            networkingConfig.pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
+            networkingConfig.pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
+          end
+
+          if networkingConfig.needs_public_port?
+            random_public_port = create_randomport_forwarding_rule(
+              env,
+              networkingConfig.port_forwarding_rule(vm_guest),
+              networkingConfig.portforwarding_port_range,
+              vm_guest == :linux ? 'pf_public_port' : 'pf_public_rdp_port'
+            )
+            networkingConfig.default_port_forwarding_rule_created = true
+            networkingConfig.udpate_public_port(vm_guest, random_public_port)
+            domain_config.pf_public_port     = networkingConfig.pf_public_port
+            domain_config.pf_public_rdp_port = networkingConfig.pf_public_rdp_port
+          end
+
+          networkingConfig.port_forwarding_rules(vm_guest).each { |rule| create_port_forwarding_rule(env, rule) }
+        end
 
         def sync_ip_address(ip_address_id, ip_address_value)
           ip_address = Model::CloudstackResource.new(ip_address_id, ip_address_value, 'public_ip_address')
