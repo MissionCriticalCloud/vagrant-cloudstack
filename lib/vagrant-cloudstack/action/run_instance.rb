@@ -129,7 +129,7 @@ module VagrantPlugins
             }
 
             options['network_ids'] = @network.id unless @network.id.nil?
-            options['security_group_ids'] = security_group_ids unless security_group_ids.nil?
+            options['security_group_ids'] = security_group_ids.join(',') unless security_group_ids.nil?
             options['project_id'] = project_id unless project_id.nil?
             options['key_name']   = keypair unless keypair.nil?
             options['name']       = hostname unless hostname.nil?
