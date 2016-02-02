@@ -5,7 +5,8 @@ notifications:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq -y bsdtar
-  - gem install bundler -v '1.5.2'
+  - rvm @global do gem uninstall bundler -a -x
+  - rvm @global do gem install bundler -v 1.10.6
 rvm:
   - 2.0.0
 script: rake
