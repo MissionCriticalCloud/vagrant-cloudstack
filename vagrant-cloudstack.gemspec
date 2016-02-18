@@ -1,26 +1,26 @@
-$:.unshift File.expand_path("../lib", __FILE__)
-require "vagrant-cloudstack/version"
+$:.unshift File.expand_path('../lib', __FILE__)
+require 'vagrant-cloudstack/version'
 
 Gem::Specification.new do |s|
-  s.name          = "vagrant-cloudstack"
+  s.name          = 'vagrant-cloudstack'
   s.version       = VagrantPlugins::Cloudstack::VERSION
   s.platform      = Gem::Platform::RUBY
-  s.license       = "MIT"
-  s.authors       = ["Mitchell Hashimoto", "Carl Loa Odin", "Tor-Åke Fransson", "Olle Lundberg", "Roeland Kuipers", "Yuichi Uemura", "Atsushi Sasaki", "Nicolas Brechet", "Peter Jönsson", "Christophe Roux", "Andrei Chiriaev", "Miguel Ferreira", "Timothy van Zadelhoff", "Geurt Schimmel"]
-  s.email         = "int-toolkit@schubergphilis.com"
-  s.homepage      = "https://github.com/schubergphilis/vagrant-cloudstack/"
-  s.summary       = "Enables Vagrant to manage machines in Cloudstack."
-  s.description   = "Enables Vagrant to manage machines in Cloudstack."
+  s.license       = 'MIT'
+  s.authors       = ['Mitchell Hashimoto', 'Carl Loa Odin', 'Tor-Åke Fransson', 'Olle Lundberg', 'Roeland Kuipers', 'Yuichi Uemura', 'Atsushi Sasaki', 'Nicolas Brechet', 'Peter Jönsson', 'Christophe Roux', 'Andrei Chiriaev', 'Miguel Ferreira', 'Timothy van Zadelhoff', 'Geurt Schimmel']
+  s.email         = 'int-toolkit@schubergphilis.com'
+  s.homepage      = 'https://github.com/schubergphilis/vagrant-cloudstack/'
+  s.summary       = 'Enables Vagrant to manage machines in Cloudstack.'
+  s.description   = 'Enables Vagrant to manage machines in Cloudstack.'
 
-  s.required_rubygems_version = ">= 1.3.6"
-  s.rubyforge_project         = "vagrant-cloudstack"
+  s.required_rubygems_version = '>= 1.3.6'
+  s.rubyforge_project         = 'vagrant-cloudstack'
 
-  s.add_runtime_dependency "fog", "~> 1.32.0"
+  s.add_runtime_dependency 'fog', '~> 1.32.0'
 
-  s.add_development_dependency "rake"
-  s.add_development_dependency "rspec-core", "~> 2.14.7"
-  s.add_development_dependency "rspec-expectations", "~> 2.14.4"
-  s.add_development_dependency "rspec-mocks", "~> 2.14.4"
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'rspec-core', '~> 2.14.7'
+  s.add_development_dependency 'rspec-expectations', '~> 2.14.4'
+  s.add_development_dependency 'rspec-mocks', '~> 2.14.4'
 
   # The following block of code determines the files that should be included
   # in the gem. It does this by reading all the files in the directory where
@@ -28,9 +28,9 @@ Gem::Specification.new do |s|
   # Note that the entire gitignore(5) syntax is not supported, specifically
   # the "!" syntax, but it should mostly work correctly.
   root_path      = File.dirname(__FILE__)
-  all_files      = Dir.chdir(root_path) { Dir.glob("**/{*,.*}") }
-  all_files.reject! { |file| [".", ".."].include?(File.basename(file)) }
-  gitignore_path = File.join(root_path, ".gitignore")
+  all_files      = Dir.chdir(root_path) { Dir.glob('**/{*,.*}') }
+  all_files.reject! { |file| ['.', '..'].include?(File.basename(file)) }
+  gitignore_path = File.join(root_path, '.gitignore')
   gitignore      = File.readlines(gitignore_path)
   gitignore.map!    { |line| line.chomp.strip }
   gitignore.reject! { |line| line.empty? || line =~ /^(#|!)/ }
