@@ -48,7 +48,7 @@ Gem::Specification.new do |s|
     #     as git).
     #
     gitignore.any? do |ignore|
-      File.fnmatch(ignore, file, File::FNM_PATHNAME) ||
+      File.fnmatch(ignore, file) ||
         File.fnmatch(ignore, File.basename(file), File::FNM_PATHNAME)
     end
   end
