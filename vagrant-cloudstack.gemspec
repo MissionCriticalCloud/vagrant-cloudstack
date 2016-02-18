@@ -10,17 +10,17 @@ Gem::Specification.new do |s|
   s.email         = 'int-toolkit@schubergphilis.com'
   s.homepage      = 'https://github.com/schubergphilis/vagrant-cloudstack/'
   s.summary       = 'Enables Vagrant to manage machines in Cloudstack.'
-  s.description   = 'Enables Vagrant to manage machines in Cloudstack.'
+  s.description   = 'Provides a cloudstack provider in Vagrant via which Vagrant can manage machines in CloudStack.'
 
   s.required_rubygems_version = '>= 1.3.6'
   s.rubyforge_project         = 'vagrant-cloudstack'
 
-  s.add_runtime_dependency 'fog', '~> 1.32.0'
+  s.add_runtime_dependency 'fog', '~> 1.32', '>= 1.32.0'
 
-  s.add_development_dependency 'rake'
-  s.add_development_dependency 'rspec-core', '~> 2.14.7'
-  s.add_development_dependency 'rspec-expectations', '~> 2.14.4'
-  s.add_development_dependency 'rspec-mocks', '~> 2.14.4'
+  s.add_development_dependency 'rake',                '>= 10.4', '~> 10.5'
+  s.add_development_dependency 'rspec-core',          '~> 2.14', '>= 2.14.7'
+  s.add_development_dependency 'rspec-expectations',  '~> 2.14', '>= 2.14.4'
+  s.add_development_dependency 'rspec-mocks',         '~> 2.14', '>= 2.14.4'
 
   # The following block of code determines the files that should be included
   # in the gem. It does this by reading all the files in the directory where
