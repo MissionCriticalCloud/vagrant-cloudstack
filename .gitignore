@@ -12,5 +12,5 @@ Gemfile.lock
 .vagrant
 Vagrantfile
 !example_box/Vagrantfile
-coverage/
-vendor/
+coverage/*
+vendor/*
