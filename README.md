@@ -258,7 +258,6 @@ Vagrant.configure("2") do |config|
   config.vm.provider :cloudstack do |cloudstack|
     cloudstack.api_key = "foo"
     cloudstack.secret_key = "bar"
-    cloudstack.network_type = "basic"
     cloudstack.security_groups = [
       {
         :name         => "Awesome_security_group",
