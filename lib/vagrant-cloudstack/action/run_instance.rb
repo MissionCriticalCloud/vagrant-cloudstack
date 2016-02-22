@@ -364,7 +364,7 @@ module VagrantPlugins
               end
             end
           end
-          return rule[:publicport] if pf_public_port.nil?
+          pf_public_port.nil? ? (return rule[:publicport]) : (return pf_public_port)
         end
 
         def store_ssh_keypair(env, domain_config, keyname, account = nil, domainid = nil, projectid = nil)
