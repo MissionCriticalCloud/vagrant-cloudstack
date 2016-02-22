@@ -391,20 +391,15 @@ $ bundle exec rake
 ```
 
 If the unit-tests pass, verify the plugin is functionaly good by running the functional tests with bats.
-Before running the tests you need to export a set of variables that are used in the tests.
+Before running the tests you need to export a set of variables that are used in the tests. Look at the
+Rake file for the required variables, or run the following Rake command to check:
 ```
-export CLOUDSTACK_HOST="..."
-export CLOUDSTACK_API_KEY="..."
-export CLOUDSTACK_SECRET_KEY="..."
-export PUBLIC_SOURCE_NAT_IP="..."
-export PUBLIC_SSH_PORT="..."
-export ZONE_NAME="..."
-export NETWORK_NAME="..."
-export SERVICE_OFFERING_NAME="..."
-export TEMPLATE_NAME="..."
+bundle exec rake functional_tests:check_environment
+```
 
-cd functional-tests
-./run_tests.sh
+Run all functional tests by executing:
+```
+bundle exec rake functional_tests:all
 ```
 
 If those pass, you're ready to start developing the plugin. You can test
