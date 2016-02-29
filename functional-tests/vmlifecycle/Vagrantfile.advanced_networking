@@ -50,7 +50,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |global_config|
         cloudstack.network_name          = ENV['NETWORK_NAME']
         cloudstack.service_offering_name = ENV['SERVICE_OFFERING_NAME']
 
-        cloudstack.network_type          = 'Advanced'
         cloudstack.pf_ip_address         = public_source_nat_ip
 
         cloudstack.pf_public_port        = options['public_port']

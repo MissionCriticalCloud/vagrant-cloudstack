@@ -2,6 +2,9 @@ en:
   vagrant_cloudstack:
     already_status: |-
       The machine is already %{status}.
+    basic_network: |-
+      Network name or id defined but zone %{zone_name} is of network type 'Basic'
+      Network name or id will be ignored
     launching_instance: |-
       Launching an instance with the following settings...
     launch_no_keypair_no_sshkey: |-
@@ -21,6 +24,9 @@ en:
       Make sure rsync is installed and the binary can be found in the PATH.
     rsync_folder: |-
       Rsyncing folder: %{hostpath} => %{guestpath}
+    security_groups_disabled: |-
+      Security groups defined but not supported in the zone %{zone_name}
+      Defined security groups will be ignored
     ssh_key_pair_creating: |-
       Creating an SSH keypair in CloudStack...
     ssh_key_pair_removing: |-

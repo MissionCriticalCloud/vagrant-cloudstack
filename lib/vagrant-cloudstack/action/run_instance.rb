@@ -37,7 +37,6 @@ module VagrantPlugins
           @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
 
           hostname                    = domain_config.name
-          network_type                = domain_config.network_type
           project_id                  = domain_config.project_id
           keypair                     = domain_config.keypair
           static_nat                  = domain_config.static_nat
@@ -64,11 +63,34 @@ module VagrantPlugins
           private_ip_address          = domain_config.private_ip_address
 
           @resource_service.sync_resource(@zone, { 'available' => true })
-          @resource_service.sync_resource(@network)
+          cs_zone = env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
           @resource_service.sync_resource(@service_offering)
           @resource_service.sync_resource(@disk_offering)
           @resource_service.sync_resource(@template, {'zoneid' => @zone.id, 'templatefilter' => 'executable' })
 
+          if cs_zone.network_type.downcase == 'basic'
+            # No network specification in basic zone
+            env[:ui].warn(I18n.t('vagrant_cloudstack.basic_network', :zone_name => @zone.name)) if @network.id || @network.name
+            @network = CloudstackResource.new(nil, nil, 'network')
+
+            # No portforwarding in basic zone, so none of the below
+            pf_ip_address               = nil
+            pf_ip_address_id            = nil
+            pf_public_port              = nil
+            pf_public_rdp_port          = nil
+            pf_public_port_randomrange  = nil
+          else
+            @resource_service.sync_resource(@network)
+          end
+
+          if !cs_zone.security_groups_enabled
+            if !security_group_ids.empty? || !security_group_names.empty? || !security_groups.empty?
+              env[:ui].warn(I18n.t('vagrant_cloudstack.security_groups_disabled', :zone_name => @zone.name))
+            end
+            security_group_ids        = []
+            security_group_names      = []
+            security_groups           = []
+          end
           # Can't use Security Group IDs and Names at the same time
           # Let's use IDs by default...
           if security_group_ids.empty? and !security_group_names.empty?
