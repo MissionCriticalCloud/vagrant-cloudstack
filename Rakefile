@@ -31,7 +31,8 @@ namespace :functional_tests do
   # Name must match folder beneath functional-tests/
   functional_test_names = [
     'vmlifecycle',
-    'rsync'
+    'rsync',
+    'networking'
   ]
 
   desc "Check for required enviroment variables for functional testing"

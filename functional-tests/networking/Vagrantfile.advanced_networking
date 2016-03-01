@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = '2'
+
+Vagrant.require_version '>= 1.5.0'
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = ENV['LINUX_TEMPLATE_NAME']
+
+  config.vm.synced_folder ".", "/vagrant", type: "rsync",
+    rsync__exclude: [".git/", "vendor"], disabled: true
+
+  config.vm.provider :cloudstack do |cloudstack, override|
+    cloudstack.display_name          = ENV['TEST_NAME']
+
+    cloudstack.host                  = ENV['CLOUDSTACK_HOST']
+    # Use default path, port and scheme
+    cloudstack.api_key               = ENV['CLOUDSTACK_API_KEY']
+    cloudstack.secret_key            = ENV['CLOUDSTACK_SECRET_KEY']
+    cloudstack.zone_name             = ENV['ZONE_NAME']
+    cloudstack.network_name          = ENV['NETWORK_NAME']
+    cloudstack.service_offering_name = ENV['SERVICE_OFFERING_NAME']
+    cloudstack.ssh_key               = ENV['SSH_KEY']  unless ENV['SSH_KEY'].nil?
+    cloudstack.ssh_user              = ENV['SSH_USER'] unless ENV['SSH_USER'].nil?
+
+    cloudstack.pf_ip_address         = ENV['PUBLIC_SOURCE_NAT_IP']
+    cloudstack.pf_public_port        = ENV['PUBLIC_SSH_PORT']
+    cloudstack.pf_private_port       = ENV['PRIVATE_SSH_PORT']
+    cloudstack.pf_open_firewall      = false
+
+    # With Advanced networking, following Basic networking features should be ignored
+    cloudstack.security_groups       = [{
+      :name         => "Awesome_security_group",
+      :description  => "Created from the Vagrantfile",
+      :rules        => [{:type => "ingress", :protocol => "TCP", :startport => 22, :endport => 22, :cidrlist => "0.0.0.0/0"}]
+    }]
+    cloudstack.security_group_names  = ['default', 'Awesome_security_group']
+    # With Advanced networking, following Basic networking features should be ignored
+
+    cloudstack.pf_trusted_networks   = [ ENV['SOURCE_CIDR'] ]
+    cloudstack.firewall_rules = [
+      # Full Firewall rule
+      { :ipaddress => cloudstack.pf_ip_address, :protocol => 'tcp', :startport => 1111, :endport => 1111 },
+      # Firewall rule without ':ipaddress' which defaults to 'cloudstack.pf_ip_address'
+      { :protocol => 'tcp', :startport => 1122, :endport => 1122 },
+      # Firewall rule without ':protocol', which defaults to 'tcp'
+      { :startport => 1133, :endport => 1133 },
+      # Firewall rule without ':endport', which defaults to ':startport' if present
+      { :startport => 1144 },
+      # Firewall rule without ':start', which defaults to ':endport' if present
+      { :endport => 22 }
+    ]
+    cloudstack.port_forwarding_rules = [
+      # Full portforwarding rule
+      { :ipaddress => cloudstack.pf_ip_address, :protocol => "tcp", :publicport => 1111, :privateport  => 22, :openfirewall => false },
+      # Portforwarding rule without ':ipaddress' which defaults to 'cloudstack.pf_ip_address'
+      { :protocol => "tcp", :publicport => 1122, :privateport  => 22, :openfirewall => false },
+      # Portforwarding rule without ':protocol', which defaults to 'tcp'
+      { :publicport => 1133, :privateport  => 22, :openfirewall => false },
+      # Portforwarding rule without ':openfirewall', which defaults to 'cloudstack.pf_open_firewall'
+      { :publicport => 1144, :privateport  => 22 },
+      # Portforwarding rule without ':publicport', which defaults to ':privateport'
+      { :privateport => 22 },
+      # Portforwarding rule with ':generate_firewall', which generates an apropriate
+      # Firewall rule based ':publicport' => ':startport', and other defaults
+      { :publicport => 1155, :privateport  => 22, :generate_firewall => true },
+      # Portforwarding rule which instructs CloudStack to create a Firewall rule
+      { :publicport => 1166, :privateport  => 22, :openfirewall => true },
+    ]
+  end
+end
