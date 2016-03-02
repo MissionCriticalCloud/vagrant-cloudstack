@@ -36,37 +36,11 @@ module VagrantPlugins
           @disk_offering    = CloudstackResource.new(domain_config.disk_offering_id, domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(domain_config.template_id, domain_config.template_name || env[:machine].config.vm.box, 'template')
 
-          hostname                    = domain_config.name
-          project_id                  = domain_config.project_id
-          keypair                     = domain_config.keypair
-          static_nat                  = domain_config.static_nat
-          pf_ip_address_id            = domain_config.pf_ip_address_id
-          pf_ip_address               = domain_config.pf_ip_address
-          pf_public_port              = domain_config.pf_public_port
-          pf_public_rdp_port          = domain_config.pf_public_rdp_port
-          pf_public_port_randomrange  = domain_config.pf_public_port_randomrange
-          pf_private_port             = domain_config.pf_private_port
-          pf_open_firewall            = domain_config.pf_open_firewall
-          pf_trusted_networks         = domain_config.pf_trusted_networks
-          port_forwarding_rules       = domain_config.port_forwarding_rules
-          firewall_rules              = domain_config.firewall_rules
-          display_name                = domain_config.display_name
-          group                       = domain_config.group
-          security_group_ids          = domain_config.security_group_ids
-          security_group_names        = domain_config.security_group_names
-          security_groups             = domain_config.security_groups
-          user_data                   = domain_config.user_data
-          ssh_key                     = domain_config.ssh_key
-          ssh_user                    = domain_config.ssh_user
-          vm_user                     = domain_config.vm_user
-          vm_password                 = domain_config.vm_password
-          private_ip_address          = domain_config.private_ip_address
-
-          @resource_service.sync_resource(@zone, { 'available' => true })
+          @resource_service.sync_resource(@zone, { available: true })
           cs_zone = env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
           @resource_service.sync_resource(@service_offering)
           @resource_service.sync_resource(@disk_offering)
-          @resource_service.sync_resource(@template, {'zoneid' => @zone.id, 'templatefilter' => 'executable' })
+          @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable' })
 
           if cs_zone.network_type.downcase == 'basic'
             # No network specification in basic zone
@@ -74,92 +48,158 @@ module VagrantPlugins
             @network = CloudstackResource.new(nil, nil, 'network')
 
             # No portforwarding in basic zone, so none of the below
-            pf_ip_address               = nil
-            pf_ip_address_id            = nil
-            pf_public_port              = nil
-            pf_public_rdp_port          = nil
-            pf_public_port_randomrange  = nil
+            domain_config.pf_ip_address               = nil
+            domain_config.pf_ip_address_id            = nil
+            domain_config.pf_public_port              = nil
+            domain_config.pf_public_rdp_port          = nil
+            domain_config.pf_public_port_randomrange  = nil
           else
             @resource_service.sync_resource(@network)
           end
 
-          if !cs_zone.security_groups_enabled
-            if !security_group_ids.empty? || !security_group_names.empty? || !security_groups.empty?
+          if cs_zone.security_groups_enabled
+            prepare_security_groups(domain_config, env)
+          else
+            if !domain_config.security_group_ids.empty? || !domain_config.security_group_names.empty? || !domain_config.security_groups.empty?
               env[:ui].warn(I18n.t('vagrant_cloudstack.security_groups_disabled', :zone_name => @zone.name))
             end
-            security_group_ids        = []
-            security_group_names      = []
-            security_groups           = []
-          end
-          # Can't use Security Group IDs and Names at the same time
-          # Let's use IDs by default...
-          if security_group_ids.empty? and !security_group_names.empty?
-            security_group_ids = security_group_names.map { |name| name_to_id(env, name, 'security_group') }
-          elsif !security_group_ids.empty?
-            security_group_names = security_group_ids.map { |id| id_to_name(env, id, 'security_group') }
+            domain_config.security_group_ids        = []
+            domain_config.security_group_names      = []
+            domain_config.security_groups           = []
           end
 
-          # Still no security group ids huh?
-          # Let's try to create some security groups from specifcation, if provided.
-          if !security_groups.empty? and security_group_ids.empty?
-            security_groups.each do |security_group|
-              sgname, sgid = create_security_group(env, security_group)
-              security_group_names.push(sgname)
-              security_group_ids.push(sgid)
-            end
-          end
-
-          if display_name.nil?
-            local_user = ENV['USER'].dup
-            local_user.gsub!(/[^-a-z0-9_]/i, '')
-            prefix = env[:root_path].basename.to_s
-            prefix.gsub!(/[^-a-z0-9_]/i, '')
-            display_name = local_user + '_' + prefix + "_#{Time.now.to_i}"
-          end
+          domain_config.display_name = generate_display_name(env) if domain_config.display_name.nil?
 
           # If there is no keypair or keyfile then warn the user
-          if keypair.nil? && ssh_key.nil?
+          if domain_config.keypair.nil? && domain_config.ssh_key.nil?
             env[:ui].warn(I18n.t('vagrant_cloudstack.launch_no_keypair_no_sshkey'))
-            store_ssh_keypair(env, domain_config, "vagacs_#{display_name}_#{sprintf("%04d", rand(9999))}",
+            store_ssh_keypair(env, domain_config, "vagacs_#{display_name}_#{sprintf('%04d', rand(9999))}",
                               nil, domain, project_id)
-            keypair = domain_config.keypair
           end
+
 
           # Launch!
           env[:ui].info(I18n.t('vagrant_cloudstack.launching_instance'))
-          env[:ui].info(" -- Display Name: #{display_name}")
-          env[:ui].info(" -- Group: #{group}") if group
+          env[:ui].info(" -- Display Name: #{domain_config.display_name}")
+          env[:ui].info(" -- Group: #{domain_config.group}") if domain_config.group
           env[:ui].info(" -- Service offering: #{@service_offering.name} (#{@service_offering.id})")
           env[:ui].info(" -- Disk offering: #{@disk_offering.name} (#{@disk_offering.id})") unless @disk_offering.id.nil?
           env[:ui].info(" -- Template: #{@template.name} (#{@template.id})")
-          env[:ui].info(" -- Project UUID: #{project_id}") unless project_id.nil?
+          env[:ui].info(" -- Project UUID: #{domain_config.project_id}") unless domain_config.project_id.nil?
           env[:ui].info(" -- Zone: #{@zone.name} (#{@zone.id})")
           env[:ui].info(" -- Network: #{@network.name} (#{@network.id})") unless @network.id.nil?
-          env[:ui].info(" -- Keypair: #{keypair}") if keypair
-          env[:ui].info(' -- User Data: Yes') if user_data
-          security_group_names.zip(security_group_ids).each do |security_group_name, security_group_id|
+          env[:ui].info(" -- Keypair: #{domain_config.keypair}") if domain_config.keypair
+          env[:ui].info(' -- User Data: Yes') if domain_config.user_data
+          domain_config.security_group_names.zip(domain_config.security_group_ids).each do |security_group_name, security_group_id|
               env[:ui].info(" -- Security Group: #{security_group_name} (#{security_group_id})")
           end
 
+          server = create_vm(domain_config, env)
+
+          # Wait for the instance to be ready first
+          wait_for_instance_ready(domain_config, env, server)
+
+          store_password(env, domain_config, server)
+
+          enable_static_nat_rules(domain_config, env)
+
+          evaluate_pf_private_port(domain_config, env)
+
+          manage_firewall_rules(domain_config, env)
+
+          create_port_forwardings(domain_config, env)
+
+          configure_firewall(domain_config, env)
+
+          unless env[:interrupted]
+            wait_for_communicator_ready(env)
+            env[:ui].info(I18n.t('vagrant_cloudstack.ready'))
+          end
+
+          # Terminate the instance if we were interrupted
+          terminate(env) if env[:interrupted]
+
+          @app.call(env)
+        end
+
+        def enable_static_nat_rules(domain_config, env)
+          unless domain_config.static_nat.empty?
+            domain_config.static_nat.each do |rule|
+              enable_static_nat(env, rule)
+            end
+          end
+        end
+
+        def generate_display_name(env)
+          local_user = ENV['USER'].dup
+          local_user.gsub!(/[^-a-z0-9_]/i, '')
+          prefix = env[:root_path].basename.to_s
+          prefix.gsub!(/[^-a-z0-9_]/i, '')
+
+          local_user + '_' + prefix + "_#{Time.now.to_i}"
+        end
+
+        def wait_for_communicator_ready(env)
+          env[:metrics]['instance_ssh_time'] = Util::Timer.time do
+            # Wait for communicator to be ready.
+            communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
+            env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_communicator', :communicator => communicator.to_s.upcase))
+            while true
+              # If we're interrupted then just back out
+              break if env[:interrupted]
+              break if env[:machine].communicate.ready?
+              sleep 2
+            end
+          end
+          @logger.info("Time for SSH ready: #{env[:metrics]['instance_ssh_time']}")
+        end
+
+        def wait_for_instance_ready(domain_config, env, server)
+          env[:metrics]['instance_ready_time'] = Util::Timer.time do
+            tries = domain_config.instance_ready_timeout / 2
+
+            env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_ready'))
+            begin
+              retryable(:on => Fog::Errors::TimeoutError, :tries => tries) do
+                # If we're interrupted don't worry about waiting
+                next if env[:interrupted]
+
+                # Wait for the server to be ready
+                server.wait_for(2) { ready? }
+              end
+            rescue Fog::Errors::TimeoutError
+              # Delete the instance
+              terminate(env)
+
+              # Notify the user
+              raise Errors::InstanceReadyTimeout,
+                    :timeout => domain_config.instance_ready_timeout
+            end
+          end
+          @logger.info("Time to instance ready: #{env[:metrics]['instance_ready_time']}")
+        end
+
+        def create_vm(domain_config, env)
+          server = nil
           begin
             options = {
-                :display_name => display_name,
-                :group        => group,
-                :zone_id      => @zone.id,
-                :flavor_id    => @service_offering.id,
-                :image_id     => @template.id
+                :display_name => domain_config.display_name,
+                :group => domain_config.group,
+                :zone_id => @zone.id,
+                :flavor_id => @service_offering.id,
+                :image_id => @template.id
             }
 
             options['network_ids'] = @network.id unless @network.id.nil?
-            options['security_group_ids'] = security_group_ids.join(',') unless security_group_ids.nil?
-            options['project_id'] = project_id unless project_id.nil?
-            options['key_name']   = keypair unless keypair.nil?
-            options['name']       = hostname unless hostname.nil?
-            options['ip_address'] = private_ip_address unless private_ip_address.nil?
+            options['security_group_ids'] = domain_config.security_group_ids.join(',') unless domain_config.security_group_ids.nil?
+            options['project_id'] = domain_config.project_id unless domain_config.project_id.nil?
+            options['key_name'] = domain_config.keypair unless domain_config.keypair.nil?
+            options['name'] = domain_config.name unless domain_config.name.nil?
+            options['ip_address'] = domain_config.private_ip_address unless domain_config.private_ip_address.nil?
             options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
 
-            if user_data != nil
-              options['user_data'] = Base64.urlsafe_encode64(user_data)
+            if domain_config.user_data != nil
+              options['user_data'] = Base64.urlsafe_encode64(domain_config.user_data)
               if options['user_data'].length > 2048
                 raise Errors::UserdataError,
                       :userdataLength => options['user_data'].length
@@ -182,184 +222,157 @@ module VagrantPlugins
           end
 
           # Immediately save the ID since it is created at this point.
-          env[:machine].id                     = server.id
+          env[:machine].id = server.id
+          server
+        end
 
-          # Wait for the instance to be ready first
-          env[:metrics]['instance_ready_time'] = Util::Timer.time do
-            tries = domain_config.instance_ready_timeout / 2
+        def prepare_security_groups(domain_config, env)
+          # Can't use Security Group IDs and Names at the same time
+          # Let's use IDs by default...
+          if domain_config.security_group_ids.empty? and !domain_config.security_group_names.empty?
+            domain_config.security_group_ids = domain_config.security_group_names.map { |name| name_to_id(env, name, 'security_group') }
+          elsif !domain_config.security_group_ids.empty?
+            domain_config.security_group_names = domain_config.security_group_ids.map { |id| id_to_name(env, id, 'security_group') }
+          end
 
-            env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_ready'))
-            begin
-              retryable(:on => Fog::Errors::TimeoutError, :tries => tries) do
-                # If we're interrupted don't worry about waiting
-                next if env[:interrupted]
-
-                # Wait for the server to be ready
-                server.wait_for(2) { ready? }
-              end
-            rescue Fog::Errors::TimeoutError
-              # Delete the instance
-              terminate(env)
-
-              # Notify the user
-              raise Errors::InstanceReadyTimeout,
-                 :timeout => domain_config.instance_ready_timeout
+          # Still no security group ids huh?
+          # Let's try to create some security groups from specifcation, if provided.
+          if !domain_config.security_groups.empty? and domain_config.security_group_ids.empty?
+            domain_config.security_groups.each do |security_group|
+              sgname, sgid = create_security_group(env, security_group)
+              domain_config.security_group_names.push(sgname)
+              domain_config.security_group_ids.push(sgid)
             end
           end
+        end
 
-          @logger.info("Time to instance ready: #{env[:metrics]['instance_ready_time']}")
+        def evaluate_pf_private_port(domain_config, env)
+          if domain_config.pf_private_port.nil?
 
-          if server.password_enabled and server.respond_to?("job_id")
-            store_password(env, domain_config, server.job_id)
-          end
-
-          if !static_nat.empty?
-            static_nat.each do |rule|
-              enable_static_nat(env, rule)
-            end
-          end
-
-          pf_private_rdp_port = 3389
-          pf_private_rdp_port = env[:machine].config.vm.rdp.port if ( env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port) )
-
-          if pf_private_port.nil?
             communicator = env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name')
             comm_obj = env[:machine].config.send(communicator)
 
-            pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
-            pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
-            pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
+            domain_config.pf_private_port = comm_obj.port if comm_obj.respond_to?('port')
+            domain_config.pf_private_port = comm_obj.guest_port if comm_obj.respond_to?('guest_port')
+            domain_config.pf_private_port = comm_obj.default.port if (comm_obj.respond_to?('default') && comm_obj.default.respond_to?('port'))
           end
+        end
 
-          if (pf_ip_address_id || pf_ip_address) && (pf_public_port || pf_public_port_randomrange)
-            port_forwarding_rule = {
-              :ipaddressid  => pf_ip_address_id,
-              :ipaddress    => pf_ip_address,
-              :protocol     => 'tcp',
-              :publicport   => pf_public_port,
-              :privateport  => pf_private_port,
-              :openfirewall => pf_open_firewall
-            }
-
-            pf_public_port = domain_config.pf_public_port = create_randomport_forwarding_rule(
-              env,
-              port_forwarding_rule,
-              pf_public_port_randomrange[:start]...pf_public_port_randomrange[:end],
-              'pf_public_port'
-            )
-
-            if pf_trusted_networks && !pf_open_firewall
-              # Allow access to public port from trusted networks only
-              fw_rule_trusted_networks = {
-                  :ipaddressid  => pf_ip_address_id,
-                  :ipaddress    => pf_ip_address,
-                  :protocol     => 'tcp',
-                  :startport    => pf_public_port,
-                  :endport      => pf_public_port,
-                  :cidrlist     => pf_trusted_networks.join(',')
-              }
-              firewall_rules = [] unless firewall_rules
-              firewall_rules << fw_rule_trusted_networks
-            end
-          end
-
-          if env[:machine].config.vm.guest == :windows && 
-                        (pf_ip_address_id || pf_ip_address) &&
-                      (pf_public_rdp_port || pf_public_port_randomrange)
-            port_forwarding_rule = {
-              :ipaddressid  => pf_ip_address_id,
-              :ipaddress    => pf_ip_address,
-              :protocol     => 'tcp',
-              :publicport   => pf_public_rdp_port,
-              :privateport  => pf_private_rdp_port,
-              :openfirewall => pf_open_firewall
-            }
-
-            pf_public_rdp_port = domain_config.pf_public_rdp_port = create_randomport_forwarding_rule(
-              env,
-              port_forwarding_rule,
-              pf_public_port_randomrange[:start]...pf_public_port_randomrange[:end],
-              'pf_public_rdp_port'
-            )
-
-            if pf_trusted_networks  && !pf_open_firewall
-              # Allow access to public port from trusted networks only
-              fw_rule_trusted_networks = {
-                  :ipaddressid  => pf_ip_address_id,
-                  :ipaddress    => pf_ip_address,
-                  :protocol     => 'tcp',
-                  :startport    => pf_public_rdp_port,
-                  :endport      => pf_public_rdp_port,
-                  :cidrlist     => pf_trusted_networks.join(',')
-              }
-              firewall_rules = [] unless firewall_rules
-              firewall_rules << fw_rule_trusted_networks
-            end
-          end
-
-          if !port_forwarding_rules.empty?
-            port_forwarding_rules.each do |port_forwarding_rule|
-              port_forwarding_rule[:ipaddressid]  = pf_ip_address_id                    if port_forwarding_rule[:ipaddressid].nil?
-              port_forwarding_rule[:ipaddress]    = pf_ip_address                       if port_forwarding_rule[:ipaddress].nil?
-              port_forwarding_rule[:protocol]     = 'tcp'                               if port_forwarding_rule[:protocol].nil?
-              port_forwarding_rule[:openfirewall] = pf_open_firewall                    if port_forwarding_rule[:openfirewall].nil?
-              port_forwarding_rule[:publicport]   = port_forwarding_rule[:privateport]  if port_forwarding_rule[:publicport].nil?
-              port_forwarding_rule[:privateport]  = port_forwarding_rule[:publicport]   if port_forwarding_rule[:privateport].nil?
-
-              create_port_forwarding_rule(env, port_forwarding_rule)
-
-              if port_forwarding_rule[:generate_firewall] && pf_trusted_networks && !port_forwarding_rule[:openfirewall]
-                # Allow access to public port from trusted networks only
-                fw_rule_trusted_networks = {
-                    :ipaddressid  => port_forwarding_rule[:ipaddressid],
-                    :ipaddress    => port_forwarding_rule[:ipaddress],
-                    :protocol     => port_forwarding_rule[:protocol],
-                    :startport    => port_forwarding_rule[:publicport],
-                    :endport      => port_forwarding_rule[:publicport],
-                    :cidrlist     => pf_trusted_networks.join(',')
-                }
-                firewall_rules = [] unless firewall_rules
-                firewall_rules << fw_rule_trusted_networks
-              end
-
-            end
-          end
-
-          if !firewall_rules.empty?
-            firewall_rules.each do |firewall_rule|
-              firewall_rule[:ipaddressid] = pf_ip_address_id              if firewall_rule[:ipaddressid].nil?
-              firewall_rule[:ipaddress]   = pf_ip_address                 if firewall_rule[:ipaddress].nil?
-              firewall_rule[:cidrlist]    = pf_trusted_networks.join(',') if firewall_rule[:cidrlist].nil?
-              firewall_rule[:protocol]    = 'tcp'                         if firewall_rule[:protocol].nil?
-              firewall_rule[:startport]   = firewall_rule[:endport]       if firewall_rule[:startport].nil?
+        def configure_firewall(domain_config, env)
+          unless domain_config.firewall_rules.empty?
+            domain_config.firewall_rules.each do |firewall_rule|
+              firewall_rule[:ipaddressid] = domain_config.pf_ip_address_id if firewall_rule[:ipaddressid].nil?
+              firewall_rule[:ipaddress] = domain_config.pf_ip_address if firewall_rule[:ipaddress].nil?
+              firewall_rule[:cidrlist] = domain_config.pf_trusted_networks.join(',') if firewall_rule[:cidrlist].nil?
+              firewall_rule[:protocol] = 'tcp' if firewall_rule[:protocol].nil?
+              firewall_rule[:startport] = firewall_rule[:endport] if firewall_rule[:startport].nil?
 
               create_firewall_rule(env, firewall_rule)
             end
           end
+        end
 
-          if !env[:interrupted]
-            env[:metrics]['instance_ssh_time'] = Util::Timer.time do
-              # Wait for communicator to be ready.
-              communicator = env[:machine].communicate.instance_variable_get("@logger").instance_variable_get("@name")
-              env[:ui].info(I18n.t('vagrant_cloudstack.waiting_for_communicator', :communicator => communicator.to_s.upcase))
-              while true
-                # If we're interrupted then just back out
-                break if env[:interrupted]
-                break if env[:machine].communicate.ready?
-                sleep 2
-              end
+        def create_port_forwardings(domain_config, env)
+          unless domain_config.port_forwarding_rules.empty?
+            domain_config.port_forwarding_rules.each do |port_forwarding_rule|
+              port_forwarding_rule[:ipaddressid] = domain_config.pf_ip_address_id if port_forwarding_rule[:ipaddressid].nil?
+              port_forwarding_rule[:ipaddress] = domain_config.pf_ip_address if port_forwarding_rule[:ipaddress].nil?
+              port_forwarding_rule[:protocol] = 'tcp' if port_forwarding_rule[:protocol].nil?
+              port_forwarding_rule[:openfirewall] = domain_config.pf_open_firewall if port_forwarding_rule[:openfirewall].nil?
+              port_forwarding_rule[:publicport] = port_forwarding_rule[:privateport] if port_forwarding_rule[:publicport].nil?
+              port_forwarding_rule[:privateport] = port_forwarding_rule[:publicport] if port_forwarding_rule[:privateport].nil?
+
+              create_port_forwarding_rule(env, port_forwarding_rule)
             end
+          end
+        end
 
-            @logger.info("Time for SSH ready: #{env[:metrics]['instance_ssh_time']}")
+        def manage_firewall_rules(domain_config, env)
+          pf_private_rdp_port = 3389
+          pf_private_rdp_port = env[:machine].config.vm.rdp.port if ( env[:machine].config.vm.respond_to?(:rdp) && env[:machine].config.vm.rdp.respond_to?(:port) )
 
-            # Ready and booted!
-            env[:ui].info(I18n.t('vagrant_cloudstack.ready'))
+          if (domain_config.pf_ip_address_id || domain_config.pf_ip_address) && (domain_config.pf_public_port || domain_config.pf_public_port_randomrange)
+            port_forwarding_rule = {
+                :ipaddressid => domain_config.pf_ip_address_id,
+                :ipaddress => domain_config.pf_ip_address,
+                :protocol => 'tcp',
+                :publicport => domain_config.pf_public_port,
+                :privateport => domain_config.pf_private_port,
+                :openfirewall => domain_config.pf_open_firewall
+            }
+
+            domain_config.pf_public_port = domain_config.pf_public_port = create_randomport_forwarding_rule(
+                env,
+                port_forwarding_rule,
+                domain_config.pf_public_port_randomrange[:start]...domain_config.pf_public_port_randomrange[:end],
+                'pf_public_port'
+            )
+
+            if domain_config.pf_trusted_networks && !domain_config.pf_open_firewall
+              # Allow access to public port from trusted networks only
+              fw_rule_trusted_networks = {
+                  :ipaddressid => domain_config.pf_ip_address_id,
+                  :ipaddress => domain_config.pf_ip_address,
+                  :protocol => 'tcp',
+                  :startport => domain_config.pf_public_port,
+                  :endport => domain_config.pf_public_port,
+                  :cidrlist => domain_config.pf_trusted_networks.join(',')
+              }
+              domain_config.firewall_rules = [] unless domain_config.firewall_rules
+              domain_config.firewall_rules << fw_rule_trusted_networks
+            end
           end
 
-          # Terminate the instance if we were interrupted
-          terminate(env) if env[:interrupted]
+          if env[:machine].config.vm.guest == :windows &&
+              (domain_config.pf_ip_address_id || domain_config.pf_ip_address) &&
+              (domain_config.pf_public_rdp_port || domain_config.pf_public_port_randomrange)
+            port_forwarding_rule = {
+                :ipaddressid => domain_config.pf_ip_address_id,
+                :ipaddress => domain_config.pf_ip_address,
+                :protocol => 'tcp',
+                :publicport => domain_config.pf_public_rdp_port,
+                :privateport => pf_private_rdp_port,
+                :openfirewall => domain_config.pf_open_firewall
+            }
 
-          @app.call(env)
+            domain_config.pf_public_rdp_port = domain_config.pf_public_rdp_port = create_randomport_forwarding_rule(
+                env,
+                port_forwarding_rule,
+                domain_config.pf_public_port_randomrange[:start]...domain_config.pf_public_port_randomrange[:end],
+                'pf_public_rdp_port'
+            )
+
+            if domain_config.pf_trusted_networks && !domain_config.pf_open_firewall
+              # Allow access to public port from trusted networks only
+              fw_rule_trusted_networks = {
+                  :ipaddressid => domain_config.pf_ip_address_id,
+                  :ipaddress => domain_config.pf_ip_address,
+                  :protocol => 'tcp',
+                  :startport => domain_config.pf_public_rdp_port,
+                  :endport => domain_config.pf_public_rdp_port,
+                  :cidrlist => domain_config.pf_trusted_networks.join(',')
+              }
+              domain_config.firewall_rules = [] unless domain_config.firewall_rules
+              domain_config.firewall_rules << fw_rule_trusted_networks
+            end
+          end
+          unless domain_config.port_forwarding_rules.empty?
+            domain_config.port_forwarding_rules.each do |port_forwarding_rule|
+              if port_forwarding_rule[:generate_firewall] && domain_config.pf_trusted_networks && !port_forwarding_rule[:openfirewall]
+                # Allow access to public port from trusted networks only
+                fw_rule_trusted_networks = {
+                    :ipaddressid => port_forwarding_rule[:ipaddressid],
+                    :ipaddress => port_forwarding_rule[:ipaddress],
+                    :protocol => port_forwarding_rule[:protocol],
+                    :startport => port_forwarding_rule[:publicport],
+                    :endport => port_forwarding_rule[:publicport],
+                    :cidrlist => domain_config.pf_trusted_networks.join(',')
+                }
+                domain_config.firewall_rules = [] unless domain_config.firewall_rules
+                domain_config.firewall_rules << fw_rule_trusted_networks
+              end
+            end
+          end
         end
 
         def create_randomport_forwarding_rule(env, rule, randomrange, filename)
@@ -386,7 +399,7 @@ module VagrantPlugins
               end
             end
           end
-          pf_public_port.nil? ? (return rule[:publicport]) : (return pf_public_port)
+          pf_public_port.nil? ? (rule[:publicport]) : (pf_public_port)
         end
 
         def store_ssh_keypair(env, domain_config, keyname, account = nil, domainid = nil, projectid = nil)
@@ -409,31 +422,34 @@ module VagrantPlugins
           domain_config.keypair =  sshkeypair['name']
         end
 
-        def store_password(env, domain_config, job_id)
-          server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-          if server_job_result.nil?
-            env[:ui].warn(' -- Failed to retrieve job_result for retrieving the password')
-            return
-          end
-
-          while true
-            server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-            if server_job_result['queryasyncjobresultresponse']['jobstatus'] != 0
-              password = server_job_result['queryasyncjobresultresponse']['jobresult']['virtualmachine']['password']
-              break
-            else
-              sleep 2
+        def store_password(env, domain_config, server)
+          password = nil
+          if server.password_enabled and server.respond_to?('job_id')
+            server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => server.job_id})
+            if server_job_result.nil?
+              env[:ui].warn(' -- Failed to retrieve job_result for retrieving the password')
+              return
             end
-          end
 
-          env[:ui].info("Password of virtualmachine: #{password}")
-          # Set the password on the current communicator
-          domain_config.vm_password = password
+            while true
+              server_job_result = env[:cloudstack_compute].query_async_job_result({:jobid => server.job_id})
+              if server_job_result['queryasyncjobresultresponse']['jobstatus'] != 0
+                password = server_job_result['queryasyncjobresultresponse']['jobresult']['virtualmachine']['password']
+                break
+              else
+                sleep 2
+              end
+            end
 
-          # Save password to file
-          vmcredentials_file = env[:machine].data_dir.join('vmcredentials')
-          vmcredentials_file.open('w') do |f|
-            f.write("#{password}")
+            env[:ui].info("Password of virtualmachine: #{password}")
+            # Set the password on the current communicator
+            domain_config.vm_password = password
+
+            # Save password to file
+            vmcredentials_file = env[:machine].data_dir.join('vmcredentials')
+            vmcredentials_file.open('w') do |f|
+              f.write("#{password}")
+            end
           end
         end
 
@@ -520,6 +536,7 @@ module VagrantPlugins
         end
 
         def create_port_forwarding_rule(env, rule)
+          port_forwarding_rule = nil
           env[:ui].info(I18n.t('vagrant_cloudstack.creating_port_forwarding_rule'))
 
           begin
@@ -571,8 +588,9 @@ module VagrantPlugins
             f.write("#{port_forwarding_rule['id']}\n")
           end
         end
-
+()
         def create_firewall_rule(env, rule)
+          firewall_rule = nil
           env[:ui].info(I18n.t('vagrant_cloudstack.creating_firewall_rule'))
 
           begin
@@ -608,6 +626,7 @@ module VagrantPlugins
               env[:ui].warn(" -- Failed to create firewall rule: #{resp['createfirewallruleresponse']['errortext']}")
               return
             end
+
 
             while true
               response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
@@ -660,6 +679,7 @@ module VagrantPlugins
           ip_address
         end
 
+        # TODO below methods used to translate security_group names/ids. Other types use cloudstack_resource
         def translate_from_to(env, resource_type, options)
           if resource_type == 'public_ip_address'
             pluralised_type = 'public_ip_addresses'
@@ -680,7 +700,7 @@ module VagrantPlugins
 
         def id_to_resourcefield(env, resource_id, resource_type, resource_field, options={})
           env[:ui].info("Fetching #{resource_field} for #{resource_type} with UUID '#{resource_id}'")
-          options = options.merge({'id' => resource_id})
+          options = options.merge({id: resource_id})
           full_response = translate_from_to(env, resource_type, options)
           full_response[0][resource_field]
         end
@@ -692,14 +712,8 @@ module VagrantPlugins
         def id_to_name(env, resource_id, resource_type, options={})
           id_to_resourcefield(env, resource_id, resource_type, 'name', options)
         end
+        # TODO above methods used to translate security_group names/ids. Other types use cloudstack_resource
 
-        def ip_to_id(env, ip_address, options={})
-          resourcefield_to_id(env, 'public_ip_address', 'ipaddress', ip_address, options)
-        end
-
-        def id_to_ip(env, ip_address_id, options={})
-          id_to_resourcefield(env, ip_address_id, 'public_ip_address', 'ipaddress', options)
-        end
       end
     end
   end
