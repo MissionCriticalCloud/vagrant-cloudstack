@@ -9,6 +9,9 @@ Vagrant.require_version '>= 1.5.0'
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = ENV['LINUX_TEMPLATE_NAME']
 
+  config.vm.synced_folder ".", "/vagrant", type: "rsync",
+  rsync__exclude: [".git/", "vendor"]
+
   config.vm.provider :cloudstack do |cloudstack, override|
     cloudstack.display_name = ENV['TEST_NAME']
 
