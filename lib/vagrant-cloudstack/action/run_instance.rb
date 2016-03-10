@@ -19,6 +19,7 @@ module VagrantPlugins
           @app              = app
           @logger           = Log4r::Logger.new('vagrant_cloudstack::action::run_instance')
           @resource_service = CloudstackResourceService.new(env[:cloudstack_compute], env[:ui])
+          @security_groups = []
         end
 
         def call(env)
@@ -74,8 +75,8 @@ module VagrantPlugins
           # If there is no keypair or keyfile then warn the user
           if @domain_config.keypair.nil? && @domain_config.ssh_key.nil?
             @env[:ui].warn(I18n.t('vagrant_cloudstack.launch_no_keypair_no_sshkey'))
-            store_ssh_keypair("vagacs_#{display_name}_#{sprintf('%04d', rand(9999))}",
-                              nil, @domain, project_id)
+            store_ssh_keypair("vagacs_#{@domain_config.display_name}_#{sprintf('%04d', rand(9999))}",
+                              nil, @domain, @domain_config.project_id)
           end
 
 
@@ -91,8 +92,8 @@ module VagrantPlugins
           @env[:ui].info(" -- Network: #{@network.name} (#{@network.id})") unless @network.id.nil?
           @env[:ui].info(" -- Keypair: #{@domain_config.keypair}") if @domain_config.keypair
           @env[:ui].info(' -- User Data: Yes') if @domain_config.user_data
-          @domain_config.security_group_names.zip(@domain_config.security_group_ids).each do |security_group_name, security_group_id|
-              @env[:ui].info(" -- Security Group: #{security_group_name} (#{security_group_id})")
+          @security_groups.each do |security_group|
+              @env[:ui].info(" -- Security Group: #{security_group.name} (#{security_group.id})")
           end
 
           server = create_vm
@@ -198,7 +199,7 @@ module VagrantPlugins
             }
 
             options['network_ids'] = @network.id unless @network.id.nil?
-            options['security_group_ids'] = @domain_config.security_group_ids.join(',') unless @domain_config.security_group_ids.nil?
+            options['security_group_ids'] = @security_groups.map{|security_group| security_group.id}.join(',') unless @security_groups.empty?
             options['project_id'] = @domain_config.project_id unless @domain_config.project_id.nil?
             options['key_name'] = @domain_config.keypair unless @domain_config.keypair.nil?
             options['name'] = @domain_config.name unless @domain_config.name.nil?
@@ -237,18 +238,26 @@ module VagrantPlugins
           # Can't use Security Group IDs and Names at the same time
           # Let's use IDs by default...
           if @domain_config.security_group_ids.empty? and !@domain_config.security_group_names.empty?
-            @domain_config.security_group_ids = @domain_config.security_group_names.map { |name| name_to_id(@env, name, 'security_group') }
+            #@domain_config.security_group_ids = @domain_config.security_group_names.map { |name|  name_to_id(@env, name, 'security_group') }
+            @security_groups = @domain_config.security_group_names.map do |name|
+              group = CloudstackResource.new(nil, name, 'security_group')
+              @resource_service.sync_resource(group)
+              group
+            end
           elsif !@domain_config.security_group_ids.empty?
-            @domain_config.security_group_names = @domain_config.security_group_ids.map { |id| id_to_name(@env, id, 'security_group') }
+            @security_groups = @domain_config.security_group_ids.map do |id|
+              group = CloudstackResource.new(id, nil, 'security_group')
+              @resource_service.sync_resource(group)
+              group
+            end
           end
 
           # Still no security group ids huh?
           # Let's try to create some security groups from specifcation, if provided.
-          if !@domain_config.security_groups.empty? and @domain_config.security_group_ids.empty?
+          if !@domain_config.security_groups.empty? and @security_groups.empty?
             @domain_config.security_groups.each do |security_group|
-              sgname, sgid = create_security_group( security_group)
-              @domain_config.security_group_names.push(sgname)
-              @domain_config.security_group_ids.push(sgid)
+              security_group = create_security_group( security_group)
+              @security_groups.push(security_group)
             end
           end
         end
@@ -412,7 +421,7 @@ module VagrantPlugins
           sshkeyfile_file.open('w') do |f|
             f.write("#{sshkeypair['privatekey']}")
           end
-          domain_config.ssh_key = sshkeyfile_file.to_s
+          @domain_config.ssh_key = sshkeyfile_file.to_s
 
           # Save keyname to file for terminate_instance
           sshkeyname_file = @env[:machine].data_dir.join('sshkeyname')
@@ -458,11 +467,13 @@ module VagrantPlugins
           begin
             sgid = @env[:cloudstack_compute].create_security_group(:name        => security_group[:name],
                                                                   :description => security_group[:description])['createsecuritygroupresponse']['securitygroup']['id']
+            security_group_object = CloudstackResource.new(sgid, security_group[:name], 'security_group')
             @env[:ui].info(" -- Security Group #{security_group[:name]} created with ID: #{sgid}")
           rescue Exception => e
             if e.message =~ /already exis/
-              sgid = name_to_id(@env, security_group[:name], 'security_group')
-              @env[:ui].info(" -- Security Group #{security_group[:name]} found with ID: #{sgid}")
+              security_group_object = CloudstackResource.new(nil, security_group[:name], 'security_group')
+              @resource_service.sync_resource(security_group_object)
+              @env[:ui].info(" -- Security Group #{security_group_object.name} found with ID: #{security_group_object.id}")
             end
           end
 
@@ -470,7 +481,7 @@ module VagrantPlugins
           # so we add the rules... Does it really matter if they already exist ? CLoudstack seems to take care of that!
           security_group[:rules].each do |rule|
             rule_options = {
-                :securityGroupId => sgid,
+                :securityGroupId => security_group_object.id,
                 :protocol        => rule[:protocol],
                 :startport       => rule[:startport],
                 :endport         => rule[:endport],
@@ -486,9 +497,9 @@ module VagrantPlugins
           # and record the security group ids for future deletion (of rules and groups if possible)
           security_groups_file = @env[:machine].data_dir.join('security_groups')
           security_groups_file.open('a+') do |f|
-            f.write("#{sgid}\n")
+            f.write("#{security_group_object.id}\n")
           end
-          [security_group[:name], sgid]
+          security_group_object
         end
 
         def recover(env)
@@ -679,42 +690,6 @@ module VagrantPlugins
 
           ip_address
         end
-
-        # TODO below methods used to translate security_group names/ids. Other types use cloudstack_resource
-        def translate_from_to(env, resource_type, options)
-          if resource_type == 'public_ip_address'
-            pluralised_type = 'public_ip_addresses'
-          else
-            pluralised_type = "#{resource_type}s"
-          end
-
-          full_response = env[:cloudstack_compute].send("list_#{pluralised_type}".to_sym, options)
-          full_response["list#{pluralised_type.tr('_', '')}response"][resource_type.tr('_', '')]
-        end
-
-        def resourcefield_to_id(env, resource_type, resource_field, resource_field_value, options={})
-          env[:ui].info("Fetching UUID for #{resource_type} with #{resource_field} '#{resource_field_value}'")
-          full_response = translate_from_to(env, resource_type, options)
-          result        = full_response.find {|type| type[resource_field] == resource_field_value }
-          result['id']
-        end
-
-        def id_to_resourcefield(env, resource_id, resource_type, resource_field, options={})
-          env[:ui].info("Fetching #{resource_field} for #{resource_type} with UUID '#{resource_id}'")
-          options = options.merge({id: resource_id})
-          full_response = translate_from_to(env, resource_type, options)
-          full_response[0][resource_field]
-        end
-
-        def name_to_id(env, resource_name, resource_type, options={})
-          resourcefield_to_id(env, resource_type, 'name', resource_name, options)
-        end
-
-        def id_to_name(env, resource_id, resource_type, options={})
-          id_to_resourcefield(env, resource_id, resource_type, 'name', options)
-        end
-        # TODO above methods used to translate security_group names/ids. Other types use cloudstack_resource
-
       end
     end
   end
