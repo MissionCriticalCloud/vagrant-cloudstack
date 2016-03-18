@@ -29,11 +29,8 @@ task :default => "spec"
 namespace :functional_tests do
 
   # Name must match folder beneath functional-tests/
-  functional_test_names = [
-    'vmlifecycle',
-    'rsync',
-    'networking'
-  ]
+  functional_test_names = %w(vmlifecycle rsync networking)
+  separate_test_names   = %w(basic)
 
   desc "Check for required enviroment variables for functional testing"
   task :check_environment do
@@ -82,4 +79,21 @@ namespace :functional_tests do
       end
     end
   end
+
+  separate_test_names.each do |test_dir_name|
+    desc "Run functional test: #{test_dir_name}"
+    task test_dir_name => [ :check_environment ] do
+      Dir.chdir("#{File.expand_path('../', __FILE__)}/functional-tests/#{test_dir_name}/")
+      Dir.glob("Vagrantfile*", File::FNM_CASEFOLD).each do |vagrant_file|
+
+        ENV['TEST_NAME'] = "vagrant_cloudstack_functional_test-#{test_dir_name}"
+        ENV['VAGRANT_VAGRANTFILE'] = vagrant_file
+        puts "Running RSpec tests in folder : #{test_dir_name}"
+        puts "Using Vagrant file            : #{ENV['VAGRANT_VAGRANTFILE']}"
+        Rake::Task[:functionaltest].execute
+      end
+    end
+  end
+
+
 end
