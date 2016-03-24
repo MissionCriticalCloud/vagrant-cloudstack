@@ -29,7 +29,7 @@ task :default => "spec"
 namespace :functional_tests do
 
   # Name must match folder beneath functional-tests/
-  functional_test_names = %w(vmlifecycle rsync networking)
+  functional_test_names = %w(vmlifecycle networking rsync)
   separate_test_names   = %w(basic)
 
   desc "Check for required enviroment variables for functional testing"

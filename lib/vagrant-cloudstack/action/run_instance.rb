@@ -32,6 +32,8 @@ module VagrantPlugins
           # Get the configs
           @domain_config = @env[:machine].provider_config.get_domain_config(@domain)
 
+          sanitize_domain_config
+
           @zone             = CloudstackResource.new(@domain_config.zone_id, @domain_config.zone_name, 'zone')
           @network          = CloudstackResource.new(@domain_config.network_id, @domain_config.network_name, 'network')
           @service_offering = CloudstackResource.new(@domain_config.service_offering_id, @domain_config.service_offering_name, 'service_offering')
@@ -114,6 +116,11 @@ module VagrantPlugins
           terminate if @env[:interrupted]
 
           @app.call(@env)
+        end
+
+        def sanitize_domain_config
+          # Accept a single entry as input, convert it to array
+          @domain_config.pf_trusted_networks = [@domain_config.pf_trusted_networks] if @domain_config.pf_trusted_networks
         end
 
         def configure_networking
