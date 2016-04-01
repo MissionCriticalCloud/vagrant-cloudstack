@@ -126,7 +126,8 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `instance_ready_timeout` - The number of seconds to wait for the instance
   to become "ready" in Cloudstack. Defaults to 120 seconds.
 * `domain_id` - Domain id to launch the instance into
-* `network_id` - Network uuid that the instance should use
+* `network_id` - Network uuid(s) that the instance should use
+  - `network_id` is single value (e.g. `"AAAA"`) or multiple values (e.g. `["AAAA", "BBBB"]`)
 * `network_name` - Network name that the instance should use
 * `project_id` - Project uuid that the instance should belong to
 * `service_offering_id`- Service offering uuid to use for the instance

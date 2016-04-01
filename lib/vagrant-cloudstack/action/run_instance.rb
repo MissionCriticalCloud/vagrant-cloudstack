@@ -34,8 +34,15 @@ module VagrantPlugins
 
           sanitize_domain_config
 
+          @network_ids =
+            if @domain_config.network_id.nil?
+              []
+            else
+              Array(@domain_config.network_id)
+            end
+
           @zone             = CloudstackResource.new(@domain_config.zone_id, @domain_config.zone_name, 'zone')
-          @network          = CloudstackResource.new(@domain_config.network_id, @domain_config.network_name, 'network')
+          @network          = CloudstackResource.new(@network_ids.first, @domain_config.network_name, 'network')
           @service_offering = CloudstackResource.new(@domain_config.service_offering_id, @domain_config.service_offering_name, 'service_offering')
           @disk_offering    = CloudstackResource.new(@domain_config.disk_offering_id, @domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(@domain_config.template_id, @domain_config.template_name || @env[:machine].config.vm.box, 'template')
@@ -91,7 +98,7 @@ module VagrantPlugins
           @env[:ui].info(" -- Template: #{@template.name} (#{@template.id})")
           @env[:ui].info(" -- Project UUID: #{@domain_config.project_id}") unless @domain_config.project_id.nil?
           @env[:ui].info(" -- Zone: #{@zone.name} (#{@zone.id})")
-          @env[:ui].info(" -- Network: #{@network.name} (#{@network.id})") unless @network.id.nil?
+          @env[:ui].info(" -- Network: #{@network.name} (#{@network_ids.join(",")})") unless @network.id.nil?
           @env[:ui].info(" -- Keypair: #{@domain_config.keypair}") if @domain_config.keypair
           @env[:ui].info(' -- User Data: Yes') if @domain_config.user_data
           @security_groups.each do |security_group|
@@ -205,7 +212,7 @@ module VagrantPlugins
                 :image_id => @template.id
             }
 
-            options['network_ids'] = @network.id unless @network.id.nil?
+            options['network_ids'] = @network_ids.join(",") unless @network_ids.empty?
             options['security_group_ids'] = @security_groups.map{|security_group| security_group.id}.join(',') unless @security_groups.empty?
             options['project_id'] = @domain_config.project_id unless @domain_config.project_id.nil?
             options['key_name'] = @domain_config.keypair unless @domain_config.keypair.nil?
