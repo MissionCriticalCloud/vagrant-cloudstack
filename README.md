@@ -155,6 +155,7 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `group` - Group for the instance
 * `ssh_key` - Path to a private key to be used with ssh _(defaults to Vagrant's `config.ssh.private_key_path`)_
 * `ssh_user` - User name to be used with ssh _(defaults to Vagrant's `config.ssh.username`)_
+* `ssh_network_id` - The network_id to be used when loging in to the vm via ssh _(defaults to first nic)_
 * `vm_user` - User name to be used with winrm _(defaults to Vagrant's `config.winrm.username`)_
 * `vm_password` - Password to be used with winrm. _(If the CloudStack template is "Password Enabled", leaving this unset will trigger the plugin to retrieve and use it.)_
 * `private_ip_address` - private (static)ip address to be used by the virtual machine
