@@ -70,4 +70,39 @@ describe CloudstackResource do
     it { expect(CloudstackResource.new(nil, 'name', 'kind').is_name_undefined?).to be_eql false }
     it { expect(CloudstackResource.new('', 'name', 'kind').is_name_undefined?).to be_eql false }
   end
+
+  describe '#create_list' do
+    subject { CloudstackResource.create_list(ids, names, kind) }
+
+    let(:kind) { 'network' }
+
+    context 'When ids count == names count' do
+      let(:ids)   { %w(id1 id2) }
+      let(:names) { %w(name1 name2) }
+
+      its(:count) { should eq 2 }
+      its([0])    { should be_a_resource('id1', 'name1', kind) }
+      its([1])    { should be_a_resource('id2', 'name2', kind) }
+    end
+
+    context 'When ids count >= names count' do
+      let(:ids)   { %w(id1 id2 id3) }
+      let(:names) { %w(name1 name2) }
+
+      its(:count) { should eq 3 }
+      its([0])    { should be_a_resource('id1', 'name1', kind) }
+      its([1])    { should be_a_resource('id2', 'name2', kind) }
+      its([2])    { should be_a_resource('id3', nil, kind) }
+    end
+
+    context 'When ids count <= names count' do
+      let(:ids)   { %w(id1 id2) }
+      let(:names) { %w(name1 name2 name3) }
+
+      its(:count) { should eq 3 }
+      its([0])    { should be_a_resource('id1', 'name1', kind) }
+      its([1])    { should be_a_resource('id2', 'name2', kind) }
+      its([2])    { should be_a_resource(nil, 'name3', kind) }
+    end
+  end
 end
