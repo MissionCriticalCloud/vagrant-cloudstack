@@ -128,7 +128,8 @@ to update UUIDs in your Vagrantfile. If both are specified, the id parameter tak
 * `domain_id` - Domain id to launch the instance into
 * `network_id` - Network uuid(s) that the instance should use
   - `network_id` is single value (e.g. `"AAAA"`) or multiple values (e.g. `["AAAA", "BBBB"]`)
-* `network_name` - Network name that the instance should use
+* `network_name` - Network name(s) that the instance should use
+  - `network_name` is single value (e.g. `"AAAA"`) or multiple values (e.g. `["AAAA", "BBBB"]`)
 * `project_id` - Project uuid that the instance should belong to
 * `service_offering_id`- Service offering uuid to use for the instance
 * `service_offering_name`- Service offering name to use for the instance

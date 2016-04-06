@@ -34,15 +34,22 @@ module VagrantPlugins
 
           sanitize_domain_config
 
-          @network_ids =
+          network_ids =
             if @domain_config.network_id.nil?
               []
             else
               Array(@domain_config.network_id)
             end
 
+          network_names =
+            if @domain_config.network_name.nil?
+              []
+            else
+              Array(@domain_config.network_name)
+            end
+
           @zone             = CloudstackResource.new(@domain_config.zone_id, @domain_config.zone_name, 'zone')
-          @network          = CloudstackResource.new(@network_ids.first, @domain_config.network_name, 'network')
+          @networks         = CloudstackResource.create_list(network_ids, network_names, 'network')
           @service_offering = CloudstackResource.new(@domain_config.service_offering_id, @domain_config.service_offering_name, 'service_offering')
           @disk_offering    = CloudstackResource.new(@domain_config.disk_offering_id, @domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(@domain_config.template_id, @domain_config.template_name || @env[:machine].config.vm.box, 'template')
@@ -55,8 +62,8 @@ module VagrantPlugins
 
           if cs_zone.network_type.downcase == 'basic'
             # No network specification in basic zone
-            @env[:ui].warn(I18n.t('vagrant_cloudstack.basic_network', :zone_name => @zone.name)) if @network.id || @network.name
-            @network = CloudstackResource.new(nil, nil, 'network')
+            @env[:ui].warn(I18n.t('vagrant_cloudstack.basic_network', :zone_name => @zone.name)) if !@networks.empty? && (@networks[0].id || @networks[0].name)
+            @networks = [CloudstackResource.new(nil, nil, 'network')]
 
             # No portforwarding in basic zone, so none of the below
             @domain_config.pf_ip_address               = nil
@@ -65,7 +72,9 @@ module VagrantPlugins
             @domain_config.pf_public_rdp_port          = nil
             @domain_config.pf_public_port_randomrange  = nil
           else
-            @resource_service.sync_resource(@network)
+            @networks.each do |network|
+              @resource_service.sync_resource(network)
+            end
           end
 
           if cs_zone.security_groups_enabled
@@ -98,7 +107,9 @@ module VagrantPlugins
           @env[:ui].info(" -- Template: #{@template.name} (#{@template.id})")
           @env[:ui].info(" -- Project UUID: #{@domain_config.project_id}") unless @domain_config.project_id.nil?
           @env[:ui].info(" -- Zone: #{@zone.name} (#{@zone.id})")
-          @env[:ui].info(" -- Network: #{@network.name} (#{@network_ids.join(",")})") unless @network.id.nil?
+          @networks.each do |network|
+            @env[:ui].info(" -- Network: #{network.name} (#{network.id})")
+          end
           @env[:ui].info(" -- Keypair: #{@domain_config.keypair}") if @domain_config.keypair
           @env[:ui].info(' -- User Data: Yes') if @domain_config.user_data
           @security_groups.each do |security_group|
@@ -212,7 +223,7 @@ module VagrantPlugins
                 :image_id => @template.id
             }
 
-            options['network_ids'] = @network_ids.join(",") unless @network_ids.empty?
+            options['network_ids'] = @networks.map(&:id).compact.join(",") unless @networks.empty?
             options['security_group_ids'] = @security_groups.map{|security_group| security_group.id}.join(',') unless @security_groups.empty?
             options['project_id'] = @domain_config.project_id unless @domain_config.project_id.nil?
             options['key_name'] = @domain_config.keypair unless @domain_config.keypair.nil?
@@ -235,7 +246,7 @@ module VagrantPlugins
             # XXX FIXME vpc?
             if e.message =~ /subnet ID/
               raise Errors::FogError,
-                    :message => "Subnet ID not found: #{@network.id}"
+                    :message => "Subnet ID not found: #{@networks.map(&:id).compact.join(",")}"
             end
 
             raise

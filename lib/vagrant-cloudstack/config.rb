@@ -54,9 +54,9 @@ module VagrantPlugins
       # @return [String,Array]
       attr_accessor :network_id
 
-      # Network name that the instance should use
+      # Network name(s) that the instance should use
       #
-      # @return [String]
+      # @return [String,Array]
       attr_accessor :network_name
 
       # Network Type
