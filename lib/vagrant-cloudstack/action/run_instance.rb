@@ -34,22 +34,8 @@ module VagrantPlugins
 
           sanitize_domain_config
 
-          network_ids =
-            if @domain_config.network_id.nil?
-              []
-            else
-              Array(@domain_config.network_id)
-            end
-
-          network_names =
-            if @domain_config.network_name.nil?
-              []
-            else
-              Array(@domain_config.network_name)
-            end
-
           @zone             = CloudstackResource.new(@domain_config.zone_id, @domain_config.zone_name, 'zone')
-          @networks         = CloudstackResource.create_list(network_ids, network_names, 'network')
+          @networks         = CloudstackResource.create_list(@domain_config.network_id, @domain_config.network_name, 'network')
           @service_offering = CloudstackResource.new(@domain_config.service_offering_id, @domain_config.service_offering_name, 'service_offering')
           @disk_offering    = CloudstackResource.new(@domain_config.disk_offering_id, @domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(@domain_config.template_id, @domain_config.template_name || @env[:machine].config.vm.box, 'template')
@@ -139,6 +125,21 @@ module VagrantPlugins
         def sanitize_domain_config
           # Accept a single entry as input, convert it to array
           @domain_config.pf_trusted_networks = [@domain_config.pf_trusted_networks] if @domain_config.pf_trusted_networks
+
+          if @domain_config.network_id.nil?
+            # Use names if ids are not present
+            @domain_config.network_id = []
+
+            if @domain_config.network_name.nil?
+              @domain_config.network_name = []
+            else
+              @domain_config.network_name = Array(@domain_config.network_name)
+            end
+          else
+            # Use ids if present
+            @domain_config.network_id = Array(@domain_config.network_id)
+            @domain_config.network_name = []
+          end
         end
 
         def configure_networking
