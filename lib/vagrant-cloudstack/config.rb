@@ -49,14 +49,14 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :domain_id
 
-      # Network uuid that the instance should use
+      # Network uuid(s) that the instance should use
       #
-      # @return [String]
+      # @return [String,Array]
       attr_accessor :network_id
 
-      # Network name that the instance should use
+      # Network name(s) that the instance should use
       #
-      # @return [String]
+      # @return [String,Array]
       attr_accessor :network_name
 
       # Network Type

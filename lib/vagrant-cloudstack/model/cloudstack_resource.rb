@@ -27,6 +27,24 @@ module VagrantPlugins
         def to_s
           "#{kind} - #{id || '<unknown id>'}:#{name || '<unknown name>'}"
         end
+
+        def self.create_list(ids, names, kind)
+          return create_id_list(ids, kind)     unless ids.empty?
+          return create_name_list(names, kind) unless names.empty?
+          []
+        end
+
+        def self.create_id_list(ids, kind)
+          ids.each_with_object([]) do |id, resources|
+            resources << CloudstackResource.new(id, nil, kind)
+          end
+        end
+
+        def self.create_name_list(names, kind)
+          names.each_with_object([]) do |name, resources|
+            resources << CloudstackResource.new(nil, name, kind)
+          end
+        end
       end
     end
   end
