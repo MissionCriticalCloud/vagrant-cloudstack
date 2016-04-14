@@ -70,13 +70,7 @@ module VagrantPlugins
             end
           end
 
-          nic_ip_address = server.nics[0]['ipaddress']
-
-          unless domain_config.ssh_network_id.nil?
-            # When ssh_network_id is specified, use the IP address that is linked to the network_id of nic
-            ssh_nic = server.nics.find { |nic| nic["networkid"] == domain_config.ssh_network_id }
-            nic_ip_address = ssh_nic["ipaddress"] if ssh_nic
-          end
+          nic_ip_address = fetch_nic_ip_address(server.nics, domain_config)
 
           ssh_info = {
                        :host => pf_ip_address || nic_ip_address,
@@ -88,6 +82,21 @@ module VagrantPlugins
           }) unless domain_config.ssh_key.nil?
           ssh_info = ssh_info.merge({ :username => domain_config.ssh_user }) unless domain_config.ssh_user.nil?
           ssh_info
+        end
+
+        def fetch_nic_ip_address(nics, domain_config)
+          ssh_nic =
+            if !domain_config.ssh_network_id.nil?
+              nics.find { |nic| nic["networkid"] == domain_config.ssh_network_id }
+            elsif !domain_config.ssh_network_name.nil?
+              nics.find { |nic| nic["networkname"] == domain_config.ssh_network_name }
+            else
+              # When without neither ssh_network_id and ssh_network_name, use 1st nic
+              nics[0]
+            end
+
+          ssh_nic ||= nics[0]
+          ssh_nic["ipaddress"]
         end
       end
     end
