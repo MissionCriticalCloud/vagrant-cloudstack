@@ -294,6 +294,7 @@ module VagrantPlugins
         @ssh_key                   = UNSET_VALUE
         @ssh_user                  = UNSET_VALUE
         @ssh_network_id            = UNSET_VALUE
+        @ssh_network_name          = UNSET_VALUE
         @vm_user                   = UNSET_VALUE
         @vm_password               = UNSET_VALUE
         @private_ip_address        = UNSET_VALUE
