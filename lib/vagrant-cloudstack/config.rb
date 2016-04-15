@@ -222,6 +222,16 @@ module VagrantPlugins
       # @return [String]
       attr_accessor :ssh_user
 
+      # The network_id to be used when loging in to the vm via ssh
+      #
+      # @return [String]
+      attr_accessor :ssh_network_id
+
+      # The network_name to be used when loging in to the vm via ssh
+      #
+      # @return [String]
+      attr_accessor :ssh_network_name
+
       # The username to be used when loging in to the vm
       #
       # @return [String]
@@ -283,6 +293,8 @@ module VagrantPlugins
         @user_data                 = UNSET_VALUE
         @ssh_key                   = UNSET_VALUE
         @ssh_user                  = UNSET_VALUE
+        @ssh_network_id            = UNSET_VALUE
+        @ssh_network_name          = UNSET_VALUE
         @vm_user                   = UNSET_VALUE
         @vm_password               = UNSET_VALUE
         @private_ip_address        = UNSET_VALUE
@@ -476,6 +488,12 @@ module VagrantPlugins
 
         # ssh user is nil by default
         @ssh_user               = nil if @ssh_user == UNSET_VALUE
+
+        # ssh network_id is nil by default
+        @ssh_network_id         = nil if @ssh_network_id == UNSET_VALUE
+
+        # ssh network_name is nil by default
+        @ssh_network_name       = nil if @ssh_network_name == UNSET_VALUE
 
         # vm user is nil by default
         @vm_user               = nil if @vm_user == UNSET_VALUE
