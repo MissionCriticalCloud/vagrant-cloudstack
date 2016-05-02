@@ -5,10 +5,10 @@ module VagrantPlugins
     module Action
       # This action reads the WinRM info for the machine and puts it into the
       # `:machine_winrm_info` key in the environment.
-      class ReadWinrmInfo
+      class ReadWinrmInfo < VagrantPlugins::Cloudstack::Action::ReadInfo
         def initialize(app, env)
           @app    = app
-          @logger = Log4r::Logger.new("vagrant_cloudstack::action::read_winrm_info")
+          @logger = Log4r::Logger.new('vagrant_cloudstack::action::read_winrm_info')
         end
 
         def call(env)
@@ -20,80 +20,53 @@ module VagrantPlugins
         def read_winrm_info(cloudstack, machine)
           return nil if machine.id.nil?
 
+          @cloudstack = cloudstack
+          @machine = machine
+
           # Find the machine
-          server = cloudstack.servers.get(machine.id)
+          server = @cloudstack.servers.get(@machine.id)
           if server.nil?
             # The machine can't be found
             @logger.info("Machine couldn't be found, assuming it got destroyed.")
-            machine.id = nil
+            @machine.id = nil
             return nil
           end
 
           # Get the Port forwarding config
-          domain        = machine.provider_config.domain_id
-          domain_config = machine.provider_config.get_domain_config(domain)
+          pf_ip_address, pf_public_port = retrieve_public_ip_port('pf_public_port')
 
-          pf_ip_address_id = domain_config.pf_ip_address_id
-          pf_ip_address    = domain_config.pf_ip_address
-          pf_public_port   = domain_config.pf_public_port
-
-          if pf_public_port.nil?
-            pf_public_port_file = machine.data_dir.join('pf_public_port')
-            if pf_public_port_file.file?
-              File.read(pf_public_port_file).each_line do |line|
-                pf_public_port = line.strip
-              end
-              domain_config.pf_public_port = pf_public_port
-            end
-          end
-
-          if not pf_ip_address and pf_ip_address_id and pf_public_port
-            begin
-              response = cloudstack.list_public_ip_addresses({:id => pf_ip_address_id})
-            rescue Fog::Compute::Cloudstack::Error => e
-              raise Errors::FogError, :message => e.message
-            end
-
-            if response["listpublicipaddressesresponse"]["count"] == 0
-              @logger.info("IP address #{pf_ip_address_id} not exists.")
-              env[:ui].info(I18n.t("IP address #{pf_ip_address_id} not exists."))
-              pf_ip_address = nil
-            else
-              pf_ip_address = response["listpublicipaddressesresponse"]["publicipaddress"][0]["ipaddress"]
-            end
-          end
-
+          nic_ip_address = server.nics[0]['ipaddress']
 
           winrm_info = {
-                       :host => pf_ip_address || server.nics[0]['ipaddress'],
+                       :host => pf_ip_address || nic_ip_address,
                        :port => pf_public_port
                      }
 
           winrm_info = winrm_info.merge({
-            :username => domain_config.vm_user
-          }) unless domain_config.vm_user.nil?
-          machine.config.winrm.username = domain_config.vm_user unless domain_config.vm_user.nil?
+            :username => @domain_config.vm_user
+          }) unless @domain_config.vm_user.nil?
+          @machine.config.winrm.username = @domain_config.vm_user unless @domain_config.vm_user.nil?
           # The WinRM communicator doesnt support passing
           # the username via winrm_info ... yet ;-)
 
           # Read password from file into domain_config
-          if domain_config.vm_password.nil?
-            vmcredentials_file = machine.data_dir.join("vmcredentials")
+          if @domain_config.vm_password.nil?
+            vmcredentials_file = @machine.data_dir.join("vmcredentials")
             if vmcredentials_file.file?
               vmcredentials_password = nil
               File.read(vmcredentials_file).each_line do |line|
                 vmcredentials_password = line.strip
               end
-              domain_config.vm_password = vmcredentials_password
+              @domain_config.vm_password = vmcredentials_password
             end
           end
 
           winrm_info = winrm_info.merge({
-            :password => domain_config.vm_password
-          }) unless domain_config.vm_password.nil?
+            :password => @domain_config.vm_password
+          }) unless @domain_config.vm_password.nil?
           # The WinRM communicator doesnt support passing
           # the password via winrm_info ... yet ;-)
-          machine.config.winrm.password = domain_config.vm_password unless domain_config.vm_password.nil?
+          @machine.config.winrm.password = @domain_config.vm_password unless @domain_config.vm_password.nil?
 
           winrm_info
         end
