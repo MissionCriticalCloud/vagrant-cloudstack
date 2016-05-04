@@ -336,7 +336,7 @@ end
 ```
 Where X.X.X.X is the ip of the respective CloudStack network, this will automatically map the port of the used Communicator (SSH/Winrm) via a random public port, open the Firewall and set Vagrant to use it.
 
-The plugin can also automatically generate firewall rules off of the portforwarding  rules:
+The plugin can also automatically generate firewall rules off of the portforwarding rules:
 ```ruby
 Vagrant.configure("2") do |config|
   # ... other stuff
@@ -352,6 +352,20 @@ Vagrant.configure("2") do |config|
   end
 end
 ```
+
+### Virtual Router versus VPC
+Both Virtual Routers and VPCs are supported when using port-forwarding and firewall. This is automatically determined by the specific `pf_ip_address`.
+
+Note that there are architectural differences in CloudStack which the configuration must adhere to.
+
+For VPC:
+* `pf_open_firewall` will be ignored as global setting and (specifically) in `port_forwarding_rules`
+* for `firewall_rules` to open access for `port_forwarding_rules`, the firewall rule should allow traffic for the `:privateport` port.
+
+For Virtual Router:
+* for `firewall_rules` to open access for `port_forwarding_rules`, the firewall rule should allow traffic for the `:publicport` port.
+
+Usage of other attributes and features work with both network types. Such as `:generate_firewall` for portforwarding rules, or `pf_trusted_networks` to automatically generate rules for the Communicator.
 
 ## Synced Folders
 
