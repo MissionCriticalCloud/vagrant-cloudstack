@@ -590,6 +590,7 @@ module VagrantPlugins
           @env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
 
           options = {
+              :networkid        => @networks[0].id,
               :ipaddressid      => ip_address.id,
               :publicport       => rule[:publicport],
               :privateport      => rule[:privateport],
@@ -628,6 +629,7 @@ module VagrantPlugins
         end
 
         def create_firewall_rule(rule)
+          acl_name = ''
           firewall_rule = nil
           @env[:ui].info(I18n.t('vagrant_cloudstack.creating_firewall_rule'))
 
@@ -645,31 +647,64 @@ module VagrantPlugins
           @env[:ui].info(" -- ICMP code  : #{rule[:icmpcode]}")
           @env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
 
-          options = {
-              :command          => 'createFirewallRule',
-              :ipaddressid      => ip_address.id,
-              :protocol         => rule[:protocol],
-              :cidrlist         => rule[:cidrlist],
-              :startport        => rule[:startport],
-              :endeport         => rule[:endport],
-              :icmpcode         => rule[:icmpcode],
-              :icmptype         => rule[:icmptype]
-          }
+          if @networks[0].details.has_key?('aclid')
+            resp = @env[:cloudstack_compute].list_network_acl_lists({
+              id:  @networks[0].details['aclid']
+            })
+            acl_name = resp['listnetworkacllistsresponse']['networkacllist'][0]['name']
+
+            resp = @env[:cloudstack_compute].list_network_acls({
+              aclid:  @networks[0].details['aclid']
+            })
+            number = 0
+            resp["listnetworkaclsresponse"]["networkacl"].each{ |ace| number = [number, ace["number"]].max }
+            number = number+1
+
+            command_string  = 'createNetworkACL'
+            response_string = 'createnetworkaclresponse'
+            type_string = 'networkacl'
+            options = {
+                :command     => command_string,
+                :aclid       => @networks[0].details['aclid'],
+                :action      => 'Allow',
+                :protocol    => rule[:protocol],
+                :cidrlist    => rule[:cidrlist],
+                :startport   => rule[:startport],
+                :endport     => rule[:endport],
+                :icmpcode    => rule[:icmpcode],
+                :icmptype    => rule[:icmptype],
+                :number      => number,
+                :traffictype => 'Ingress'
+            }
+          else
+            command_string = 'createFirewallRule'
+            response_string = 'createfirewallruleresponse'
+            type_string = 'firewallrule'
+            options = {
+                :command          => command_string,
+                :ipaddressid      => ip_address.id,
+                :protocol         => rule[:protocol],
+                :cidrlist         => rule[:cidrlist],
+                :startport        => rule[:startport],
+                :endeport         => rule[:endport],
+                :icmpcode         => rule[:icmpcode],
+                :icmptype         => rule[:icmptype]
+            }
+          end
 
           begin
             resp = @env[:cloudstack_compute].request(options)
-            job_id = resp['createfirewallruleresponse']['jobid']
+            job_id = resp[response_string]['jobid']
 
             if job_id.nil?
-              @env[:ui].warn(" -- Failed to create firewall rule: #{resp['createfirewallruleresponse']['errortext']}")
+              @env[:ui].warn(" -- Failed to create firewall rule: #{resp[response_string]['errortext']}")
               return
             end
-
 
             while true
               response = @env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
               if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                firewall_rule = response['queryasyncjobresultresponse']['jobresult']['firewallrule']
+                firewall_rule = response['queryasyncjobresultresponse']['jobresult'][type_string]
                 break
               else
                 sleep 2
@@ -678,6 +713,8 @@ module VagrantPlugins
           rescue Fog::Compute::Cloudstack::Error => e
             if e.message =~ /The range specified,.*conflicts with rule/
               @env[:ui].warn(" -- Failed to create firewall rule: #{e.message}")
+            elsif e.message =~ /Default ACL cannot be modified/
+              @env[:ui].warn(" -- Failed to create network acl: #{e.message}: #{acl_name}")
             else
               raise Errors::FogError, :message => e.message
             end
@@ -687,7 +724,7 @@ module VagrantPlugins
             # Save firewall rule id to the data dir so it can be released when the instance is destroyed
             firewall_file = @env[:machine].data_dir.join('firewall')
             firewall_file.open('a+') do |f|
-              f.write("#{firewall_rule['id']}\n")
+              f.write("#{firewall_rule['id']},#{type_string}\n")
             end
           end
         end

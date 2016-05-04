@@ -191,14 +191,25 @@ module VagrantPlugins
           firewall_file = env[:machine].data_dir.join('firewall')
           if firewall_file.file?
             File.read(firewall_file).each_line do |line|
-              rule_id = line.strip
+              line_items=line.split(",").collect(&:strip)
+              rule_id = line_items[0]
+              type_string = line_items[1]
+
+              if type_string == 'firewallrule'
+                command_string = 'deleteFirewallRule'
+                response_string = 'deletefirewallruleresponse'
+              else
+                command_string = 'deleteNetworkACL'
+                response_string = 'deletenetworkaclresponse'
+              end
+
               begin
                 options = {
-                    :command => 'deleteFirewallRule',
-                    :id => rule_id
+                    command: command_string,
+                    id: rule_id
                 }
                 resp = env[:cloudstack_compute].request(options)
-                job_id = resp['deletefirewallruleresponse']['jobid']
+                job_id = resp[response_string]['jobid']
                 while true
                   response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
                   if response['queryasyncjobresultresponse']['jobstatus'] != 0
@@ -209,7 +220,7 @@ module VagrantPlugins
                 end
               rescue Fog::Compute::Cloudstack::Error => e
                 if e.message =~ /Unable to execute API command deletefirewallrule.*entity does not exist/
-                  env[:ui].warn(" -- Failed to delete firewall rule: #{e.message}")
+                  env[:ui].warn(" -- Failed to delete #{type_string}: #{e.message}")
                 else
                   raise Errors::FogError, :message => e.message
                 end
