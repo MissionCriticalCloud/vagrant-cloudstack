@@ -109,6 +109,8 @@ module VagrantPlugins
           # Wait for the instance to be ready first
           wait_for_instance_ready(server)
 
+          store_volumes(server)
+
           store_password(server)
 
           configure_networking
@@ -122,6 +124,19 @@ module VagrantPlugins
           terminate if @env[:interrupted]
 
           @app.call(@env)
+        end
+
+        def store_volumes(server)
+          volumes = @env[:cloudstack_compute].volumes.find_all { |f| f.server_id == server.id }
+          # volumes refuses to be iterated directly, do it by index
+          (0...volumes.length).each do |idx|
+            unless volumes[idx].type == 'ROOT'
+              volumes_file = @env[:machine].data_dir.join('volumes')
+              volumes_file.open('a+') do |f|
+                f.write("#{volumes[idx].id}\n")
+              end
+            end
+          end
         end
 
         def sanitize_domain_config
