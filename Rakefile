@@ -34,6 +34,7 @@ namespace :functional_tests do
 
   desc "Check for required enviroment variables for functional testing"
   task :check_environment do
+    missing_env=false
     [
       'CLOUDSTACK_API_KEY',
       'CLOUDSTACK_SECRET_KEY',
@@ -48,13 +49,18 @@ namespace :functional_tests do
       'PRIVATE_SSH_PORT',
       'SOURCE_CIDR',
       'LINUX_TEMPLATE_NAME',
-      'WINDOWS_TEMPLATE_NAME'
+      'WINDOWS_TEMPLATE_NAME',
+      'VPC_PUBLIC_IP',
+      'VPC_TIER_NAME',
+      'VR_PUBLIC_IP',
+      'VR_NETWORK_NAME'
     ].each do |var|
       if ENV[var].nil?
-        puts "#{var} not set. Quitting"
-        exit 1
+        puts "Please set environment variable #{var}."
+        missing_env=true
       end
     end
+    exit 1 if missing_env
   end
 
   desc "Run all functional tests"
