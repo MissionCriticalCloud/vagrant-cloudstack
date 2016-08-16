@@ -679,7 +679,9 @@ module VagrantPlugins
               aclid:  network.details['aclid']
             })
             number = 0
-            resp["listnetworkaclsresponse"]["networkacl"].each{ |ace| number = [number, ace["number"]].max }
+            if resp["listnetworkaclsresponse"].key?("networkacl")
+              resp["listnetworkaclsresponse"]["networkacl"].each{ |ace| number = [number, ace["number"]].max }
+            end
             number = number+1
 
             command_string  = 'createNetworkACL'
