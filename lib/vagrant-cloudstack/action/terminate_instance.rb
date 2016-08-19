@@ -48,6 +48,8 @@ module VagrantPlugins
             end
           end
 
+          remove_volumes(env)
+
           # Delete the vmcredentials file
           remove_stored_credentials(env)
 
@@ -58,7 +60,39 @@ module VagrantPlugins
 
           env[:machine].id = nil
 
+          env[:ui].info(I18n.t('vagrant_cloudstack.terminateinstance_done'))
           @app.call(env)
+        end
+
+        def remove_volumes(env)
+          volumes_file = env[:machine].data_dir.join('volumes')
+          if volumes_file.file?
+            env[:ui].info(I18n.t('vagrant_cloudstack.deleting_volumes'))
+            File.read(volumes_file).each_line do |line|
+              volume_id = line.strip
+              begin
+                resp = env[:cloudstack_compute].detach_volume({:id => volume_id})
+                job_id = resp['detachvolumeresponse']['jobid']
+                while true
+                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+                  if response['queryasyncjobresultresponse']['jobstatus'] != 0
+                    break
+                  else
+                    sleep 2
+                  end
+                end
+              rescue Fog::Compute::Cloudstack::Error => e
+                if e.message =~ /Unable to execute API command detachvolume.*entity does not exist/
+                  env[:ui].warn(I18n.t('vagrant_cloudstack.detach_volume_failed', message: e.message))
+                else
+                  raise Errors::FogError, :message => e.message
+                end
+              end
+              resp = env[:cloudstack_compute].delete_volume({:id => volume_id})
+              env[:ui].warn(I18n.t('vagrant_cloudstack.detach_volume_failed', volume_id: volume_id)) unless resp['deletevolumeresponse']['success'] == 'true'
+            end
+            volumes_file.delete
+          end
         end
 
         def remove_security_groups(env)

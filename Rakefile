@@ -53,7 +53,8 @@ namespace :functional_tests do
       'VPC_PUBLIC_IP',
       'VPC_TIER_NAME',
       'VR_PUBLIC_IP',
-      'VR_NETWORK_NAME'
+      'VR_NETWORK_NAME',
+      'DISK_OFFERING_NAME'
     ].each do |var|
       if ENV[var].nil?
         puts "Please set environment variable #{var}."

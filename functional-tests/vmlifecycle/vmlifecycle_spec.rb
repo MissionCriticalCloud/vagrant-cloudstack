@@ -7,7 +7,7 @@ describe 'VM Life Cycle' do
     expect($?.exitstatus).to eq(0)
   end
   it 'destroys Linux and Windows VM' do
-    expect(`vagrant destroy --force`).to include('Terminating the instance...')
+    expect(`vagrant destroy --force`).to include('Done removing resources')
     expect($?.exitstatus).to eq(0)
   end
 end
