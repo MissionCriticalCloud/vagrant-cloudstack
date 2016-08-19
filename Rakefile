@@ -5,6 +5,7 @@ require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:functionaltest) do |t|
   t.pattern = "*_spec.rb"
   t.rspec_opts = "-fd"
+  t.verbose = false
 end
 
 # Immediately sync all stdout so that tools like buildbot can
