@@ -2,7 +2,7 @@ module VagrantPlugins
   module Cloudstack
     module Model
       class CloudstackResource
-        attr_accessor :id, :name
+        attr_accessor :id, :name, :details
         attr_reader   :kind
 
         def initialize(id, name, kind)

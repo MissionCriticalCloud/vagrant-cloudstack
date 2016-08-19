@@ -8,12 +8,17 @@ module VagrantPlugins
         end
 
         def sync_resource(resource, api_parameters = {})
+          @resource_details = nil
           if resource.id.nil? and resource.name
             resource.id = name_to_id(resource.name, resource.kind, api_parameters)
           elsif resource.id
             resource.name = id_to_name(resource.id, resource.kind, api_parameters)
           end
-          @ui.detail("Syncronized resource: #{resource}")
+
+          unless resource.is_undefined?
+            resource.details = @resource_details
+            @ui.detail("Syncronized resource: #{resource}")
+          end
         end
 
         private
@@ -32,15 +37,16 @@ module VagrantPlugins
         def resourcefield_to_id(resource_type, resource_field, resource_field_value, options={})
           @ui.info("Fetching UUID for #{resource_type} with #{resource_field} '#{resource_field_value}'")
           full_response = translate_from_to(resource_type, options)
-          result        = full_response.find {|type| type[resource_field] == resource_field_value }
-          result['id']
+          @resource_details = full_response.find {|type| type[resource_field] == resource_field_value }
+          @resource_details['id']
         end
 
         def id_to_resourcefield(resource_id, resource_type, resource_field, options={})
           @ui.info("Fetching #{resource_field} for #{resource_type} with UUID '#{resource_id}'")
           options = options.merge({'id' => resource_id})
           full_response = translate_from_to(resource_type, options)
-          full_response[0][resource_field]
+          @resource_details = full_response[0]
+          @resource_details[resource_field]
         end
 
         def name_to_id(resource_name, resource_type, options={})

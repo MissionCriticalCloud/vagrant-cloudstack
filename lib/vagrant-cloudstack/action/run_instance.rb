@@ -39,12 +39,14 @@ module VagrantPlugins
           @service_offering = CloudstackResource.new(@domain_config.service_offering_id, @domain_config.service_offering_name, 'service_offering')
           @disk_offering    = CloudstackResource.new(@domain_config.disk_offering_id, @domain_config.disk_offering_name, 'disk_offering')
           @template         = CloudstackResource.new(@domain_config.template_id, @domain_config.template_name || @env[:machine].config.vm.box, 'template')
+          @pf_ip_address    = CloudstackResource.new(@domain_config.pf_ip_address_id, @domain_config.pf_ip_address, 'public_ip_address')
 
           @resource_service.sync_resource(@zone, { available: true })
           cs_zone = @env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
           @resource_service.sync_resource(@service_offering)
           @resource_service.sync_resource(@disk_offering)
           @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable' })
+          @resource_service.sync_resource(@pf_ip_address)
 
           if cs_zone.network_type.downcase == 'basic'
             # No network specification in basic zone
@@ -306,33 +308,45 @@ module VagrantPlugins
 
         def configure_firewall
 
-          ports = [ Hash[:public_port => 'pf_public_port',     :private_port => 'pf_private_port'] ]
-          ports <<  Hash[:public_port => 'pf_public_rdp_port', :private_port => 'pf_private_rdp_port']
+          unless @pf_ip_address.is_undefined?
+            ports = [ Hash[publicport: 'pf_public_port',     privateport: 'pf_private_port'] ]
+            ports <<  Hash[publicport: 'pf_public_rdp_port', privateport: 'pf_private_rdp_port']
 
-          ports.each do |port_set|
-            public_port_name = port_set[:public_port]
-            # As we take care of implicit/auto port_forward of 'pf_public_port' we do Firewall as well, possibly
-            if (@domain_config.pf_ip_address_id || @domain_config.pf_ip_address) &&
-                @domain_config.send(public_port_name) &&
-                @domain_config.pf_trusted_networks &&
-                !@domain_config.pf_open_firewall
-              # Allow access to public port from trusted networks only
-              fw_rule_trusted_networks = {
-                  :ipaddressid => @domain_config.pf_ip_address_id,
-                  :ipaddress => @domain_config.pf_ip_address,
-                  :protocol => 'tcp',
-                  :startport => @domain_config.send(public_port_name),
-                  :endport => @domain_config.send(public_port_name),
-                  :cidrlist => @domain_config.pf_trusted_networks.join(',')
-              }
-              @domain_config.firewall_rules = [] unless @domain_config.firewall_rules
-              @domain_config.firewall_rules << fw_rule_trusted_networks
+            ports.each do |port_set|
+              if @pf_ip_address.details.has_key?('vpcid')
+                forward_portname = port_set[:privateport]
+              else
+                forward_portname = port_set[:publicport]
+              end
+              check_portname = port_set[:publicport]
+              # As we take care of implicit/auto port_forward of 'pf_public_port' we do Firewall as well, possibly
+              if (@domain_config.pf_ip_address_id || @domain_config.pf_ip_address) &&
+                  @domain_config.send(check_portname) &&
+                  @domain_config.pf_trusted_networks &&
+                  !@domain_config.pf_open_firewall
+                # Allow access to public port from trusted networks only
+                fw_rule_trusted_networks = {
+                    :ipaddressid => @domain_config.pf_ip_address_id,
+                    :ipaddress => @domain_config.pf_ip_address,
+                    :protocol => 'tcp',
+                    :startport => @domain_config.send(forward_portname),
+                    :endport => @domain_config.send(forward_portname),
+                    :cidrlist => @domain_config.pf_trusted_networks.join(',')
+                }
+                @domain_config.firewall_rules = [] unless @domain_config.firewall_rules
+                @domain_config.firewall_rules << fw_rule_trusted_networks
+              end
             end
           end
 
           unless @domain_config.firewall_rules.empty?
 
             # Inspect port_forwarding rules to make firewall rules
+            if @pf_ip_address.details.has_key?('vpcid')
+              port_name = :privateport
+            else
+              port_name = :publicport
+            end
             unless @domain_config.port_forwarding_rules.empty?
               @domain_config.port_forwarding_rules.each do |port_forwarding_rule|
                 if port_forwarding_rule[:generate_firewall] && @domain_config.pf_trusted_networks && !port_forwarding_rule[:openfirewall]
@@ -341,8 +355,8 @@ module VagrantPlugins
                       :ipaddressid => port_forwarding_rule[:ipaddressid],
                       :ipaddress => port_forwarding_rule[:ipaddress],
                       :protocol => port_forwarding_rule[:protocol],
-                      :startport => port_forwarding_rule[:publicport],
-                      :endport => port_forwarding_rule[:publicport],
+                      :startport => port_forwarding_rule[port_name],
+                      :endport => port_forwarding_rule[port_name],
                       :cidrlist => @domain_config.pf_trusted_networks.join(',')
                   }
                   @domain_config.firewall_rules = [] unless @domain_config.firewall_rules
@@ -368,32 +382,34 @@ module VagrantPlugins
         end
 
         def create_port_forwardings
-          guest_windows = false || @env[:machine].config.vm.guest == :windows || @env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name') == 'winrm'
+          unless @pf_ip_address.is_undefined?
+            guest_windows = false || @env[:machine].config.vm.guest == :windows || @env[:machine].communicate.instance_variable_get('@logger').instance_variable_get('@name') == 'winrm'
 
-          ports = [ Hash[:public_port => 'pf_public_port',     :private_port => 'pf_private_port'] ]
-          ports <<  Hash[:public_port => 'pf_public_rdp_port', :private_port => 'pf_private_rdp_port'] if guest_windows
+            ports = [ Hash[:public_port => 'pf_public_port',     :private_port => 'pf_private_port'] ]
+            ports <<  Hash[:public_port => 'pf_public_rdp_port', :private_port => 'pf_private_rdp_port'] if guest_windows
 
-          ports.each do |port_set|
-            # Implicit/automatic Port forward for 'private' port (SSH/WinRM or RDP)
-            # Also sets 'public_port' port to random port if missing
-            public_port_name = port_set[:public_port]
-            private_port_name = port_set[:private_port]
-            if (@domain_config.pf_ip_address_id || @domain_config.pf_ip_address) && (@domain_config.send(public_port_name) || @domain_config.pf_public_port_randomrange)
-              port_forwarding_rule = {
-                  :ipaddressid => @domain_config.pf_ip_address_id,
-                  :ipaddress => @domain_config.pf_ip_address,
-                  :protocol => 'tcp',
-                  :publicport => @domain_config.send(public_port_name),
-                  :privateport => @domain_config.send(private_port_name),
-                  :openfirewall => @domain_config.pf_open_firewall
-              }
+            ports.each do |port_set|
+              # Implicit/automatic Port forward for 'private' port (SSH/WinRM or RDP)
+              # Also sets 'public_port' port to random port if missing
+              public_port_name = port_set[:public_port]
+              private_port_name = port_set[:private_port]
+              if (@domain_config.pf_ip_address_id || @domain_config.pf_ip_address) && (@domain_config.send(public_port_name) || @domain_config.pf_public_port_randomrange)
+                port_forwarding_rule = {
+                    :ipaddressid => @domain_config.pf_ip_address_id,
+                    :ipaddress => @domain_config.pf_ip_address,
+                    :protocol => 'tcp',
+                    :publicport => @domain_config.send(public_port_name),
+                    :privateport => @domain_config.send(private_port_name),
+                    :openfirewall => @domain_config.pf_open_firewall
+                }
 
-              public_port = create_randomport_forwarding_rule(
-                  port_forwarding_rule,
-                  @domain_config.pf_public_port_randomrange[:start]...@domain_config.pf_public_port_randomrange[:end],
-                  public_port_name
-              )
-              @domain_config.send("#{public_port_name}=", public_port)
+                public_port = create_randomport_forwarding_rule(
+                    port_forwarding_rule,
+                    @domain_config.pf_public_port_randomrange[:start]...@domain_config.pf_public_port_randomrange[:end],
+                    public_port_name
+                )
+                @domain_config.send("#{public_port_name}=", public_port)
+              end
             end
           end
 
@@ -589,7 +605,15 @@ module VagrantPlugins
           @env[:ui].info(" -- Private port  : #{rule[:privateport]}")
           @env[:ui].info(" -- Open Firewall : #{rule[:openfirewall]}")
 
+          if ip_address.details.has_key?('associatednetworkid')
+            network = @networks.find{ |f| f.id == ip_address.details['associatednetworkid']}
+          elsif ip_address.details.has_key?('vpcid')
+            # In case of VPC and ip has not yet been used, a network MUST be specified
+            network = @networks.find{ |f| f.details['vpcid'] == ip_address.details['vpcid']}
+          end
+
           options = {
+              :networkid        => network.id,
               :ipaddressid      => ip_address.id,
               :publicport       => rule[:publicport],
               :privateport      => rule[:privateport],
@@ -598,6 +622,7 @@ module VagrantPlugins
               :virtualmachineid => @env[:machine].id
           }
 
+          options.delete(:openfirewall) if network.details.has_key?('vpcid')
           begin
             resp = @env[:cloudstack_compute].create_port_forwarding_rule(options)
             job_id = resp['createportforwardingruleresponse']['jobid']
@@ -628,14 +653,12 @@ module VagrantPlugins
         end
 
         def create_firewall_rule(rule)
+          acl_name = ''
           firewall_rule = nil
           @env[:ui].info(I18n.t('vagrant_cloudstack.creating_firewall_rule'))
 
-          begin
-            ip_address = sync_ip_address(rule[:ipaddressid], rule[:ipaddress])
-          rescue IpNotFoundException
-            return
-          end
+          ip_address = CloudstackResource.new(rule[:ipaddressid], rule[:ipaddress], 'public_ip_address')
+          @resource_service.sync_resource(ip_address)
 
           @env[:ui].info(" -- IP address : #{ip_address.name} (#{ip_address.id})")
           @env[:ui].info(" -- Protocol   : #{rule[:protocol]}")
@@ -645,31 +668,67 @@ module VagrantPlugins
           @env[:ui].info(" -- ICMP code  : #{rule[:icmpcode]}")
           @env[:ui].info(" -- ICMP type  : #{rule[:icmptype]}")
 
-          options = {
-              :command          => 'createFirewallRule',
-              :ipaddressid      => ip_address.id,
-              :protocol         => rule[:protocol],
-              :cidrlist         => rule[:cidrlist],
-              :startport        => rule[:startport],
-              :endeport         => rule[:endport],
-              :icmpcode         => rule[:icmpcode],
-              :icmptype         => rule[:icmptype]
-          }
+          if ip_address.details.has_key?('vpcid')
+            network = @networks.find{ |f| f.id == ip_address.details['associatednetworkid']}
+            resp = @env[:cloudstack_compute].list_network_acl_lists({
+              id:  network.details['aclid']
+            })
+            acl_name = resp['listnetworkacllistsresponse']['networkacllist'][0]['name']
+
+            resp = @env[:cloudstack_compute].list_network_acls({
+              aclid:  network.details['aclid']
+            })
+            number = 0
+            if resp["listnetworkaclsresponse"].key?("networkacl")
+              resp["listnetworkaclsresponse"]["networkacl"].each{ |ace| number = [number, ace["number"]].max }
+            end
+            number = number+1
+
+            command_string  = 'createNetworkACL'
+            response_string = 'createnetworkaclresponse'
+            type_string = 'networkacl'
+            options = {
+                :command     => command_string,
+                :aclid       => network.details['aclid'],
+                :action      => 'Allow',
+                :protocol    => rule[:protocol],
+                :cidrlist    => rule[:cidrlist],
+                :startport   => rule[:startport],
+                :endport     => rule[:endport],
+                :icmpcode    => rule[:icmpcode],
+                :icmptype    => rule[:icmptype],
+                :number      => number,
+                :traffictype => 'Ingress'
+            }
+          else
+            command_string = 'createFirewallRule'
+            response_string = 'createfirewallruleresponse'
+            type_string = 'firewallrule'
+            options = {
+                :command          => command_string,
+                :ipaddressid      => ip_address.id,
+                :protocol         => rule[:protocol],
+                :cidrlist         => rule[:cidrlist],
+                :startport        => rule[:startport],
+                :endeport         => rule[:endport],
+                :icmpcode         => rule[:icmpcode],
+                :icmptype         => rule[:icmptype]
+            }
+          end
 
           begin
             resp = @env[:cloudstack_compute].request(options)
-            job_id = resp['createfirewallruleresponse']['jobid']
+            job_id = resp[response_string]['jobid']
 
             if job_id.nil?
-              @env[:ui].warn(" -- Failed to create firewall rule: #{resp['createfirewallruleresponse']['errortext']}")
+              @env[:ui].warn(" -- Failed to create firewall rule: #{resp[response_string]['errortext']}")
               return
             end
-
 
             while true
               response = @env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
               if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                firewall_rule = response['queryasyncjobresultresponse']['jobresult']['firewallrule']
+                firewall_rule = response['queryasyncjobresultresponse']['jobresult'][type_string]
                 break
               else
                 sleep 2
@@ -678,6 +737,8 @@ module VagrantPlugins
           rescue Fog::Compute::Cloudstack::Error => e
             if e.message =~ /The range specified,.*conflicts with rule/
               @env[:ui].warn(" -- Failed to create firewall rule: #{e.message}")
+            elsif e.message =~ /Default ACL cannot be modified/
+              @env[:ui].warn(" -- Failed to create network acl: #{e.message}: #{acl_name}")
             else
               raise Errors::FogError, :message => e.message
             end
@@ -687,7 +748,7 @@ module VagrantPlugins
             # Save firewall rule id to the data dir so it can be released when the instance is destroyed
             firewall_file = @env[:machine].data_dir.join('firewall')
             firewall_file.open('a+') do |f|
-              f.write("#{firewall_rule['id']}\n")
+              f.write("#{firewall_rule['id']},#{type_string}\n")
             end
           end
         end
