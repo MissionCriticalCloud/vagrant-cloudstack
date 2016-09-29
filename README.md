@@ -1,15 +1,15 @@
 # Vagrant Cloudstack Provider
 
-[![Build Status](https://travis-ci.org/schubergphilis/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/schubergphilis/vagrant-cloudstack)
+[![Build Status](https://travis-ci.org/missioncriticalcloud/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/missioncriticalcloud/vagrant-cloudstack)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.png)](http://badge.fury.io/rb/vagrant-cloudstack)
-[![Code climate](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack.png)](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack)
-[![Coverage Status](https://coveralls.io/repos/schubergphilis/vagrant-cloudstack/badge.svg?branch=master)](https://coveralls.io/r/schubergphilis/vagrant-cloudstack?branch=master)
+[![Code climate](https://codeclimate.com/github/missioncriticalcloud/vagrant-cloudstack.png)](https://codeclimate.com/github/missioncriticalcloud/vagrant-cloudstack)
+[![Coverage Status](https://coveralls.io/repos/missioncriticalcloud/vagrant-cloudstack/badge.svg?branch=master)](https://coveralls.io/r/missioncriticalcloud/vagrant-cloudstack?branch=master)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.svg)](http://badge.fury.io/rb/vagrant-cloudstack)
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
 This is a [Vagrant](http://www.vagrantup.com) 1.5+ plugin that adds a [Cloudstack](http://cloudstack.apache.org)
-provider to Vagrant.
+provider to Vagrant for use with either [Cosmic](https://github.com/MissionCriticalCloud/cosmic) or [Cloudstack](http://cloudstack.apache.org).
 
 ## Features
 
@@ -29,9 +29,6 @@ $ vagrant plugin install vagrant-cloudstack
 $ vagrant up --provider=cloudstack
 ...
 ```
-
-Of course prior to doing this, you'll need to obtain an Cloudstack-compatible
-box file for Vagrant.
 
 ## Quick Start
 
@@ -85,28 +82,12 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-
-Note that normally a lot of this boilerplate is encoded within the box
-file, but the box file used for the quick start, the "dummy" box, has
-no preconfigured defaults.
-
 And then run `vagrant up --provider=cloudstack`.
 
 This will start an instance in Cloudstack. And assuming your template
 on Cloudstack is Vagrant compatible _(vagrant user with official
 vagrant pub key in authorized_keys)_ SSH and provisioning will work as
 well.
-
-## Box Format
-
-Every provider in Vagrant must introduce a custom box format. This
-provider introduces `cloudstack` boxes. You can view an example box in
-the [example_box/ directory](https://github.com/schubergphilis/vagrant-cloudstack/tree/master/example_box).
-That directory also contains instructions on how to build a box.
-
-The box format is basically just the required `metadata.json` file
-along with a `Vagrantfile` that does default settings for the
-provider-specific configuration for this provider.
 
 ## Configuration
 
