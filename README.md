@@ -30,9 +30,6 @@ $ vagrant up --provider=cloudstack
 ...
 ```
 
-Of course prior to doing this, you'll need to obtain an Cloudstack-compatible
-box file for Vagrant.
-
 ## Quick Start
 
 After installing the plugin (instructions above), the quickest way to get
@@ -85,28 +82,12 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-
-Note that normally a lot of this boilerplate is encoded within the box
-file, but the box file used for the quick start, the "dummy" box, has
-no preconfigured defaults.
-
 And then run `vagrant up --provider=cloudstack`.
 
 This will start an instance in Cloudstack. And assuming your template
 on Cloudstack is Vagrant compatible _(vagrant user with official
 vagrant pub key in authorized_keys)_ SSH and provisioning will work as
 well.
-
-## Box Format
-
-Every provider in Vagrant must introduce a custom box format. This
-provider introduces `cloudstack` boxes. You can view an example box in
-the [example_box/ directory](https://github.com/missioncriticalcloud/vagrant-cloudstack/tree/master/example_box).
-That directory also contains instructions on how to build a box.
-
-The box format is basically just the required `metadata.json` file
-along with a `Vagrantfile` that does default settings for the
-provider-specific configuration for this provider.
 
 ## Configuration
 
