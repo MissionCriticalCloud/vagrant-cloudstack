@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.license       = 'MIT'
   s.authors       = ['Mitchell Hashimoto', 'Carl Loa Odin', 'Tor-Åke Fransson', 'Olle Lundberg', 'Roeland Kuipers', 'Yuichi Uemura', 'Atsushi Sasaki', 'Nicolas Brechet', 'Peter Jönsson', 'Christophe Roux', 'Andrei Chiriaev', 'Miguel Ferreira', 'Timothy van Zadelhoff', 'Geurt Schimmel', 'Bob van den Heuvel']
   s.email         = 'int-toolkit@schubergphilis.com'
-  s.homepage      = 'https://github.com/schubergphilis/vagrant-cloudstack/'
+  s.homepage      = 'https://github.com/missioncriticalcloud/vagrant-cloudstack/'
   s.summary       = 'Enables Vagrant to manage machines in Cloudstack.'
   s.description   = 'Provides a cloudstack provider in Vagrant via which Vagrant can manage machines in CloudStack.'
 

@@ -1,9 +1,9 @@
 # Vagrant Cloudstack Provider
 
-[![Build Status](https://travis-ci.org/schubergphilis/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/schubergphilis/vagrant-cloudstack)
+[![Build Status](https://travis-ci.org/missioncriticalcloud/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/missioncriticalcloud/vagrant-cloudstack)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.png)](http://badge.fury.io/rb/vagrant-cloudstack)
-[![Code climate](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack.png)](https://codeclimate.com/github/schubergphilis/vagrant-cloudstack)
-[![Coverage Status](https://coveralls.io/repos/schubergphilis/vagrant-cloudstack/badge.svg?branch=master)](https://coveralls.io/r/schubergphilis/vagrant-cloudstack?branch=master)
+[![Code climate](https://codeclimate.com/github/missioncriticalcloud/vagrant-cloudstack.png)](https://codeclimate.com/github/missioncriticalcloud/vagrant-cloudstack)
+[![Coverage Status](https://coveralls.io/repos/missioncriticalcloud/vagrant-cloudstack/badge.svg?branch=master)](https://coveralls.io/r/missioncriticalcloud/vagrant-cloudstack?branch=master)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.svg)](http://badge.fury.io/rb/vagrant-cloudstack)
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
@@ -101,7 +101,7 @@ well.
 
 Every provider in Vagrant must introduce a custom box format. This
 provider introduces `cloudstack` boxes. You can view an example box in
-the [example_box/ directory](https://github.com/schubergphilis/vagrant-cloudstack/tree/master/example_box).
+the [example_box/ directory](https://github.com/missioncriticalcloud/vagrant-cloudstack/tree/master/example_box).
 That directory also contains instructions on how to build a box.
 
 The box format is basically just the required `metadata.json` file
