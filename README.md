@@ -9,7 +9,7 @@
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
 This is a [Vagrant](http://www.vagrantup.com) 1.5+ plugin that adds a [Cloudstack](http://cloudstack.apache.org)
-provider to Vagrant.
+provider to Vagrant for use with either [Cosmic](https://github.com/MissionCriticalCloud/cosmic) or [Cloudstack](http://cloudstack.apache.org).
 
 ## Features
 
