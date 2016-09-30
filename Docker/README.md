@@ -22,8 +22,8 @@ This may not work for everyone as we try to use latest, but also stable combinat
 _As the container is build automatically on triggers, latest versions are latest at time of (re)build_
 
 Links to the respective Dockerfiles:
-* [latest](https://raw.githubusercontent.com/missioncriticalcloud/vagrant-cloudstack/feat/docker/Docker/Dockerfile)
-* [latest_dependencies](https://raw.githubusercontent.com/missioncriticalcloud/vagrant-cloudstack/feat/docker/Docker/Dockerfile.latest_dependencies)
+* [latest](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile)
+* [latest_dependencies](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile.latest_dependencies)
 
 ## Features
 * Run Vagrant with the plugin
@@ -33,11 +33,11 @@ Links to the respective Dockerfiles:
 ## Usage
 Retrieve the docker container:
 ```
-docker pull bheuvel/vagrant-cloudstack:latest
+docker pull missioncriticalcloud/vagrant-cloudstack
 ```
 Change into the directory containing your project (Vagrantfile, .kitchen.yml), and execute:
 ```
-docker run -ti --rm  -v $(pwd):/work bheuvel/vagrant-cloudstack /bin/bash
+docker run -ti --rm  -v $(pwd):/work missioncriticalcloud/vagrant-cloudstack /bin/bash
 ```
 This provides a bash shell (in the container) where you can execute e.g. Vagrant, Test-Kitchen, Bundler.
 
@@ -47,9 +47,9 @@ docker run \
 -e USER=${USER} \
 -e CLOUDSTACK_API_KEY=${CLOUDSTACK_API_KEY} \
 -e CLOUDSTACK_SECRET_KEY=${CLOUDSTACK_SECRET_KEY} \
--ti --rm  -v $(pwd):/work bheuvel/vagrant-cloudstack:latest /bin/bash
+-ti --rm  -v $(pwd):/work missioncriticalcloud/vagrant-cloudstack /bin/bash
 ```
 
-For actual development of the plugin, a lot more variables are required. To this end you can use the the [bash script `vac.sh` in the git repo](https://github.com/bheuvel/vagrant-cloudstack/blob/feat/docker/Docker/vac.sh).
+For actual development of the plugin, a lot more variables are required. To this end you can use the [bash script `vac.sh`](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/vac.sh) or [PowerShell script `vac.ps1`](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/vac.ps1) in the git repo.
 
 _Note on usage of SSH keyfile_: As the container is mounted on a specific folder (`$(pwd)`), the keyfile must be specified (by `SSH_KEY`) relative to, __and within__, the specified folder!

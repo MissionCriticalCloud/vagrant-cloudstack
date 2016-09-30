@@ -27,4 +27,4 @@ docker run \
 -e KITCHEN_LOCAL_YAML=${KITCHEN_LOCAL_YAML} \
 -e DISK_OFFERING_NAME=${DISK_OFFERING_NAME} \
 -e EXPUNGE_ON_DESTROY=${EXPUNGE_ON_DESTROY} \
--ti --rm  -v $(pwd):/work bheuvel/vagrant-cloudstack /bin/bash
+-ti --rm  -v $(pwd):/work missioncriticalcloud/vagrant-cloudstack /bin/bash
