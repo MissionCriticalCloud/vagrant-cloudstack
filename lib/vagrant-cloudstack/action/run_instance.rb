@@ -43,9 +43,9 @@ module VagrantPlugins
 
           @resource_service.sync_resource(@zone, { available: true })
           cs_zone = @env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
-          @resource_service.sync_resource(@service_offering)
-          @resource_service.sync_resource(@disk_offering)
-          @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable' })
+          @resource_service.sync_resource(@service_offering, {listall: true})
+          @resource_service.sync_resource(@disk_offering, {listall: true})
+          @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable', listall: true})
           @resource_service.sync_resource(@pf_ip_address)
 
           if cs_zone.network_type.downcase == 'basic'
