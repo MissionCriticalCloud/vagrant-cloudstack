@@ -2,9 +2,9 @@ FROM debian:8
 
 MAINTAINER Bob van den Heuvel <bvandenheuvel@schubergphilis.com>
 
-# Specific older chef-dk required due to bundler version, only available as Debian 6 package
-ENV	CHEFDK_VERSION 0.15.15
-ENV	CHEFDK_DEB_VERSION 8
+# Specify the ChefDK version and channel
+ENV CHEFDK_VERSION 0.19
+ENV CHEFDK_CHANNEL stable
 
 # Currently the latest version of the plugin has been tested with Vagrant 1.8.1
 ENV	VAGRANT_VERSION 1.8.1
@@ -30,21 +30,19 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 #
 
-# install vagrant and the vagrant-cloudstack plugin
+# Install vagrant and the vagrant-cloudstack plugin
 RUN curl -L https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_x86_64.deb > /tmp/vagrant_x86_64.deb && \
     dpkg -i /tmp/vagrant_x86_64.deb && \
     rm -f /tmp/vagrant_x86_64.deb && \
     vagrant plugin install vagrant-cloudstack && \
     vagrant plugin install vagrant-winrm
 
-RUN curl -L https://packages.chef.io/stable/debian/${CHEFDK_DEB_VERSION}/chefdk_${CHEFDK_VERSION}-1_amd64.deb > /tmp/chef_dk.deb && \
-    dpkg -i /tmp/chef_dk.deb &&  rm /tmp/chef_dk.deb && \
-    rm -f /tmp/chef_dk.deb && \
+# Install ChefDK
+RUN curl https://omnitruck.chef.io/install.sh | bash -s -- -c ${CHEFDK_CHANNEL} -P chefdk -v ${CHEFDK_VERSION} && \
     echo 'eval "$(chef shell-init bash)"' >> ~/.bashrc && \
     /opt/chefdk/embedded/bin/bundler config --global path vendor/bundle && \
     /opt/chefdk/embedded/bin/bundler config --global bin vendor/bin && \
     /opt/chefdk/embedded/bin/gem install kitchen-vagrant
-
 
 WORKDIR "/work"
 
