@@ -3,7 +3,7 @@ FROM debian:8
 MAINTAINER Bob van den Heuvel <bvandenheuvel@schubergphilis.com>
 
 # Specify the ChefDK version and channel
-ENV CHEFDK_VERSION 0.19
+ENV CHEFDK_VERSION 0.17
 ENV CHEFDK_CHANNEL stable
 
 # Currently the latest version of the plugin has been tested with Vagrant 1.8.1

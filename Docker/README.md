@@ -17,13 +17,25 @@ This may not work for everyone as we try to use latest, but also stable combinat
 * [Vagrant](http://www.vagrantup.com) 1.8.1
 * [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin latest
 * [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) latest
-* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.15.15
+* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.19
 * [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) latest
 _As the container is build automatically on triggers, latest versions are latest at time of (re)build_
+
+
+## chefdk_0_17
+This will install chef-client 12.13.37 which is needed for some compatibilty reasons.
+* [Vagrant](http://www.vagrantup.com) 1.8.1
+* [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin latest
+* [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) latest
+* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.17
+* [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) latest
+_As the container is build automatically on triggers, latest versions are latest at time of (re)build_
+
 
 Links to the respective Dockerfiles:
 * [latest](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile)
 * [latest_dependencies](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile.latest_dependencies)
+* [chefdk_0_17](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile.chefdk_0_17)
 
 ## Features
 * Run Vagrant with the plugin
