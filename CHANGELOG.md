@@ -1,3 +1,11 @@
+# 1.4.0 (Nov 30, 2016)
+* Support multiple network ids and network names (PR #148)
+* Add ssh_network_id and ssh_network_name configuration (PR #149)
+* Add (firewall management for) VPC support (PR #151)
+* Remove additional data disk on destroy (PR #152)
+* Add Docker containers for development and testing (PR #159)
+* CloudStack >= 4.6 list all offerings / templates. (PR #161)
+
 # 1.3.0 (Mar 24, 2016)
 * Automate port forwarding for RDP for Windows guests (PR #117)
 * Specify `trusted_networks` by Array (PR #121)
