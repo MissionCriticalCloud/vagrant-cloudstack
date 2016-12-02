@@ -35,7 +35,7 @@ RUN curl -L https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${
     dpkg -i /tmp/vagrant_x86_64.deb && \
     rm -f /tmp/vagrant_x86_64.deb && \
     vagrant plugin install vagrant-cloudstack && \
-    vagrant plugin install vagrant-winrm
+    vagrant plugin install vagrant-winrm --plugin-version 0.7.0
 
 RUN curl -L https://packages.chef.io/stable/debian/${CHEFDK_DEB_VERSION}/chefdk_${CHEFDK_VERSION}-1_amd64.deb > /tmp/chef_dk.deb && \
     dpkg -i /tmp/chef_dk.deb &&  rm /tmp/chef_dk.deb && \
@@ -43,7 +43,7 @@ RUN curl -L https://packages.chef.io/stable/debian/${CHEFDK_DEB_VERSION}/chefdk_
     echo 'eval "$(chef shell-init bash)"' >> ~/.bashrc && \
     /opt/chefdk/embedded/bin/bundler config --global path vendor/bundle && \
     /opt/chefdk/embedded/bin/bundler config --global bin vendor/bin && \
-    /opt/chefdk/embedded/bin/gem install kitchen-vagrant
+    /opt/chefdk/embedded/bin/gem install kitchen-vagrant -v 0.20.0
 
 
 WORKDIR "/work"

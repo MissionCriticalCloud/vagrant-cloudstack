@@ -35,14 +35,14 @@ RUN curl -L https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${
     dpkg -i /tmp/vagrant_x86_64.deb && \
     rm -f /tmp/vagrant_x86_64.deb && \
     vagrant plugin install vagrant-cloudstack && \
-    vagrant plugin install vagrant-winrm
+    vagrant plugin install vagrant-winrm --plugin-version 0.7.0
 
 # Install ChefDK
 RUN curl https://omnitruck.chef.io/install.sh | bash -s -- -c ${CHEFDK_CHANNEL} -P chefdk -v ${CHEFDK_VERSION} && \
     echo 'eval "$(chef shell-init bash)"' >> ~/.bashrc && \
     /opt/chefdk/embedded/bin/bundler config --global path vendor/bundle && \
     /opt/chefdk/embedded/bin/bundler config --global bin vendor/bin && \
-    /opt/chefdk/embedded/bin/gem install kitchen-vagrant
+    /opt/chefdk/embedded/bin/gem install kitchen-vagrant -v 0.20.0
 
 WORKDIR "/work"
 
