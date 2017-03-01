@@ -182,7 +182,7 @@ module VagrantPlugins
         end
 
         def generate_display_name
-          local_user = ENV['USER'].dup
+          local_user = ENV['USER'] ? ENV['USER'].dup : 'VACS'
           local_user.gsub!(/[^-a-z0-9_]/i, '')
           prefix = @env[:root_path].basename.to_s
           prefix.gsub!(/[^-a-z0-9_]/i, '')
