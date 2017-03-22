@@ -26,6 +26,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |global_config|
       config.vm.box = options['template']
 
       config.vm.communicator = options['communicator']
+      config.winrm.retry_delay = 30
       config.vm.synced_folder ".", "/vagrant", type: "rsync",
         rsync__exclude: [".git/", "vendor"], disabled: options['rsync_disabled']
       config.vm.provider :cloudstack do |cloudstack, override|
