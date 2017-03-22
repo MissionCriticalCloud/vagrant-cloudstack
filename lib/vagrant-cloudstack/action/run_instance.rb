@@ -241,7 +241,10 @@ module VagrantPlugins
                 :image_id => @template.id
             }
 
-            options['network_ids'] = @networks.map(&:id).compact.join(",") unless @networks.empty?
+            unless @networks.empty?
+              nets = @networks.map(&:id).compact.join(",")
+              options['network_ids'] = nets unless nets.empty?
+            end
             options['security_group_ids'] = @security_groups.map{|security_group| security_group.id}.join(',') unless @security_groups.empty?
             options['project_id'] = @domain_config.project_id unless @domain_config.project_id.nil?
             options['key_name'] = @domain_config.keypair unless @domain_config.keypair.nil?
