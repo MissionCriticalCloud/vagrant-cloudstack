@@ -75,17 +75,18 @@ _Note on usage of SSH keyfile_: As the container is mounted on a specific folder
 Development of the plugin, means running Vagrant from source, in combination with the specific bundler version (conflict) between ChefDK and Vagrant and ruby version (conflict) between ChefDK and Vagrant, leads to the following version combination:
 
 "dev" container:
-* Vagrant 1.8.1
-* ChefDK 0.10.0
-
-### ChefDK
+* Vagrant 1.9.1
+* ChefDK 1.2.22
+### latest_dependencies
 Based on (somewhat subjective :) experience, the latest version of ChefDK is mostly compatible, is used as latest version.
 
-"latest_dependensies" container:
+"latest_dependencies" container:
+* Vagrant 1.8.1
 * ChefDK 0.19
-
+### ChefDK
 For convenience of some reported incompatibilities, a separate container is defined:
 "chefdk_0_17" container:
+* Vagrant 1.8.1
 * ChefDK 0.17
 
 ### Kitchen-Vagrant plugin

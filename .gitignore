@@ -6,7 +6,6 @@
 .bundle
 pkg/*
 tags
-Gemfile.lock
 
 # Vagrant
 .vagrant
