@@ -53,14 +53,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |global_config|
         cloudstack.pf_trusted_networks   = ENV['SOURCE_CIDR']
         cloudstack.pf_open_firewall      = false
 
-        unless ENV['SSH_KEY'].nil?
-            cloudstack.ssh_key               = ENV['SSH_KEY']
-            cloudstack.ssh_user              = ENV['SSH_USER']
-        end
 
-        unless ENV['WINDOWS_USER'].nil?
-            cloudstack.vm_user = ENV['WINDOWS_USER']
-        end
+        cloudstack.ssh_key               = ENV['SSH_KEY'] unless ENV['SSH_KEY'].nil?
+        cloudstack.ssh_user              = ENV['SSH_USER'] unless ENV['SSH_USER'].nil?
+        cloudstack.vm_user               = ENV['WINDOWS_USER'] unless ENV['WINDOWS_USER'].nil?
+
       end
     end
   end
