@@ -6,7 +6,7 @@ describe VagrantPlugins::Cloudstack::Config do
 
   # Ensure tests are not affected by Cloudstack credential environment variables
   before :each do
-    ENV.stub(:[] => nil)
+    allow(ENV).to receive_messages(:[] => nil)
   end
 
   describe "defaults" do
@@ -71,8 +71,8 @@ describe VagrantPlugins::Cloudstack::Config do
 
     context "with CloudStack credential variables" do
       before :each do
-        ENV.stub(:[]).with("CLOUDSTACK_API_KEY").and_return("api_key")
-        ENV.stub(:[]).with("CLOUDSTACK_SECRET_KEY").and_return("secret_key")
+        allow(ENV).to receive(:[]).with("CLOUDSTACK_API_KEY").and_return("api_key")
+        allow(ENV).to receive(:[]).with("CLOUDSTACK_SECRET_KEY").and_return("secret_key")
       end
 
       subject do
@@ -98,7 +98,7 @@ describe VagrantPlugins::Cloudstack::Config do
       it "should not default #{attribute} if overridden" do
         instance.send("#{attribute}=".to_sym, "foo")
         instance.finalize!
-        instance.send(attribute).should == "foo"
+        expect(instance.send(attribute)).to be =='foo'
       end
 
     end
@@ -107,7 +107,7 @@ describe VagrantPlugins::Cloudstack::Config do
       instance.pf_open_firewall = false
       instance.finalize!
 
-      instance.pf_open_firewall.should == false
+      expect(instance.pf_open_firewall).to be false
     end
   end
 
@@ -208,7 +208,7 @@ describe VagrantPlugins::Cloudstack::Config do
 
     it "should raise an exception if not finalized" do
       expect { instance.get_domain_config("default") }.
-        to raise_error
+        to raise_error(RuntimeError)
     end
 
     context "with no specific config set" do
