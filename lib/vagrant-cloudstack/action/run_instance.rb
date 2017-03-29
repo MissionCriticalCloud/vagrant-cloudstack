@@ -41,13 +41,19 @@ module VagrantPlugins
           @template         = CloudstackResource.new(@domain_config.template_id, @domain_config.template_name || @env[:machine].config.vm.box, 'template')
           @pf_ip_address    = CloudstackResource.new(@domain_config.pf_ip_address_id, @domain_config.pf_ip_address, 'public_ip_address')
 
-          @resource_service.sync_resource(@zone, { available: true })
-          cs_zone = @env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
-          @resource_service.sync_resource(@service_offering, {listall: true})
-          @resource_service.sync_resource(@disk_offering, {listall: true})
-          @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable', listall: true})
-          @resource_service.sync_resource(@pf_ip_address)
+          begin
+            @resource_service.sync_resource(@zone, { available: true })
+            @resource_service.sync_resource(@service_offering, {listall: true})
+            @resource_service.sync_resource(@disk_offering, {listall: true})
+            @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable', listall: true})
+            @resource_service.sync_resource(@pf_ip_address)
+          rescue CloudstackResourceNotFound => e
+            @env[:ui].error(e.message)
+            terminate
+            exit(false)
+          end
 
+          cs_zone = @env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
           if cs_zone.network_type.downcase == 'basic'
             # No network specification in basic zone
             @env[:ui].warn(I18n.t('vagrant_cloudstack.basic_network', :zone_name => @zone.name)) if !@networks.empty? && (@networks[0].id || @networks[0].name)
