@@ -119,7 +119,13 @@ module VagrantPlugins
 
           store_password(server)
 
-          configure_networking
+          begin
+            configure_networking
+          rescue CloudstackResourceNotFound => e
+            @env[:ui].error(e.message)
+            terminate
+            exit(false)
+          end
 
           unless @env[:interrupted]
             wait_for_communicator_ready
@@ -694,14 +700,18 @@ module VagrantPlugins
 
           if ip_address.details.has_key?('vpcid')
             network = @networks.find{ |f| f.id == ip_address.details['associatednetworkid']}
-            resp = @env[:cloudstack_compute].list_network_acl_lists({
-              id:  network.details['aclid']
-            })
+            acl_id = network.details['aclid']
+
+            raise CloudstackResourceNotFound.new("No ACL found associated with VPC tier #{network.details['name']} (id: #{network.details['id']})") unless acl_id
+
+            resp = @env[:cloudstack_compute].list_network_acl_lists(
+              id:  network.details[acl_id]
+            )
             acl_name = resp['listnetworkacllistsresponse']['networkacllist'][0]['name']
 
-            resp = @env[:cloudstack_compute].list_network_acls({
+            resp = @env[:cloudstack_compute].list_network_acls(
               aclid:  network.details['aclid']
-            })
+            )
             number = 0
             if resp["listnetworkaclsresponse"].key?("networkacl")
               resp["listnetworkaclsresponse"]["networkacl"].each{ |ace| number = [number, ace["number"]].max }
