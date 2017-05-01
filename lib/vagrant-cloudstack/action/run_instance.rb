@@ -41,13 +41,19 @@ module VagrantPlugins
           @template         = CloudstackResource.new(@domain_config.template_id, @domain_config.template_name || @env[:machine].config.vm.box, 'template')
           @pf_ip_address    = CloudstackResource.new(@domain_config.pf_ip_address_id, @domain_config.pf_ip_address, 'public_ip_address')
 
-          @resource_service.sync_resource(@zone, { available: true })
-          cs_zone = @env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
-          @resource_service.sync_resource(@service_offering, {listall: true})
-          @resource_service.sync_resource(@disk_offering, {listall: true})
-          @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable', listall: true})
-          @resource_service.sync_resource(@pf_ip_address)
+          begin
+            @resource_service.sync_resource(@zone, { available: true })
+            @resource_service.sync_resource(@service_offering, {listall: true})
+            @resource_service.sync_resource(@disk_offering, {listall: true})
+            @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable', listall: true})
+            @resource_service.sync_resource(@pf_ip_address)
+          rescue CloudstackResourceNotFound => e
+            @env[:ui].error(e.message)
+            terminate
+            exit(false)
+          end
 
+          cs_zone = @env[:cloudstack_compute].zones.find{ |f| f.id == @zone.id }
           if cs_zone.network_type.downcase == 'basic'
             # No network specification in basic zone
             @env[:ui].warn(I18n.t('vagrant_cloudstack.basic_network', :zone_name => @zone.name)) if !@networks.empty? && (@networks[0].id || @networks[0].name)
@@ -113,7 +119,13 @@ module VagrantPlugins
 
           store_password(server)
 
-          configure_networking
+          begin
+            configure_networking
+          rescue CloudstackResourceNotFound => e
+            @env[:ui].error(e.message)
+            terminate
+            exit(false)
+          end
 
           unless @env[:interrupted]
             wait_for_communicator_ready
@@ -688,14 +700,18 @@ module VagrantPlugins
 
           if ip_address.details.has_key?('vpcid')
             network = @networks.find{ |f| f.id == ip_address.details['associatednetworkid']}
-            resp = @env[:cloudstack_compute].list_network_acl_lists({
-              id:  network.details['aclid']
-            })
+            acl_id = network.details['aclid']
+
+            raise CloudstackResourceNotFound.new("No ACL found associated with VPC tier #{network.details['name']} (id: #{network.details['id']})") unless acl_id
+
+            resp = @env[:cloudstack_compute].list_network_acl_lists(
+              id:  network.details[acl_id]
+            )
             acl_name = resp['listnetworkacllistsresponse']['networkacllist'][0]['name']
 
-            resp = @env[:cloudstack_compute].list_network_acls({
+            resp = @env[:cloudstack_compute].list_network_acls(
               aclid:  network.details['aclid']
-            })
+            )
             number = 0
             if resp["listnetworkaclsresponse"].key?("networkacl")
               resp["listnetworkaclsresponse"]["networkacl"].each{ |ace| number = [number, ace["number"]].max }

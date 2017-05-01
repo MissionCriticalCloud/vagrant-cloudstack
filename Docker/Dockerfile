@@ -3,14 +3,11 @@ FROM debian:8
 MAINTAINER Bob van den Heuvel <bvandenheuvel@schubergphilis.com>
 
 # Specific older chef-dk required due to bundler version, only available as Debian 6 package
-ENV	CHEFDK_VERSION 0.10.0
-ENV	CHEFDK_DEB_VERSION 6
+ENV	CHEFDK_VERSION 1.2.22
+ENV	CHEFDK_DEB_VERSION 8
 
 # Currently the latest version of the plugin has been tested with Vagrant 1.8.1
-ENV	VAGRANT_VERSION 1.8.1
-
-# The plugin currently depends on existence of the USER variable...
-ENV USER VAC
+ENV	VAGRANT_VERSION 1.9.1
 
 # Update before all package installations
 RUN apt-get update -y && \
