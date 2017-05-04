@@ -1,9 +1,9 @@
 GIT
   remote: git://github.com/mitchellh/vagrant.git
-  revision: d8c2b2e5ababcdecc65b62b91e5dec21a4bc2d96
-  tag: v1.9.1
+  revision: 267bec38b8f5210c80cf67ebf144f77a81b3a867
+  tag: v1.9.3
   specs:
-    vagrant (1.9.1)
+    vagrant (1.9.3)
       childprocess (~> 0.5.0)
       erubis (~> 2.7.0)
       hashicorp-checkpoint (~> 0.1.1)
@@ -18,8 +18,9 @@ GIT
       rest-client (>= 1.6.0, < 3.0)
       ruby_dep (<= 1.3.1)
       wdm (~> 0.1.0)
-      winrm (~> 1.6)
-      winrm-fs (~> 0.3.0)
+      winrm (~> 2.1)
+      winrm-elevated (~> 1.1)
+      winrm-fs (~> 1.0)
 
 PATH
   remote: .
@@ -35,15 +36,15 @@ GEM
     builder (3.2.3)
     childprocess (0.5.9)
       ffi (~> 1.0, >= 1.0.11)
-    coveralls (0.8.19)
+    coveralls (0.8.21)
       json (>= 1.8, < 3)
-      simplecov (~> 0.12.0)
+      simplecov (~> 0.14.1)
       term-ansicolor (~> 1.3)
-      thor (~> 0.19.1)
+      thor (~> 0.19.4)
       tins (~> 1.6)
     diff-lcs (1.3)
     docile (1.1.5)
-    domain_name (0.5.20170223)
+    domain_name (0.5.20170404)
       unf (>= 0.0.5, < 1.0.0)
     erubis (2.7.0)
     excon (0.55.0)
@@ -90,7 +91,7 @@ GEM
     fog-atmos (0.1.0)
       fog-core
       fog-xml
-    fog-aws (1.2.1)
+    fog-aws (1.3.0)
       fog-core (~> 1.38)
       fog-json (~> 1.0)
       fog-xml (~> 0.1)
@@ -104,7 +105,7 @@ GEM
       fog-json (~> 1.0)
       fog-xml (~> 0.1)
       ipaddress (~> 0.8)
-    fog-core (1.43.0)
+    fog-core (1.44.1)
       builder
       excon (~> 0.49)
       formatador (~> 0.2)
@@ -143,7 +144,7 @@ GEM
     fog-profitbricks (3.0.0)
       fog-core (~> 1.42)
       fog-json (~> 1.0)
-    fog-rackspace (0.1.4)
+    fog-rackspace (0.1.5)
       fog-core (>= 1.35)
       fog-json (>= 1.0)
       fog-xml (>= 0.1)
@@ -177,15 +178,15 @@ GEM
     fog-voxel (0.1.0)
       fog-core
       fog-xml
-    fog-vsphere (1.8.0)
+    fog-vsphere (1.9.1)
       fog-core
       rbvmomi (~> 1.9)
     fog-xenserver (0.3.0)
       fog-core
       fog-xml
-    fog-xml (0.1.2)
+    fog-xml (0.1.3)
       fog-core
-      nokogiri (~> 1.5, >= 1.5.11)
+      nokogiri (>= 1.5.11, < 2.0.0)
     formatador (0.2.5)
     gssapi (1.2.0)
       ffi (>= 1.0.1)
@@ -205,7 +206,7 @@ GEM
       ruby_dep (~> 1.2)
     little-plugger (1.1.4)
     log4r (1.1.10)
-    logging (2.2.0)
+    logging (2.2.2)
       little-plugger (~> 1.1)
       multi_json (~> 1.10)
     mime-types (3.1)
@@ -228,12 +229,12 @@ GEM
       ffi (>= 0.5.0)
     rb-kqueue (0.2.4)
       ffi (>= 0.5.0)
-    rbvmomi (1.10.0)
+    rbvmomi (1.11.2)
       builder (~> 3.0)
       json (>= 1.8)
       nokogiri (~> 1.5)
       trollop (~> 2.1)
-    rest-client (2.0.1)
+    rest-client (2.0.2)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
@@ -250,35 +251,39 @@ GEM
       rspec-support (~> 3.5.0)
     rspec-support (3.5.0)
     ruby_dep (1.3.1)
-    rubyntlm (0.6.1)
+    rubyntlm (0.6.2)
     rubyzip (1.2.1)
-    simplecov (0.12.0)
+    simplecov (0.14.1)
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
-    term-ansicolor (1.4.0)
+    term-ansicolor (1.6.0)
       tins (~> 1.0)
     thor (0.19.4)
     tins (1.13.2)
     trollop (2.1.2)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.2)
+    unf_ext (0.0.7.4)
     wdm (0.1.1)
-    winrm (1.8.1)
+    winrm (2.2.2)
       builder (>= 2.1.2)
+      erubis (~> 2.7)
       gssapi (~> 1.2)
       gyoku (~> 1.0)
       httpclient (~> 2.2, >= 2.2.0.2)
       logging (>= 1.6.1, < 3.0)
       nori (~> 2.0)
-      rubyntlm (~> 0.6.0)
-    winrm-fs (0.3.2)
+      rubyntlm (~> 0.6.0, >= 0.6.1)
+    winrm-elevated (1.1.0)
+      winrm (~> 2.0)
+      winrm-fs (~> 1.0)
+    winrm-fs (1.0.1)
       erubis (~> 2.7)
       logging (>= 1.6.1, < 3.0)
       rubyzip (~> 1.1)
-      winrm (~> 1.5)
+      winrm (~> 2.0)
     xml-simple (1.1.5)
 
 PLATFORMS
