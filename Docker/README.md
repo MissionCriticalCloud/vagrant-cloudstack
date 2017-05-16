@@ -1,45 +1,6 @@
 # Vagrant Cloudstack Container
 
 This container contains some tools commonly used with the vagrant-cloudstack plugin
-## dev
-The versions have been specifically tuned to provide a working set for development of the plugin. To this end also developer tools (e.g. make, g++) are installed to enable bundler to pull in and compile required gems.
-So this one is _required_ for developing and testing the plugin from (latest, master) source.
-* [Vagrant](http://www.vagrantup.com) 1.8.1
-* [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin _current_
-* [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) 0.7.0 (latest)
-* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.10.0
-* [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) 0.20.0
-
-As the container is build automatically on triggers, latest versions are latest at time of (re)build_
- 
-
-## latest_dependencies
-This may not work for everyone as we try to use latest, but also stable combination of versions.
-For now building on top of the "dev" container, with Vagrant 1.8.1.
-* [Vagrant](http://www.vagrantup.com) 1.8.1
-* [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin _current_
-* [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) 0.7.0 (latest)
-* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.19
-* [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) 0.20.0
-
-_As the container is build automatically on triggers, latest versions are latest at time of (re)build_
-
-
-## chefdk_0_17
-This will install chef-client 12.13.37 which is needed for some compatibilty reasons.
-* [Vagrant](http://www.vagrantup.com) 1.8.1
-* [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin _current_
-* [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) 0.7.0 (latest)
-* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.17
-* [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) 0.20.0
-
-_As the container is build automatically on triggers, latest versions are latest at time of (re)build_
-
-
-Links to the respective Dockerfiles:
-* [dev](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile)
-* [latest_dependencies](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile.latest_dependencies)
-* [chefdk_0_17](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile.chefdk_0_17)
 
 ## Features
 * Run Vagrant with the plugin
@@ -70,25 +31,51 @@ For actual development of the plugin, a lot more variables are required. To this
 
 _Note on usage of SSH keyfile_: As the container is mounted on a specific folder (`$(pwd)`), the keyfile must be specified (by `SSH_KEY`) relative to, __and within__, the specified folder!
 
-## Version notes
+## Version / Tag notes
 ### Vagrant
 Development of the plugin, means running Vagrant from source, in combination with the specific bundler version (conflict) between ChefDK and Vagrant and ruby version (conflict) between ChefDK and Vagrant, leads to the following version combination:
 
-"dev" container:
-* Vagrant 1.9.1
-* ChefDK 1.2.22
-### latest_dependencies
-Based on (somewhat subjective :) experience, the latest version of ChefDK is mostly compatible, is used as latest version.
+## dev
+The versions have been specifically tuned to provide a working set for development of the plugin. To this end also developer tools (e.g. make, g++) are installed to enable bundler to pull in and compile required gems.
+So this one is _required_ for developing and testing the plugin from (latest, master) source.
+* [Vagrant](http://www.vagrantup.com) 1.9.3
+* [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin _current_
+* [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) 0.7.0 (latest)
+* [Chef-DK](https://downloads.chef.io/chef-dk/) 1.2.22
+* [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) 0.20.0
 
-"latest_dependencies" container:
-* Vagrant 1.8.1
-* ChefDK 0.19
-### ChefDK
-For convenience of some reported incompatibilities, a separate container is defined:
-"chefdk_0_17" container:
-* Vagrant 1.8.1
-* ChefDK 0.17
+_As the container is build automatically on triggers, latest versions are latest at time of (re)build_
+ 
 
+## latest_dependencies
+This may not work for everyone as we try to use latest, but also stable combination of versions.
+For now building on top of the "dev" container, with Vagrant 1.8.1.
+* [Vagrant](http://www.vagrantup.com) 1.8.1
+* [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin _current_
+* [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) 0.7.0 (latest)
+* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.19
+* [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) 0.20.0
+
+_As the container is build automatically on triggers, latest versions are latest at time of (re)build_
+
+
+## chefdk_0_17
+This will install chef-client 12.13.37 which is needed for some compatibility reasons.
+* [Vagrant](http://www.vagrantup.com) 1.8.1
+* [Vagrant-cloudstack](https://github.com/missioncriticalcloud/vagrant-cloudstack) plugin _current_
+* [Vagrant-winrm](https://github.com/criteo/vagrant-winrm) 0.7.0 (latest)
+* [Chef-DK](https://downloads.chef.io/chef-dk/) 0.17
+* [Kitchen-Vagrant](https://github.com/test-kitchen/kitchen-vagrant) 0.20.0
+
+_As the container is build automatically on triggers, latest versions are latest at time of (re)build_
+
+
+Links to the respective Dockerfiles:
+* [dev](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile)
+* [latest_dependencies](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile.latest_dependencies)
+* [chefdk_0_17](https://raw.githubusercontent.com/MissionCriticalCloud/vagrant-cloudstack/master/Docker/Dockerfile.chefdk_0_17)
+
+## Additional notes on versions of used packages
 ### Kitchen-Vagrant plugin
 Due to new functionality in this plugin (0.21.0), using existing features, the plugin creates a Vagrantfile which has problems executing. This possibly revealed bugs in Vagrant, which might be fixed in newer Vagrant versions.
 Untill a new Vagrant is in use, this plugin will be pinned to the latest working combination.

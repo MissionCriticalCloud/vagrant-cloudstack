@@ -7,7 +7,7 @@ ENV	CHEFDK_VERSION 1.2.22
 ENV	CHEFDK_DEB_VERSION 8
 
 # Currently the latest version of the plugin has been tested with Vagrant 1.8.1
-ENV	VAGRANT_VERSION 1.9.1
+ENV	VAGRANT_VERSION 1.9.3
 
 # Update before all package installations
 RUN apt-get update -y && \

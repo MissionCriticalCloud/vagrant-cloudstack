@@ -41,6 +41,11 @@ module VagrantPlugins
           @template         = CloudstackResource.new(@domain_config.template_id, @domain_config.template_name || @env[:machine].config.vm.box, 'template')
           @pf_ip_address    = CloudstackResource.new(@domain_config.pf_ip_address_id, @domain_config.pf_ip_address, 'public_ip_address')
 
+          if @zone.is_undefined?
+            @env[:ui].error("No Zone specified!")
+            exit(false)
+          end
+
           begin
             @resource_service.sync_resource(@zone, { available: true })
             @resource_service.sync_resource(@service_offering, {listall: true})
@@ -49,7 +54,6 @@ module VagrantPlugins
             @resource_service.sync_resource(@pf_ip_address)
           rescue CloudstackResourceNotFound => e
             @env[:ui].error(e.message)
-            terminate
             exit(false)
           end
 
@@ -466,7 +470,7 @@ module VagrantPlugins
               rule[:publicport] = rand(randomrange) if pf_public_port.nil?
 
               create_port_forwarding_rule(rule)
-              
+
               if pf_public_port.nil?
                 pf_port_file = @env[:machine].data_dir.join(filename)
                 pf_port_file.open('a+') do |f|
