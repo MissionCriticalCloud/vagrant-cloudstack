@@ -178,11 +178,11 @@ module VagrantPlugins
         def configure_networking
           enable_static_nat_rules
 
-          evaluate_pf_private_port
-          evaluate_pf_private_rdp_port
-
-
-          create_port_forwardings
+          unless @pf_ip_address.is_undefined?
+            evaluate_pf_private_port
+            evaluate_pf_private_rdp_port
+            create_port_forwardings
+          end
           # First create_port_forwardings,
           # as it may generate 'pf_public_port' or 'pf_public_rdp_port',
           # which after this may need a firewall rule
