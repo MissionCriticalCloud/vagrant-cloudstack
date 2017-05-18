@@ -102,6 +102,5 @@ namespace :functional_tests do
       end
     end
   end
-
-
 end
+
