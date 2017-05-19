@@ -1,10 +1,10 @@
 # Vagrant Cloudstack Provider
 
-[![Build Status](https://travis-ci.org/MissionCriticalCloud/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/missioncriticalcloud/vagrant-cloudstack)
+[![Build Status](https://travis-ci.org/MissionCriticalCloud/vagrant-cloudstack.png?branch=master)](https://travis-ci.org/MissionCriticalCloud/vagrant-cloudstack)
 [![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.png)](http://badge.fury.io/rb/vagrant-cloudstack)
-[![Code climate](https://codeclimate.com/github/MissionCriticalCloud/vagrant-cloudstack.png)](https://codeclimate.com/github/missioncriticalcloud/vagrant-cloudstack)
+[![Code climate](https://codeclimate.com/github/MissionCriticalCloud/vagrant-cloudstack.png)](https://codeclimate.com/github/MissionCriticalCloud/vagrant-cloudstack)
 [![Coverage Status](https://coveralls.io/repos/github/MissionCriticalCloud/vagrant-cloudstack/badge.svg?branch=master)](https://coveralls.io/github/MissionCriticalCloud/vagrant-cloudstack?branch=master)
-[![Gem Version](https://badge.fury.io/rb/vagrant-cloudstack.svg)](http://badge.fury.io/rb/vagrant-cloudstack)
+[![BCH compliance](https://bettercodehub.com/edge/badge/MissionCriticalCloud/vagrant-cloudstack?branch=master)](https://bettercodehub.com/)
 
 This is a fork of [mitchellh AWS Provider](https://github.com/mitchellh/vagrant-aws/).
 
