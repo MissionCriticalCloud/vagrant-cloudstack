@@ -21,6 +21,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     cloudstack.scheme     = 'https'
     cloudstack.api_key    = ENV['CLOUDSTACK_API_KEY']
     cloudstack.secret_key = ENV['CLOUDSTACK_SECRET_KEY']
+    cloudstack.expunge_on_destroy = ENV['EXPUNGE_ON_DESTROY']=="true"
 
     cloudstack.zone_name             = ENV['ZONE_NAME']
     cloudstack.network_name          = ENV['NETWORK_NAME']
