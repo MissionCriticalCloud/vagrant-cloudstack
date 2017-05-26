@@ -21,16 +21,7 @@ module VagrantPlugins
         end
 
         def read_ssh_info(cloudstack, machine)
-          return nil if machine.id.nil?
-
-          # Find the machine
-          server = cloudstack.servers.get(machine.id)
-          if server.nil?
-            # The machine can't be found
-            @logger.info("Machine couldn't be found, assuming it got destroyed.")
-            machine.id = nil
-            return nil
-          end
+          return nil if (server = find_server(cloudstack, machine)).nil?
 
           # Get the Port forwarding config
           domain        = machine.provider_config.domain_id
