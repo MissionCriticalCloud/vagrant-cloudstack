@@ -37,7 +37,7 @@ describe VagrantPlugins::Cloudstack::Config do
     its("pf_public_port")         { should be_nil  }
     its("pf_public_rdp_port")     { should be_nil  }
     its("pf_private_rdp_port")    { should == 3389 }
-    its("pf_public_port_randomrange") { should == {:start=>49160, :end=>49200} }
+    its("pf_public_port_randomrange") { should == {:start=>49152, :end=>65535} }
     its("pf_private_port")        { should be_nil  }
     its("pf_open_firewall")       { should == true }
     its("pf_trusted_networks")    { should be_nil  }
