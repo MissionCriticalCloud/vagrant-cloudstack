@@ -37,15 +37,7 @@ module VagrantPlugins
             options['expunge'] = expunge_on_destroy
 
             job = server.destroy(options)
-            while true
-              response = env[:cloudstack_compute].query_async_job_result({:jobid => job.id})
-              if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                break
-              else
-                env[:ui].info('Waiting for instance to be deleted')
-                sleep 2
-              end
-            end
+            wait_for_job_ready(env, job.id, 'Waiting for instance to be deleted')
           end
 
           remove_volumes(env)
@@ -73,14 +65,7 @@ module VagrantPlugins
               begin
                 resp = env[:cloudstack_compute].detach_volume({:id => volume_id})
                 job_id = resp['detachvolumeresponse']['jobid']
-                while true
-                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-                  if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                    break
-                  else
-                    sleep 2
-                  end
-                end
+                wait_for_job_ready(env, job_id)
               rescue Fog::Compute::Cloudstack::Error => e
                 if e.message =~ /Unable to execute API command detachvolume.*entity does not exist/
                   env[:ui].warn(I18n.t('vagrant_cloudstack.detach_volume_failed', message: e.message))
@@ -163,14 +148,7 @@ module VagrantPlugins
               begin
                 resp = env[:cloudstack_compute].delete_port_forwarding_rule({:id => rule_id})
                 job_id = resp['deleteportforwardingruleresponse']['jobid']
-                while true
-                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-                  if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                    break
-                  else
-                    sleep 2
-                  end
-                end
+                wait_for_job_ready(env, job_id)
               rescue Fog::Compute::Cloudstack::Error => e
                 if e.message =~ /Unable to execute API command deleteportforwardingrule.*entity does not exist/
                   env[:ui].warn(" -- Failed to delete portforwarding rule: #{e.message}")
@@ -204,14 +182,7 @@ module VagrantPlugins
                 }
                 resp = env[:cloudstack_compute].request(options)
                 job_id = resp['disablestaticnatresponse']['jobid']
-                while true
-                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-                  if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                    break
-                  else
-                    sleep 2
-                  end
-                end
+                wait_for_job_ready(env, job_id)
               rescue Fog::Compute::Cloudstack::Error => e
                 raise Errors::FogError, :message => e.message
               end
@@ -244,14 +215,7 @@ module VagrantPlugins
                 }
                 resp = env[:cloudstack_compute].request(options)
                 job_id = resp[response_string]['jobid']
-                while true
-                  response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
-                  if response['queryasyncjobresultresponse']['jobstatus'] != 0
-                    break
-                  else
-                    sleep 2
-                  end
-                end
+                wait_for_job_ready(env, job_id)
               rescue Fog::Compute::Cloudstack::Error => e
                 if e.message =~ /Unable to execute API command deletefirewallrule.*entity does not exist/
                   env[:ui].warn(" -- Failed to delete #{type_string}: #{e.message}")
@@ -261,6 +225,18 @@ module VagrantPlugins
               end
             end
             firewall_file.delete
+          end
+        end
+
+        def wait_for_job_ready(env, job_id, message=nil)
+          while true
+            response = env[:cloudstack_compute].query_async_job_result({:jobid => job_id})
+            if response['queryasyncjobresultresponse']['jobstatus'] != 0
+              break
+            else
+              env[:ui].info(message) if message
+              sleep 2
+            end
           end
         end
       end
