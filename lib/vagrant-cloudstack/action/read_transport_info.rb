@@ -38,6 +38,21 @@ module VagrantPlugins
           end
           return pf_ip_address, pf_public_port
         end
+
+        def find_server(cloudstack, machine)
+          return nil if machine.id.nil?
+
+          # Find the machine
+          server = cloudstack.servers.get(machine.id)
+          if server.nil? || [:"shutting-down", :terminated].include?(server.state.downcase.to_sym)
+            # The machine can't be found
+            @logger.info("Machine couldn't be found, assuming it got destroyed.")
+            machine.id = nil
+            return nil
+          end
+
+          server
+        end
       end
     end
   end

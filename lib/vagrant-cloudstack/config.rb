@@ -3,6 +3,12 @@ require "vagrant"
 module VagrantPlugins
   module Cloudstack
     class Config < Vagrant.plugin("2", :config)
+      INSTANCE_VAR_DEFAULT_NIL = %w(host name path port domain_id network_id network_name project_id service_offering_id service_offering_name
+           template_id template_name zone_id zone_name keypair pf_ip_address_id pf_ip_address pf_public_port
+           pf_public_rdp_port pf_private_port pf_trusted_networks display_name group user_data ssh_key ssh_user
+           ssh_network_id ssh_network_name vm_user vm_password private_ip_address).freeze
+      INSTANCE_VAR_DEFAULT_EMPTY_ARRAY = %w(static_nat port_forwarding_rules firewall_rules security_group_ids security_group_names security_groups).freeze
+
       # Cloudstack api host.
       #
       # @return [String]
@@ -252,53 +258,25 @@ module VagrantPlugins
       # @return [Boolean]
       attr_accessor :expunge_on_destroy
 
-      def initialize(domain_specific=false)
-        @host                      = UNSET_VALUE
-        @name                      = UNSET_VALUE
-        @path                      = UNSET_VALUE
-        @port                      = UNSET_VALUE
-        @scheme                    = UNSET_VALUE
-        @api_key                   = UNSET_VALUE
-        @secret_key                = UNSET_VALUE
-        @instance_ready_timeout    = UNSET_VALUE
-        @domain_id                 = UNSET_VALUE
-        @network_id                = UNSET_VALUE
-        @network_name              = UNSET_VALUE
-        @network_type              = UNSET_VALUE
-        @project_id                = UNSET_VALUE
-        @service_offering_id       = UNSET_VALUE
-        @service_offering_name     = UNSET_VALUE
-        @template_id               = UNSET_VALUE
-        @template_name             = UNSET_VALUE
-        @zone_id                   = UNSET_VALUE
-        @zone_name                 = UNSET_VALUE
-        @keypair                   = UNSET_VALUE
-        @static_nat                = UNSET_VALUE
-        @pf_ip_address_id          = UNSET_VALUE
-        @pf_ip_address             = UNSET_VALUE
-        @pf_public_port            = UNSET_VALUE
-        @pf_public_rdp_port        = UNSET_VALUE
-        @pf_private_rdp_port       = UNSET_VALUE
-        @pf_public_port_randomrange= UNSET_VALUE
-        @pf_private_port           = UNSET_VALUE
-        @pf_open_firewall          = UNSET_VALUE
-        @pf_trusted_networks       = UNSET_VALUE
-        @port_forwarding_rules     = UNSET_VALUE
-        @firewall_rules            = UNSET_VALUE
-        @security_group_ids        = UNSET_VALUE
-        @display_name              = UNSET_VALUE
-        @group                     = UNSET_VALUE
-        @security_group_names      = UNSET_VALUE
-        @security_groups           = UNSET_VALUE
-        @user_data                 = UNSET_VALUE
-        @ssh_key                   = UNSET_VALUE
-        @ssh_user                  = UNSET_VALUE
-        @ssh_network_id            = UNSET_VALUE
-        @ssh_network_name          = UNSET_VALUE
-        @vm_user                   = UNSET_VALUE
-        @vm_password               = UNSET_VALUE
-        @private_ip_address        = UNSET_VALUE
-        @expunge_on_destroy        = UNSET_VALUE
+      def initialize(domain_specific = false)
+        # Initialize groups in bulk, re-use these groups to set defaults in bulk
+        INSTANCE_VAR_DEFAULT_NIL.each do |instance_variable|
+          instance_variable_set("@#{instance_variable}", UNSET_VALUE)
+        end
+        # Initialize groups in bulk, re-use these groups to set defaults in bulk
+        INSTANCE_VAR_DEFAULT_EMPTY_ARRAY.each do |instance_variable|
+          instance_variable_set("@#{instance_variable}", UNSET_VALUE)
+        end
+
+        @scheme                     = UNSET_VALUE
+        @api_key                    = UNSET_VALUE
+        @secret_key                 = UNSET_VALUE
+        @instance_ready_timeout     = UNSET_VALUE
+        @network_type               = UNSET_VALUE
+        @pf_private_rdp_port        = UNSET_VALUE
+        @pf_public_port_randomrange = UNSET_VALUE
+        @pf_open_firewall           = UNSET_VALUE
+        @expunge_on_destroy         = UNSET_VALUE
 
         # Internal state (prefix with __ so they aren't automatically
         # merged)
@@ -369,17 +347,17 @@ module VagrantPlugins
       end
 
       def finalize!
-        # Host must be nil, since we can't default that
-        @host                   = nil if @host == UNSET_VALUE
+        INSTANCE_VAR_DEFAULT_NIL.each do |instance_variable|
+          # ... must be nil, since we can't default that
+          instance_variable_set("@#{instance_variable}", nil) if
+              instance_variable_get("@#{instance_variable}") == UNSET_VALUE
+        end
 
-        # Name must be nil, since we can't default that
-        @name                   = nil if @name == UNSET_VALUE
-
-        # Path must be nil, since we can't default that
-        @path                   = nil if @path == UNSET_VALUE
-
-        # Port must be nil, since we can't default that
-        @port                   = nil if @port == UNSET_VALUE
+        INSTANCE_VAR_DEFAULT_EMPTY_ARRAY.each do |instance_variable|
+          # ... must be empty array
+          instance_variable_set("@#{instance_variable}", []) if
+              instance_variable_get("@#{instance_variable}") == UNSET_VALUE
+        end
 
         # We default the scheme to whatever the user has specifid in the .fog file
         # *OR* whatever is default for the provider in the fog library
@@ -393,131 +371,31 @@ module VagrantPlugins
         # Set the default timeout for waiting for an instance to be ready
         @instance_ready_timeout = 120 if @instance_ready_timeout == UNSET_VALUE
 
-        # Domain id must be nil, since we can't default that
-        @domain_id              = nil if @domain_id == UNSET_VALUE
-
-        # Network uuid must be nil, since we can't default that
-        @network_id             = nil if @network_id == UNSET_VALUE
-
-        # Network uuid must be nil, since we can't default that
-        @network_name           = nil if @network_name == UNSET_VALUE
-
         # NetworkType is 'Advanced' by default
         @network_type           = "Advanced" if @network_type == UNSET_VALUE
-
-        # Project uuid must be nil, since we can't default that
-        @project_id             = nil if @project_id == UNSET_VALUE
-
-        # Service offering uuid must be nil, since we can't default that
-        @service_offering_id    = nil if @service_offering_id == UNSET_VALUE
-
-        # Service offering name must be nil, since we can't default that
-        @service_offering_name  = nil if @service_offering_name == UNSET_VALUE
-
-        # Template uuid must be nil, since we can't default that
-        @template_id            = nil if @template_id == UNSET_VALUE
-
-        # Template name must be nil, since we can't default that
-        @template_name          = nil if @template_name == UNSET_VALUE
-
-        # Zone uuid must be nil, since we can't default that
-        @zone_id                = nil if @zone_id == UNSET_VALUE
-
-        # Zone uuid must be nil, since we can't default that
-        @zone_name              = nil if @zone_name == UNSET_VALUE
-
-        # Keypair defaults to nil
-        @keypair                = nil if @keypair == UNSET_VALUE
-
-        # Static NAT must be empty array
-        @static_nat             = [] if @static_nat == UNSET_VALUE
-
-        # IP address id must be nil, since we can't default that
-        @pf_ip_address_id       = nil if @pf_ip_address_id == UNSET_VALUE
-
-        # IP address must be nil, since we can't default that
-        @pf_ip_address          = nil if @pf_ip_address == UNSET_VALUE
-
-        # Public port must be nil, since we can't default that
-        @pf_public_port         = nil if @pf_public_port == UNSET_VALUE
-
-        # Public port must be nil, since we can't default that
-        @pf_public_rdp_port     = nil if @pf_public_rdp_port == UNSET_VALUE
 
         # Private rdp port defaults to 3389
         @pf_private_rdp_port     = 3389 if @pf_private_rdp_port == UNSET_VALUE
 
         # Public port random-range, default to rfc6335 'Dynamic Ports'; "(never assigned)"
-        @pf_public_port_randomrange = {:start=>49160, :end=>49200} if @pf_public_port_randomrange == UNSET_VALUE
-
-        # Private port must be nil, since we can't default that
-        @pf_private_port        = nil if @pf_private_port == UNSET_VALUE
+        @pf_public_port_randomrange = {:start=>49152, :end=>65535} if @pf_public_port_randomrange == UNSET_VALUE
 
         # Open firewall is true by default (for backwards compatibility)
         @pf_open_firewall       = true if @pf_open_firewall == UNSET_VALUE
-
-        # Trusted networks must be nil, since we can't default that
-        @pf_trusted_networks    = nil if @pf_trusted_networks == UNSET_VALUE
-
-        # Port forwarding rules  must be empty array
-        @port_forwarding_rules  = [] if @port_forwarding_rules == UNSET_VALUE
-
-        # Firewall rules  must be empty array
-        @firewall_rules         = [] if @firewall_rules == UNSET_VALUE
-
-        # Security Group IDs must be nil, since we can't default that
-        @security_group_ids     = [] if @security_group_ids == UNSET_VALUE
-
-        # Security Group Names must be nil, since we can't default that
-        @security_group_names   = [] if @security_group_names == UNSET_VALUE
-
-        # Security Groups must be nil, since we can't default that
-        @security_groups        = [] if @security_groups == UNSET_VALUE
-
-        # Display name must be nil, since we can't default that
-        @display_name           = nil if @display_name == UNSET_VALUE
-
-        # Group must be nil, since we can't default that
-        @group                  = nil if @group == UNSET_VALUE
-
-        # User Data is nil by default
-        @user_data              = nil if @user_data == UNSET_VALUE
-
-        # ssh key is nil by default
-        @ssh_key                = nil if @ssh_key == UNSET_VALUE
-
-        # ssh user is nil by default
-        @ssh_user               = nil if @ssh_user == UNSET_VALUE
-
-        # ssh network_id is nil by default
-        @ssh_network_id         = nil if @ssh_network_id == UNSET_VALUE
-
-        # ssh network_name is nil by default
-        @ssh_network_name       = nil if @ssh_network_name == UNSET_VALUE
-
-        # vm user is nil by default
-        @vm_user               = nil if @vm_user == UNSET_VALUE
-
-        # vm password is nil by default
-        @vm_password               = nil if @vm_password == UNSET_VALUE
-
-        # private ip is nil by default
-        @private_ip_address     = nil if @private_ip_address == UNSET_VALUE
 
         # expunge on destroy is nil by default
         @expunge_on_destroy     = false if @expunge_on_destroy == UNSET_VALUE
 
         # Compile our domain specific configurations only within
         # NON-DOMAIN-SPECIFIC configurations.
-        if !@__domain_specific
+        unless @__domain_specific
           @__domain_config.each do |domain, blocks|
             config = self.class.new(true).merge(self)
 
             # Execute the configuration for each block
             blocks.each { |b| b.call(config) }
 
-            # The domain name of the configuration always equals the
-            # domain config name:
+            # The domain name of the configuration always equals the domain config name:
             config.domain = domain
 
             # Finalize the configuration
@@ -536,11 +414,10 @@ module VagrantPlugins
         errors = []
 
         if @domain
-          # Get the configuration for the domain we're using and validate only
-          # that domain.
+          # Get the configuration for the domain we're using and validate only that domain.
           config = get_domain_config(@domain)
 
-          if !config.use_fog_profile
+          unless config.use_fog_profile
             errors << I18n.t("vagrant_cloudstack.config.api_key_required") if \
                config.access_key_id.nil?
             errors << I18n.t("vagrant_cloudstack.config.secret_key_required") if \
@@ -554,9 +431,7 @@ module VagrantPlugins
       # This gets the configuration for a specific domain. It shouldn't
       # be called by the general public and is only used internally.
       def get_domain_config(name)
-        if !@__finalized
-          raise "Configuration must be finalized before calling this method."
-        end
+        raise 'Configuration must be finalized before calling this method.' unless @__finalized
 
         # Return the compiled domain config
         @__compiled_domain_configs[name] || self
