@@ -34,31 +34,10 @@ describe VagrantPlugins::Cloudstack::Action::TerminateInstance do
   describe '#terminate_instance in advanced zone' do
     subject { action.call(env) }
     let(:app) { double('Vagrant::Action::Warden') }
-    let(:ssh_key) { '/some/path' }
-
-    let(:template_name) { TEMPLATE_NAME }
-
-    let(:pf_ip_address) { nil }
-    let(:pf_trusted_networks) { nil }
-    let(:pf_public_port_randomrange) { nil }
-    let(:pf_open_firewall) { nil }
-    let(:disk_offering_name) { nil }
 
     let(:provider_config) do
       config = VagrantPlugins::Cloudstack::Config.new
-      config.domain_config :cloudstack do |cfg|
-        cfg.zone_name = ZONE_NAME
-        cfg.network_name = NETWORK_NAME
-        cfg.service_offering_name = SERVICE_OFFERING_NAME
-        cfg.template_name = template_name
-        cfg.display_name = DISPLAY_NAME
-        cfg.pf_ip_address = pf_ip_address
-        cfg.pf_trusted_networks = pf_trusted_networks
-        cfg.pf_public_port_randomrange = pf_public_port_randomrange
-        cfg.pf_open_firewall = pf_open_firewall
-        cfg.ssh_key = ssh_key
-        cfg.disk_offering_name = disk_offering_name
-      end
+
       config.finalize!
       config.get_domain_config(:cloudstack)
     end
@@ -67,17 +46,7 @@ describe VagrantPlugins::Cloudstack::Action::TerminateInstance do
     let(:data_dir) { double('Pathname') }
     let(:a_path) { double('Pathname') }
     let(:file) { double('File') }
-    let(:communicator) { double('VagrantPlugins::CommunicatorSSH::Communicator') }
-    let(:communicator_config) { double('VagrantPlugins::...::...Config') }
-    let(:winrm_config) { double('VagrantPlugins::VagrantWinRM::WinRMConfig') }
 
-    let(:cloudstack_zone) do
-      instance_double('Fog::Compute::Cloudstack::Zone',
-                      id: ZONE_ID,
-                      name: ZONE_NAME,
-                      network_type: NETWORK_TYPE,
-                      security_groups_enabled: SECURITY_GROUPS_ENABLED)
-    end
     let(:cloudstack_compute) { double('Fog::Compute::Cloudstack') }
     let(:servers) { double('Fog::Compute::Cloudstack::Servers') }
     let(:server) { double('Fog::Compute::Cloudstack::Server') }
@@ -214,11 +183,11 @@ describe VagrantPlugins::Cloudstack::Action::TerminateInstance do
       end
 
       context 'with generated SSH key removal' do
-        let(:ssh_key__path) { double('Pathname') }
+        let(:ssh_key_path) { double('Pathname') }
 
         before(:each) do
-          expect(data_dir).to receive(:join).with('sshkeyname').and_return(ssh_key__path)
-          expect(ssh_key__path).to receive(:file?).and_return(true)
+          expect(data_dir).to receive(:join).with('sshkeyname').and_return(ssh_key_path)
+          expect(ssh_key_path).to receive(:file?).and_return(true)
           allow(File).to receive(:read)
             .and_return("#{SSH_GENERATED_KEY_NAME}\n")
 
@@ -226,7 +195,48 @@ describe VagrantPlugins::Cloudstack::Action::TerminateInstance do
             .with(name: SSH_GENERATED_KEY_NAME)
             .and_return('deletesshkeypairresponse' => { 'success' => 'true' })
 
-          expect(ssh_key__path).to receive(:delete).and_return(true)
+          expect(ssh_key_path).to receive(:delete).and_return(true)
+        end
+
+        it 'destroys a vm' do
+          should eq true
+        end
+      end
+
+      context 'with security groups removal' do
+        let(:security_group_path) { double('Pathname') }
+        let(:cloudstack_securitygroups) { double('Fog::Compute::Cloudstack::SecurityGroups') }
+        let(:cloudstack_securitygroup) { double('Fog::Compute::Cloudstack::SecurityGroup') }
+        RULE_ID_INGRESS = 'UUID of Ingress Rule'.freeze
+        RULE_ID_EGRESS = 'UUID of Egress Rule'.freeze
+
+        before(:each) do
+          expect(data_dir).to receive(:join).with('security_groups').and_return(security_group_path)
+          expect(security_group_path).to receive(:file?).and_return(true)
+          allow(File).to receive(:read)
+            .and_return("#{SECURITY_GROUP_ID}\n")
+
+          expect(cloudstack_compute).to receive(:security_groups).and_return(cloudstack_securitygroups)
+          expect(cloudstack_securitygroups).to receive(:get)
+            .with(SECURITY_GROUP_ID)
+            .and_return(cloudstack_securitygroup)
+
+          expect(cloudstack_securitygroup).to receive(:ingress_rules)
+            .and_return([{ 'ruleid' => RULE_ID_INGRESS }])
+          expect(cloudstack_compute).to receive(:revoke_security_group_ingress)
+            .with(id: RULE_ID_INGRESS)
+            .and_return('revokesecuritygroupingressresponse' => { 'jobid' => JOB_ID })
+
+          expect(cloudstack_securitygroup).to receive(:egress_rules)
+            .and_return([{ 'ruleid' => RULE_ID_EGRESS }])
+          expect(cloudstack_compute).to receive(:revoke_security_group_egress)
+            .with(id: RULE_ID_EGRESS)
+            .and_return('revokesecuritygroupegressresponse' => { 'jobid' => JOB_ID })
+
+          expect(cloudstack_compute).to receive(:delete_security_group)
+            .with(id: SECURITY_GROUP_ID)
+
+          expect(security_group_path).to receive(:delete).and_return(true)
         end
 
         it 'destroys a vm' do
