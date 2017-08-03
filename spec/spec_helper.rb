@@ -22,8 +22,13 @@ DISK_OFFERING_NAME = 'Disk Offering Name'.freeze
 DISK_OFFERING_ID = 'Disk Offering UUID'.freeze
 
 SERVER_ID = 'Server UUID'.freeze
-NETWORK_TYPE = 'Advanced'.freeze
-SECURITY_GROUPS_ENABLED = false
+NETWORK_TYPE_ADVANCED = 'Advanced'.freeze
+NETWORK_TYPE_BASIC = 'Basic'.freeze
+SECURITY_GROUPS_ENABLED = true
+SECURITY_GROUPS_DISABLED = false
+SECURITY_GROUP_ID   = 'UUID of Security Group'.freeze
+SECURITY_GROUP_NAME = 'Name of Security Group'.freeze
+SECURITY_GROUP_DESC = 'Description of Security Group'.freeze
 
 PF_IP_ADDRESS = 'Public IP for port forwarding'.freeze
 PF_IP_ADDRESS_ID = 'UUID of Public IP for port forwarding'.freeze
