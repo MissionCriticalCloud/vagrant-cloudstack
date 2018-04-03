@@ -30,6 +30,18 @@ $ vagrant up --provider=cloudstack
 ...
 ```
 
+## Test status features [Cosmic](https://github.com/MissionCriticalCloud/cosmic) versus [Cloudstack](http://cloudstack.apache.org)
+The release of version 1.1.0 - 1.4.0 were (only) released after ALL functional tests passed.
+As we, current maintainers, are only using [Cosmic](https://github.com/MissionCriticalCloud/cosmic), we only have availability of a [Cosmic](https://github.com/MissionCriticalCloud/cosmic) cloud, not a CloudStack cloud.
+
+This means that we, maintainers, are not able to actively test the following functionality:
+* Basic Zone Network
+* Security Groups
+* Virtual Router / Isolated network
+
+For any change on these items we kindly request you to run the appropriate functional tests and provide the result in the PR.
+
+
 ## Quick Start
 
 After installing the plugin (instructions above), the quickest way to get

@@ -30,8 +30,9 @@ task :default => "spec"
 namespace :functional_tests do
 
   # Name must match folder beneath functional-tests/
-  functional_test_names = %w(vmlifecycle networking rsync)
-  separate_test_names   = %w(basic)
+  cosmic_test_names = %w(vmlifecycle networking_vpc rsync)
+  separate_test_names   = %w(basic networking_iso)
+  functional_test_names = cosmic_test_names + separate_test_names
 
   desc "Check for required enviroment variables for functional testing"
   task :check_environment do
@@ -68,6 +69,13 @@ namespace :functional_tests do
   desc "Run all functional tests"
   task :all => [ :check_environment ] do
     functional_test_names.each do |test_name|
+      Rake::Task["functional_tests:#{test_name}"].invoke
+    end
+  end
+
+  desc "Run functional tests supported by Cosmic"
+  task :cosmic => [ :check_environment ] do
+    cosmic_test_names.each do |test_name|
       Rake::Task["functional_tests:#{test_name}"].invoke
     end
   end

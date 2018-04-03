@@ -9,10 +9,6 @@ networks = {
     VR: {
         network_name: ENV['VR_NETWORK_NAME'],
         public_ip: ENV['VR_PUBLIC_IP']
-    },
-    VPC: {
-        network_name: ENV['VPC_TIER_NAME'],
-        public_ip: ENV['VPC_PUBLIC_IP']
     }
 }
 machines = {}
