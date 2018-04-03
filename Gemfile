@@ -16,5 +16,5 @@ group :development do
 end
 
 group :plugins do
-  gem 'vagrant-cloudstack', path: '.'
+  gemspec
 end

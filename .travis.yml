@@ -1,16 +1,20 @@
 language: ruby
+
+rvm:
+  - 2.3
+
+cache: apt
+
+addons:
+  apt:
+    packages:
+      bsdtar
+
+script: bundle exec rake
+
 notifications:
   email:
     - int-toolkit@schubergphilis.com
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq -y bsdtar
-  - rvm @global do gem uninstall bundler -a -x
-  - rvm @global do gem install bundler -v 1.12.5
-rvm:
-  - 2.3
-script: bundle exec rake
-notifications:
   webhooks:
     urls:
       - https://webhooks.gitter.im/e/83f6eebe81bad15857f4
