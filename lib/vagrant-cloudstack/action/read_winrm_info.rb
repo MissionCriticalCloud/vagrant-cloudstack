@@ -43,15 +43,13 @@ module VagrantPlugins
           # the username via winrm_info ... yet ;-)
 
           # Read password from file into domain_config
-          if domain_config.vm_password.nil?
-            vmcredentials_file = machine.data_dir.join("vmcredentials")
-            if vmcredentials_file.file?
-              vmcredentials_password = nil
-              File.read(vmcredentials_file).each_line do |line|
-                vmcredentials_password = line.strip
-              end
-              domain_config.vm_password = vmcredentials_password
+          vmcredentials_file = machine.data_dir.join("vmcredentials")
+          if vmcredentials_file.file?
+            vmcredentials_password = nil
+            File.read(vmcredentials_file).each_line do |line|
+              vmcredentials_password = line.strip
             end
+            domain_config.vm_password = vmcredentials_password
           end
 
           transport_info = transport_info.merge({
