@@ -388,7 +388,7 @@ module VagrantPlugins
             'VagrantPlugins::CommunicatorSSH::Communicator' => 40,
             'VagrantPlugins::CommunicatorWinRM::Communicator' => 1
           }
-          communicator_connect_attempts[communicator.class.name]
+          return communicator_connect_attempts[communicator.class.name].nil? ? 1 : communicator_connect_attempts[communicator.class.name]
         end
 
         def evaluate_pf_private_port
@@ -498,9 +498,8 @@ module VagrantPlugins
               if response['queryasyncjobresultresponse']['jobstatus'] != 0
                 port_forwarding_rule = response['queryasyncjobresultresponse']['jobresult']['portforwardingrule']
                 break
-              else
-                sleep 2
               end
+              sleep 2
             end
           rescue Fog::Compute::Cloudstack::Error => e
             raise Errors::FogError, :message => e.message
@@ -727,9 +726,8 @@ module VagrantPlugins
               if response['queryasyncjobresultresponse']['jobstatus'] != 0
                 firewall_rule = response['queryasyncjobresultresponse']['jobresult'][type_string]
                 break
-              else
-                sleep 2
               end
+              sleep 2
             end
           rescue Fog::Compute::Cloudstack::Error => e
             if e.message =~ /The range specified,.*conflicts with rule/
@@ -772,7 +770,6 @@ module VagrantPlugins
           if @server.respond_to?('job_id')
             server_job_result = @env[:cloudstack_compute].query_async_job_result({:jobid => @server.job_id})
             if server_job_result.nil?
-              @env[:ui].warn(' -- Failed to retrieve job_result')
               raise 'ERROR -- Failed to retrieve job_result'
             end
 
@@ -781,9 +778,8 @@ module VagrantPlugins
               if server_job_result['queryasyncjobresultresponse']['jobstatus'] != 0
                 password = server_job_result['queryasyncjobresultresponse']['jobresult']['virtualmachine']['password']
                 break
-              else
-                sleep 2
               end
+              sleep 2
             end
 
             @env[:ui].info("Password of virtualmachine: #{password}")
