@@ -24,7 +24,7 @@ GIT
 PATH
   remote: .
   specs:
-    vagrant-cloudstack (1.4.0)
+    vagrant-cloudstack (1.5.0)
       fog (>= 1.32.0)
       fog-xml (>= 0.1.2)
 

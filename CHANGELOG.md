@@ -1,3 +1,33 @@
+# 1.5.0 (17 Oct 2018)
+
+**Implemented enhancements:**
+
+- Provide human readable error when `sync_resource` cannot sync name-\>id [\#163](https://github.com/MissionCriticalCloud/vagrant-cloudstack/issues/163)
+- Deduplicate code in read\_\[ssh|winrm|rdp\]\_info [\#150](https://github.com/MissionCriticalCloud/vagrant-cloudstack/issues/150)
+- CloudStack acquire Public IP address [\#87](https://github.com/MissionCriticalCloud/vagrant-cloudstack/issues/87)
+
+**Fixed bugs:**
+
+- Make vagrant-cloudstack able to run in \(Docker\) container [\#157](https://github.com/MissionCriticalCloud/vagrant-cloudstack/issues/157)
+
+**Closed issues:**
+
+- Write Code Once [\#172](https://github.com/MissionCriticalCloud/vagrant-cloudstack/issues/172)
+- Template name used is mis-reported [\#56](https://github.com/MissionCriticalCloud/vagrant-cloudstack/issues/56)
+
+**Merged pull requests:**
+
+- Fix the travis setup. [\#179](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/179) ([greut](https://github.com/greut))
+- Update Vagrant to 2.0.3, unbork bundler. [\#178](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/178) ([greut](https://github.com/greut))
+- Add testing for different scenarios for basic zone implementation [\#176](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/176) ([bheuvel](https://github.com/bheuvel))
+- Refactoring of run\_instance, config and added testing [\#175](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/175) ([bheuvel](https://github.com/bheuvel))
+- Unit testing covering a \(most\) basic VM deployment [\#174](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/174) ([bheuvel](https://github.com/bheuvel))
+- Refactor read info classes using a super class [\#173](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/173) ([bheuvel](https://github.com/bheuvel))
+- Improve error message/handling [\#170](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/170) ([bheuvel](https://github.com/bheuvel))
+- Don't set network\_ids when using basic networking [\#168](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/168) ([hrak](https://github.com/hrak))
+- Pin kitchen-vagrant and vagrant-winrm [\#167](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/167) ([bheuvel](https://github.com/bheuvel))
+- Fix user dependency [\#165](https://github.com/MissionCriticalCloud/vagrant-cloudstack/pull/165) ([bheuvel](https://github.com/bheuvel))
+
 # 1.4.0 (Nov 30, 2016)
 * Support multiple network ids and network names (PR #148)
 * Add ssh_network_id and ssh_network_name configuration (PR #149)
