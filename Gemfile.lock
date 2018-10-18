@@ -46,6 +46,7 @@ GEM
     erubis (2.7.0)
     excon (0.62.0)
     ffi (1.9.23)
+    ffi (1.9.23-x64-mingw32)
     fission (0.5.0)
       CFPropertyList (~> 2.2)
     fog (2.0.0)
@@ -230,6 +231,8 @@ GEM
     net-ssh (4.2.0)
     nokogiri (1.8.2)
       mini_portile2 (~> 2.3.0)
+    nokogiri (1.8.2-x64-mingw32)
+      mini_portile2 (~> 2.3.0)
     nori (2.6.0)
     rake (10.5.0)
     rb-fsevent (0.10.3)
@@ -291,6 +294,7 @@ GEM
 
 PLATFORMS
   ruby
+  x64-mingw32
 
 DEPENDENCIES
   coveralls

@@ -37,7 +37,9 @@ module VagrantPlugins
 
           store_volumes
 
-          store_password
+          password = wait_for_password
+
+          store_password(password)
 
           configure_networking
 
@@ -381,6 +383,14 @@ module VagrantPlugins
           communicator_short_names[communicator.class.name]
         end
 
+        def get_communicator_connect_attempts(communicator)
+          communicator_connect_attempts = {
+            'VagrantPlugins::CommunicatorSSH::Communicator' => 40,
+            'VagrantPlugins::CommunicatorWinRM::Communicator' => 1
+          }
+          return communicator_connect_attempts[communicator.class.name].nil? ? 1 : communicator_connect_attempts[communicator.class.name]
+        end
+
         def evaluate_pf_private_port
           return unless @domain_config.pf_private_port.nil?
 
@@ -488,9 +498,8 @@ module VagrantPlugins
               if response['queryasyncjobresultresponse']['jobstatus'] != 0
                 port_forwarding_rule = response['queryasyncjobresultresponse']['jobresult']['portforwardingrule']
                 break
-              else
-                sleep 2
               end
+              sleep 2
             end
           rescue Fog::Compute::Cloudstack::Error => e
             raise Errors::FogError, :message => e.message
@@ -717,9 +726,8 @@ module VagrantPlugins
               if response['queryasyncjobresultresponse']['jobstatus'] != 0
                 firewall_rule = response['queryasyncjobresultresponse']['jobresult'][type_string]
                 break
-              else
-                sleep 2
               end
+              sleep 2
             end
           rescue Fog::Compute::Cloudstack::Error => e
             if e.message =~ /The range specified,.*conflicts with rule/
@@ -756,13 +764,13 @@ module VagrantPlugins
           @domain_config.keypair =  sshkeypair['name']
         end
 
-        def store_password
+        def wait_for_password
           password = nil
-          if @server.password_enabled and @server.respond_to?('job_id')
+
+          if @server.respond_to?('job_id')
             server_job_result = @env[:cloudstack_compute].query_async_job_result({:jobid => @server.job_id})
             if server_job_result.nil?
-              @env[:ui].warn(' -- Failed to retrieve job_result for retrieving the password')
-              return
+              raise 'ERROR -- Failed to retrieve job_result'
             end
 
             while true
@@ -770,21 +778,33 @@ module VagrantPlugins
               if server_job_result['queryasyncjobresultresponse']['jobstatus'] != 0
                 password = server_job_result['queryasyncjobresultresponse']['jobresult']['virtualmachine']['password']
                 break
-              else
-                sleep 2
               end
+              sleep 2
             end
 
             @env[:ui].info("Password of virtualmachine: #{password}")
-            # Set the password on the current communicator
-            @domain_config.vm_password = password
-
-            # Save password to file
-            vmcredentials_file = @env[:machine].data_dir.join('vmcredentials')
-            vmcredentials_file.open('w') do |f|
-              f.write("#{password}")
-            end
           end
+
+          password
+        end
+
+        def store_password(password)
+          unless @server.password_enabled
+              @env[:ui].info("VM is not password-enabled. Using virtualmachine password from config")
+              if @domain_config.vm_password.nil?
+                fail "No vm_password configured but VM is not password enabled either!"
+              end
+              password = @domain_config.vm_password
+          end
+
+          # Save password to file
+          vmcredentials_file = @env[:machine].data_dir.join('vmcredentials')
+          vmcredentials_file.open('w') do |f|
+            f.write("#{password}")
+          end
+
+          # Set the password on the current communicator
+          @domain_config.vm_password = password
         end
 
         def store_volumes
@@ -829,15 +849,18 @@ module VagrantPlugins
           @env[:metrics]['instance_ssh_time'] = Util::Timer.time do
             # Wait for communicator to be ready.
             communicator_short_name = get_communicator_short_name(@env[:machine].communicate)
+            communicator_connect_attempts = get_communicator_connect_attempts(@env[:machine].communicate)
             @env[:ui].info(
               I18n.t('vagrant_cloudstack.waiting_for_communicator',
                      communicator: communicator_short_name.to_s.upcase)
             )
-            while true
+            connection_attempt = 0
+            while connection_attempt<communicator_connect_attempts
               # If we're interrupted then just back out
               break if @env[:interrupted]
               break if @env[:machine].communicate.ready?
               sleep 2
+              connection_attempt = connection_attempt + 1
             end
           end
           @logger.info("Time for SSH ready: #{@env[:metrics]['instance_ssh_time']}")

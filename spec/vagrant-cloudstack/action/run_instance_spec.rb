@@ -260,7 +260,11 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
 
       allow(machine).to receive(:provider_config).and_return(provider_config)
       expect(server).to receive(:wait_for).and_return(ready = true)
-      allow(server).to receive(:password_enabled).and_return(false)
+      allow(server).to receive(:password_enabled).and_return(true)
+      allow(server).to receive(:job_id).and_return(JOB_ID)
+      
+      expect(file).to receive(:write).with(GENERATED_PASSWORD)
+      allow(cloudstack_compute).to receive(:query_async_job_result).with(jobid: JOB_ID).and_return(fake_job_result)
       expect(cloudstack_compute).to receive(:servers).and_return(servers)
       allow(cloudstack_compute).to receive(:send).with(:list_zones, available: true).and_return(list_zones_response)
       allow(cloudstack_compute).to receive(:send).with(:list_service_offerings, listall: true)
@@ -289,6 +293,7 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
           cfg.ssh_key = ssh_key
           cfg.security_groups = security_groups
           cfg.network_name = network_name
+          cfg.vm_password = GENERATED_PASSWORD
         end
         config.finalize!
         config.get_domain_config(:cloudstack)
@@ -354,8 +359,8 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
           should eq true
         end
       end
-    end
-
+    end  
+      
     context 'in advanced zone' do
       let(:pf_ip_address) { nil }
       let(:pf_trusted_networks) { nil }
@@ -377,6 +382,7 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
           cfg.pf_open_firewall = pf_open_firewall
           cfg.ssh_key = ssh_key
           cfg.disk_offering_name = disk_offering_name
+          cfg.vm_password = GENERATED_PASSWORD
         end
         config.finalize!
         config.get_domain_config(:cloudstack)
@@ -385,8 +391,6 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
       let(:winrm_config) { double('VagrantPlugins::VagrantWinRM::WinRMConfig') }
 
       before(:each) do
-        allow(cloudstack_compute).to receive(:query_async_job_result).with(jobid: JOB_ID).and_return(fake_job_result)
-
         allow(cloudstack_compute).to receive(:send).with(:list_networks, {}).and_return(list_networks_response)
       end
 
@@ -427,11 +431,9 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
         end
       end
 
-      context 'with generated password' do
+      context 'with static password' do
         before(:each) do
-          expect(server).to receive(:password_enabled).and_return(true)
-          allow(server).to receive(:job_id).and_return(JOB_ID)
-          expect(file).to receive(:write).with(GENERATED_PASSWORD)
+          expect(server).to receive(:password_enabled).and_return(false)
         end
 
         it 'starts a vm' do
