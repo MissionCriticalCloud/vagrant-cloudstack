@@ -233,6 +233,7 @@ module VagrantPlugins
           @env[:ui].info(" -- Display Name: #{@domain_config.display_name}")
           @env[:ui].info(" -- Group: #{@domain_config.group}") if @domain_config.group
           @env[:ui].info(" -- Service offering: #{@service_offering.name} (#{@service_offering.id})")
+          @env[:ui].info(" -- Root disk size: #{@domain_config.root_disk_size}G") unless @domain_config.root_disk_size.nil?
           @env[:ui].info(" -- Disk offering: #{@disk_offering.name} (#{@disk_offering.id})") unless @disk_offering.id.nil?
           @env[:ui].info(" -- Template: #{@template.name} (#{@template.id})")
           @env[:ui].info(" -- Project UUID: #{@domain_config.project_id}") unless @domain_config.project_id.nil?
@@ -289,6 +290,7 @@ module VagrantPlugins
           options['name'] = @domain_config.name unless @domain_config.name.nil?
           options['ip_address'] = @domain_config.private_ip_address unless @domain_config.private_ip_address.nil?
           options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
+          options['root_disk_size'] = @domain_config.root_disk_size unless @domain_config.root_disk_size.nil?
 
           if @domain_config.user_data != nil
             options['user_data'] = Base64.urlsafe_encode64(@domain_config.user_data)
