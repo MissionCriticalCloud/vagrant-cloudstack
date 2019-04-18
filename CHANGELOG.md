@@ -1,3 +1,9 @@
+# 1.5.1 (18 Apr 2019)
+
+**Implemented enhancements:**
+
+- Sync resources by name: sometimes a resource (e.g. templates) were not correctly found; resources are now looked up by specifying the name of the resource
+
 # 1.5.0 (17 Oct 2018)
 
 **Implemented enhancements:**

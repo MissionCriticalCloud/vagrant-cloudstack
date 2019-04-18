@@ -114,10 +114,10 @@ module VagrantPlugins
 
         def resolve_parameters
           begin
-            @resource_service.sync_resource(@zone, {available: true})
-            @resource_service.sync_resource(@service_offering, {listall: true})
-            @resource_service.sync_resource(@disk_offering, {listall: true})
-            @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable', listall: true})
+            @resource_service.sync_resource(@zone, {available: true, name: @zone.name})
+            @resource_service.sync_resource(@service_offering, {listall: true, name: @service_offering.name})
+            @resource_service.sync_resource(@disk_offering, {listall: true, name: @disk_offering.name})
+            @resource_service.sync_resource(@template, {zoneid: @zone.id, templatefilter: 'executable', listall: true, name: @template.name})
             @resource_service.sync_resource(@pf_ip_address)
           rescue CloudstackResourceNotFound => e
             @env[:ui].error(e.message)

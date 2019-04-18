@@ -262,11 +262,11 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
       expect(server).to receive(:wait_for).and_return(ready = true)
       allow(server).to receive(:password_enabled).and_return(false)
       expect(cloudstack_compute).to receive(:servers).and_return(servers)
-      allow(cloudstack_compute).to receive(:send).with(:list_zones, available: true).and_return(list_zones_response)
-      allow(cloudstack_compute).to receive(:send).with(:list_service_offerings, listall: true)
+      allow(cloudstack_compute).to receive(:send).with(:list_zones, available: true, name: ZONE_NAME).and_return(list_zones_response)
+      allow(cloudstack_compute).to receive(:send).with(:list_service_offerings, listall: true, name: SERVICE_OFFERING_NAME)
         .and_return(list_service_offerings_response)
       allow(cloudstack_compute).to receive(:send)
-        .with(:list_templates, zoneid: ZONE_ID, templatefilter: 'executable', listall: true)
+        .with(:list_templates, zoneid: ZONE_ID, templatefilter: 'executable', listall: true, name: TEMPLATE_NAME)
         .and_return(list_templates_response)
       allow(cloudstack_compute).to receive(:zones).and_return([cloudstack_zone])
       allow(servers).to receive(:create).with(create_servers_parameters).and_return(server)
@@ -413,7 +413,7 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
         let(:volume) { double('Fog::Compute::Cloudstack::Volume') }
 
         before(:each) do
-          allow(cloudstack_compute).to receive(:send).with(:list_disk_offerings, listall: true)
+          allow(cloudstack_compute).to receive(:send).with(:list_disk_offerings, listall: true, name: DISK_OFFERING_NAME)
             .and_return(list_disk_offerings_response)
           expect(cloudstack_compute).to receive(:volumes).and_return([volume])
           allow(volume).to receive(:server_id).and_return(SERVER_ID)
