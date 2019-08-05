@@ -3,7 +3,7 @@ require 'vagrant-cloudstack/action/terminate_instance'
 require 'vagrant-cloudstack/config'
 
 require 'vagrant'
-require 'fog'
+require 'fog/cloudstack'
 
 describe VagrantPlugins::Cloudstack::Action::TerminateInstance do
   let(:action) { VagrantPlugins::Cloudstack::Action::TerminateInstance.new(app, env) }

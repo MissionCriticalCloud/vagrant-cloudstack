@@ -6,7 +6,7 @@ module VagrantPlugins
       INSTANCE_VAR_DEFAULT_NIL = %w(host name path port domain_id network_id network_name project_id service_offering_id service_offering_name
            template_id template_name zone_id zone_name keypair pf_ip_address_id pf_ip_address pf_public_port
            pf_public_rdp_port pf_private_port pf_trusted_networks display_name group user_data ssh_key ssh_user
-           ssh_network_id ssh_network_name vm_user vm_password private_ip_address).freeze
+           ssh_network_id ssh_network_name vm_user vm_password private_ip_address affinity_group_ids affinity_group_names).freeze
       INSTANCE_VAR_DEFAULT_EMPTY_ARRAY = %w(static_nat port_forwarding_rules firewall_rules security_group_ids security_group_names security_groups).freeze
 
       # Cloudstack api host.
@@ -252,6 +252,16 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :private_ip_address
+
+      # Affinity Group IDs for the instance
+      #
+      # @return [String]
+      attr_accessor :affinity_group_ids
+
+      # Affinity Group Names for the instance
+      #
+      # @return [String]
+      attr_accessor :affinity_group_names
 
       # flag to enable/disable expunge vm on destroy
       #

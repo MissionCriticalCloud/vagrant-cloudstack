@@ -6,17 +6,33 @@ Gem::Specification.new do |s|
   s.version       = VagrantPlugins::Cloudstack::VERSION
   s.platform      = Gem::Platform::RUBY
   s.license       = 'MIT'
-  s.authors       = ['Mitchell Hashimoto', 'Carl Loa Odin', 'Tor-Åke Fransson', 'Olle Lundberg', 'Roeland Kuipers', 'Yuichi Uemura', 'Atsushi Sasaki', 'Nicolas Brechet', 'Peter Jönsson', 'Christophe Roux', 'Andrei Chiriaev', 'Miguel Ferreira', 'Timothy van Zadelhoff', 'Geurt Schimmel', 'Bob van den Heuvel']
-  s.email         = 'int-toolkit@schubergphilis.com'
-  s.homepage      = 'https://github.com/missioncriticalcloud/vagrant-cloudstack/'
+  s.authors       = [
+    'Andrei Chiriaev',
+    'Atsushi Sasaki',
+    'Bob van den Heuvel',
+    'Carl Loa Odin',
+    'Christophe Roux',
+    'Geurt Schimmel',
+    'Miguel Ferreira',
+    'Mitchell Hashimoto',
+    'Nicolas Brechet',
+    'Olle Lundberg',
+    'Peter Jönsson',
+    'Roeland Kuipers',
+    'Stephen Hoekstra',
+    'Timothy van Zadelhoff',
+    'Tor-Åke Fransson',
+    'Yuichi Uemura',
+  ]
+  s.email         = 'int-cloud@schubergphilis.com'
+  s.homepage      = 'https://github.com/MissionCriticalCloud/vagrant-cloudstack/'
   s.summary       = 'Enables Vagrant to manage machines in Cloudstack.'
   s.description   = 'Provides a cloudstack provider in Vagrant via which Vagrant can manage machines in CloudStack.'
 
   s.required_rubygems_version = '>= 1.3.6'
   s.rubyforge_project         = 'vagrant-cloudstack'
 
-  s.add_runtime_dependency 'fog', '>= 1.32.0'
-  s.add_runtime_dependency 'fog-xml', '>= 0.1.2'
+  s.add_runtime_dependency 'fog-cloudstack', '~> 0.1.0'
 
   s.add_development_dependency 'rake',                '>= 10.4', '~> 10.5'
   s.add_development_dependency 'rspec-core',          '~> 2.14', '>= 2.14.7'

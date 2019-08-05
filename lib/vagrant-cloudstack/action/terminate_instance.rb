@@ -66,7 +66,7 @@ module VagrantPlugins
                 resp = env[:cloudstack_compute].detach_volume({:id => volume_id})
                 job_id = resp['detachvolumeresponse']['jobid']
                 wait_for_job_ready(env, job_id)
-              rescue Fog::Compute::Cloudstack::Error => e
+              rescue Fog::Cloudstack::Compute::Error => e
                 if e.message =~ /Unable to execute API command detachvolume.*entity does not exist/
                   env[:ui].warn(I18n.t('vagrant_cloudstack.detach_volume_failed', message: e.message))
                 else
@@ -98,13 +98,13 @@ module VagrantPlugins
                 end
                 env[:ui].info('Deleted egress rules')
 
-              rescue Fog::Compute::Cloudstack::Error => e
+              rescue Fog::Cloudstack::Compute::Error => e
                 raise Errors::FogError, :message => e.message
               end
 
               begin
                 env[:cloudstack_compute].delete_security_group({:id => security_group_id})
-              rescue Fog::Compute::Cloudstack::Error => e
+              rescue Fog::Cloudstack::Compute::Error => e
                 env[:ui].warn("Couldn't delete group right now.")
                 env[:ui].warn('Waiting 30 seconds to retry')
                 sleep 30
@@ -127,7 +127,7 @@ module VagrantPlugins
             begin
               response = env[:cloudstack_compute].delete_ssh_key_pair(name: sshkeyname)
               env[:ui].warn(I18n.t('vagrant_cloudstack.ssh_key_pair_no_success_removing', name: sshkeyname)) unless response['deletesshkeypairresponse']['success'] == 'true'
-            rescue Fog::Compute::Cloudstack::Error => e
+            rescue Fog::Cloudstack::Compute::Error => e
               env[:ui].warn(I18n.t('vagrant_cloudstack.errors.fog_error', :message => e.message))
             end
             sshkeyname_file.delete
@@ -149,7 +149,7 @@ module VagrantPlugins
                 resp = env[:cloudstack_compute].delete_port_forwarding_rule({:id => rule_id})
                 job_id = resp['deleteportforwardingruleresponse']['jobid']
                 wait_for_job_ready(env, job_id)
-              rescue Fog::Compute::Cloudstack::Error => e
+              rescue Fog::Cloudstack::Compute::Error => e
                 if e.message =~ /Unable to execute API command deleteportforwardingrule.*entity does not exist/
                   env[:ui].warn(" -- Failed to delete portforwarding rule: #{e.message}")
                 else
@@ -183,7 +183,7 @@ module VagrantPlugins
                 resp = env[:cloudstack_compute].request(options)
                 job_id = resp['disablestaticnatresponse']['jobid']
                 wait_for_job_ready(env, job_id)
-              rescue Fog::Compute::Cloudstack::Error => e
+              rescue Fog::Cloudstack::Compute::Error => e
                 raise Errors::FogError, :message => e.message
               end
             end
@@ -216,7 +216,7 @@ module VagrantPlugins
                 resp = env[:cloudstack_compute].request(options)
                 job_id = resp[response_string]['jobid']
                 wait_for_job_ready(env, job_id)
-              rescue Fog::Compute::Cloudstack::Error => e
+              rescue Fog::Cloudstack::Compute::Error => e
                 if e.message =~ /Unable to execute API command deletefirewallrule.*entity does not exist/
                   env[:ui].warn(" -- Failed to delete #{type_string}: #{e.message}")
                 else
