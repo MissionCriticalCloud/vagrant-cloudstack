@@ -281,22 +281,22 @@ module VagrantPlugins
 
           unless @networks.empty?
             nets = @networks.map(&:id).compact.join(",")
-            options['network_ids'] = nets unless nets.empty?
+            options[:network_ids] = nets unless nets.empty?
           end
-          options['security_group_ids'] = @security_groups.map {|security_group| security_group.id}.join(',') unless @security_groups.empty?
-          options['project_id'] = @domain_config.project_id unless @domain_config.project_id.nil?
-          options['key_name'] = @domain_config.keypair unless @domain_config.keypair.nil?
-          options['name'] = @domain_config.name unless @domain_config.name.nil?
-          options['ip_address'] = @domain_config.private_ip_address unless @domain_config.private_ip_address.nil?
-          options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
-          options[:affinity_group_ids] = @domain_config.affinity_group_ids.delete(' ') unless @domain_config.affinity_group_ids.nil?
+          options[:affinity_group_ids]   = @domain_config.affinity_group_ids.delete(' ') unless @domain_config.affinity_group_ids.nil?
           options[:affinity_group_names] = @domain_config.affinity_group_names.delete(' ') unless @domain_config.affinity_group_names.nil?
+          options[:disk_offering_id]     = @disk_offering.id unless @disk_offering.id.nil?
+          options[:ip_address]           = @domain_config.private_ip_address unless @domain_config.private_ip_address.nil?
+          options[:key_name]             = @domain_config.keypair unless @domain_config.keypair.nil?
+          options[:name]                 = @domain_config.name unless @domain_config.name.nil?
+          options[:project_id]           = @domain_config.project_id unless @domain_config.project_id.nil?
+          options[:security_group_ids]   = @security_groups.map {|security_group| security_group.id}.join(',') unless @security_groups.empty?
 
           if @domain_config.user_data != nil
-            options['user_data'] = Base64.urlsafe_encode64(@domain_config.user_data)
-            if options['user_data'].length > 2048
+            options[:user_data] = Base64.urlsafe_encode64(@domain_config.user_data)
+            if options[:user_data].length > 2048
               raise Errors::UserdataError,
-                    :userdataLength => options['user_data'].length
+                    :userdataLength => options[:user_data].length
             end
           end
           options
