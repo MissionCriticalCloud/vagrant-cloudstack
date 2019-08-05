@@ -3,7 +3,7 @@ require 'vagrant-cloudstack/action/run_instance'
 require 'vagrant-cloudstack/config'
 
 require 'vagrant'
-require 'fog'
+require 'fog/cloudstack'
 
 describe VagrantPlugins::Cloudstack::Action::RunInstance do
   let(:action) { VagrantPlugins::Cloudstack::Action::RunInstance.new(app, env) }
@@ -510,7 +510,7 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
               expect(cloudstack_compute).to receive(:create_port_forwarding_rule)
                 .with(create_port_forwarding_rule_parameters.merge(publicport: PF_RANDOM_START - 1))
                 .and_raise(
-                  Fog::Compute::Cloudstack::Error,
+                  Fog::Cloudstack::Compute::Error,
                   'The range specified, CONFLICTINGRANGE, conflicts with rule SOMERULE which has THESAME'
                 )
             end

@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'vagrant-cloudstack/action/read_transport_info'
 require 'vagrant-cloudstack/config'
-require 'fog'
+require 'fog/cloudstack'
 
 describe VagrantPlugins::Cloudstack::Action::ReadTransportInfo do
   let(:action) {VagrantPlugins::Cloudstack::Action::ReadTransportInfo.new }

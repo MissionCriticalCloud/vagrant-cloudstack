@@ -47,7 +47,7 @@ module VagrantPlugins
                    :timeout => domain_config.instance_ready_timeout
               end
             end
-          rescue Fog::Compute::Cloudstack::Error => e
+          rescue Fog::Cloudstack::Compute::Error => e
             raise Errors::FogError, :message => e.message
           end
 

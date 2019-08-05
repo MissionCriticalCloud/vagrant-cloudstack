@@ -1,4 +1,4 @@
-require 'fog'
+require 'fog/cloudstack'
 require 'log4r'
 
 module VagrantPlugins

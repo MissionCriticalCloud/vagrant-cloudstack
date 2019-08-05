@@ -263,7 +263,7 @@ module VagrantPlugins
             end
 
             raise
-          rescue Fog::Compute::Cloudstack::Error => e
+          rescue Fog::Cloudstack::Compute::Error => e
             raise Errors::FogError, :message => e.message
           end
 
@@ -351,7 +351,7 @@ module VagrantPlugins
               @env[:ui].warn(" -- Failed to enable static nat: #{resp['enablestaticnatresponse']['errortext']}")
               return
             end
-          rescue Fog::Compute::Cloudstack::Error => e
+          rescue Fog::Cloudstack::Compute::Error => e
             raise Errors::FogError, :message => e.message
           end
 
@@ -492,7 +492,7 @@ module VagrantPlugins
                 sleep 2
               end
             end
-          rescue Fog::Compute::Cloudstack::Error => e
+          rescue Fog::Cloudstack::Compute::Error => e
             raise Errors::FogError, :message => e.message
           end
 
@@ -721,7 +721,7 @@ module VagrantPlugins
                 sleep 2
               end
             end
-          rescue Fog::Compute::Cloudstack::Error => e
+          rescue Fog::Cloudstack::Compute::Error => e
             if e.message =~ /The range specified,.*conflicts with rule/
               @env[:ui].warn(" -- Failed to create firewall rule: #{e.message}")
             elsif e.message =~ /Default ACL cannot be modified/
