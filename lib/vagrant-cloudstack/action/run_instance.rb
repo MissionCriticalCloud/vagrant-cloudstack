@@ -289,6 +289,8 @@ module VagrantPlugins
           options['name'] = @domain_config.name unless @domain_config.name.nil?
           options['ip_address'] = @domain_config.private_ip_address unless @domain_config.private_ip_address.nil?
           options['disk_offering_id'] = @disk_offering.id unless @disk_offering.id.nil?
+          options[:affinity_group_ids] = @domain_config.affinity_group_ids.delete(' ') unless @domain_config.affinity_group_ids.nil?
+          options[:affinity_group_names] = @domain_config.affinity_group_names.delete(' ') unless @domain_config.affinity_group_names.nil?
 
           if @domain_config.user_data != nil
             options['user_data'] = Base64.urlsafe_encode64(@domain_config.user_data)
