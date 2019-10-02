@@ -253,6 +253,7 @@ module VagrantPlugins
             options = compose_server_creation_options
 
             @server = @env[:cloudstack_compute].servers.create(options)
+            @server_job_id = @server.job_id
           rescue Fog::Compute::Cloudstack::NotFound => e
             # Invalid subnet doesn't have its own error so we catch and
             # check the error message here.
@@ -759,14 +760,14 @@ module VagrantPlugins
         def store_password
           password = nil
           if @server.password_enabled and @server.respond_to?('job_id')
-            server_job_result = @env[:cloudstack_compute].query_async_job_result({:jobid => @server.job_id})
+            server_job_result = @env[:cloudstack_compute].query_async_job_result({:jobid => @server_job_id})
             if server_job_result.nil?
               @env[:ui].warn(' -- Failed to retrieve job_result for retrieving the password')
               return
             end
 
             while true
-              server_job_result = @env[:cloudstack_compute].query_async_job_result({:jobid => @server.job_id})
+              server_job_result = @env[:cloudstack_compute].query_async_job_result({:jobid => @server_job_id})
               if server_job_result['queryasyncjobresultresponse']['jobstatus'] != 0
                 password = server_job_result['queryasyncjobresultresponse']['jobresult']['virtualmachine']['password']
                 break
