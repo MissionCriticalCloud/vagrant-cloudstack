@@ -1,8 +1,8 @@
-# Unreleased
+# 1.5.2 (02 Oct 2019)
 
 Fixed bugs:
 
-- `store_passwd` would sometimes try to lookup an async job status without including the job id causing an exception being raised
+- `store_passwd` would sometimes try to lookup an async job status without including the job id causing an exception being raised [\#187](https://github.com/MissionCriticalCloud/vagrant-cloudstack/issues/187)
 
 # 1.5.1 (18 Apr 2019)
 
