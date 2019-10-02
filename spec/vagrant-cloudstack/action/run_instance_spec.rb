@@ -260,6 +260,7 @@ describe VagrantPlugins::Cloudstack::Action::RunInstance do
 
       allow(machine).to receive(:provider_config).and_return(provider_config)
       expect(server).to receive(:wait_for).and_return(ready = true)
+      allow(server).to receive(:job_id).and_return(JOB_ID)
       allow(server).to receive(:password_enabled).and_return(false)
       expect(cloudstack_compute).to receive(:servers).and_return(servers)
       allow(cloudstack_compute).to receive(:send).with(:list_zones, available: true, name: ZONE_NAME).and_return(list_zones_response)

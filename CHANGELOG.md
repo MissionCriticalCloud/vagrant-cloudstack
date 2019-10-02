@@ -1,3 +1,9 @@
+# Unreleased
+
+Fixed bugs:
+
+- `store_passwd` would sometimes try to lookup an async job status without including the job id causing an exception being raised
+
 # 1.5.1 (18 Apr 2019)
 
 **Implemented enhancements:**
