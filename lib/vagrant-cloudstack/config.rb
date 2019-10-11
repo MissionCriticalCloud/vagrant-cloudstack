@@ -3,11 +3,16 @@ require "vagrant"
 module VagrantPlugins
   module Cloudstack
     class Config < Vagrant.plugin("2", :config)
-      INSTANCE_VAR_DEFAULT_NIL = %w(host name path port domain_id network_id network_name project_id service_offering_id service_offering_name
-           template_id template_name zone_id zone_name keypair pf_ip_address_id pf_ip_address pf_public_port
-           pf_public_rdp_port pf_private_port pf_trusted_networks display_name group user_data ssh_key ssh_user
-           ssh_network_id ssh_network_name vm_user vm_password private_ip_address).freeze
-      INSTANCE_VAR_DEFAULT_EMPTY_ARRAY = %w(static_nat port_forwarding_rules firewall_rules security_group_ids security_group_names security_groups).freeze
+      INSTANCE_VAR_DEFAULT_NIL = %w(host name path port domain_id network_id
+       network_name project_id service_offering_id service_offering_name
+       template_id template_name root_disk_size zone_id zone_name keypair
+       pf_ip_address_id pf_ip_address pf_public_port pf_public_rdp_port
+       pf_private_port pf_trusted_networks display_name group user_data
+       ssh_key ssh_user ssh_network_id ssh_network_name vm_user vm_password
+       private_ip_address).freeze
+      INSTANCE_VAR_DEFAULT_EMPTY_ARRAY = %w(static_nat port_forwarding_rules
+       firewall_rules security_group_ids security_group_names
+       security_groups).freeze
 
       # Cloudstack api host.
       #
@@ -104,6 +109,11 @@ module VagrantPlugins
       #
       # @return [String]
       attr_accessor :template_name
+
+      # Size of the rootdisk in Gigabyte
+      #
+      # @return [Fixnum]
+      attr_accessor :root_disk_size
 
       # Zone uuid to launch the instance into. If nil, it will
       # launch in default project.
