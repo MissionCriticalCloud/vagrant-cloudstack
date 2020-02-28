@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'fog', '>= 1.32.0'
   s.add_runtime_dependency 'fog-xml', '>= 0.1.2'
 
-  s.add_development_dependency 'rake',                '>= 10.4', '~> 10.5'
+  s.add_development_dependency 'rake',                '>= 10.4', '~> 13.0'
   s.add_development_dependency 'rspec-core',          '~> 2.14', '>= 2.14.7'
   s.add_development_dependency 'rspec-expectations',  '~> 2.14', '>= 2.14.4'
   s.add_development_dependency 'rspec-mocks',         '~> 2.14', '>= 2.14.4'
